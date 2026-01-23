@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -41,3 +41,38 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Bottom Layer
+    uniqueID: 2708780149
+    locked: 0
+  - name: Lane
+    uniqueID: 587729025
+    locked: 0
+  - name: Placeholder
+    uniqueID: 207185329
+    locked: 0
+  - name: Judgement Line
+    uniqueID: 1093218145
+    locked: 0
+  - name: Song Progress
+    uniqueID: 1184241717
+    locked: 0
+  - name: Player
+    uniqueID: 2436954891
+    locked: 0
+  - name: Notes/Spikes
+    uniqueID: 2452928485
+    locked: 0
+  - name: Notes/Teleports
+    uniqueID: 875063817
+    locked: 0
+  - name: Notes/Slices
+    uniqueID: 2390096389
+    locked: 0
+  - name: Notes/Blacks
+    uniqueID: 607336109
+    locked: 0
+  - name: Notes/Taps
+    uniqueID: 2500803147
+    locked: 0
+  m_RenderingLayers:
+  - Default
