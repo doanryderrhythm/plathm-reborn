@@ -315,6 +315,20 @@ MonoBehaviour:
   usedNotesFolder: {fileID: 392789685}
   scrollSpeed: 5
   scrollPlayfield: {fileID: 451625974}
+  tapCPerfectPrefab: {fileID: 9141352313010921072, guid: b334e575632960948a9e919525cb7069, type: 3}
+  tapPerfectPrefab: {fileID: 9141352313010921072, guid: 0c45637ba8dbff24bb4c39ede5882977, type: 3}
+  tapGoodPrefab: {fileID: 9141352313010921072, guid: 486112f68621e894c86424b77f50e0a1, type: 3}
+  blackCPerfectPrefab: {fileID: 9141352313010921072, guid: df70108926b50ec47ad0491d8eb18bfd, type: 3}
+  sliceCPerfectPrefab: {fileID: 9141352313010921072, guid: b9fe750ddbb4001438a92312222de74d, type: 3}
+  slicePerfectPrefab: {fileID: 9141352313010921072, guid: b5c62072af9ff674692b264c92d29f60, type: 3}
+  sliceGoodPrefab: {fileID: 9141352313010921072, guid: 9b885b8d7a4ee5f439a6fc389d50a333, type: 3}
+  leftTeleportCPerfectPrefab: {fileID: 0}
+  leftTeleportPerfectPrefab: {fileID: 0}
+  leftTeleportGoodPrefab: {fileID: 0}
+  rightTeleportCPerfectPrefab: {fileID: 0}
+  rightTeleportPerfectPrefab: {fileID: 0}
+  rightTeleportGoodPrefab: {fileID: 0}
+  spikesPrefab: {fileID: 0}
 --- !u!4 &217819813
 Transform:
   m_ObjectHideFlags: 0
@@ -827,7 +841,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 0000000081080823612f2941b165590c75b474a135189646e5b73492096a283405fa758ead3633244b3a0f950bfb4091
+  m_ApplyToSortingLayers: 0000000081080823612f2941b165590c75b474a135189646e5b73492096a283405fa758ead3633244b3a0f950bfb40910f37803f27a5296be3d44c0a0b7b3711
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0

@@ -18,6 +18,15 @@ public class EditorManager : MonoBehaviour
         RIGHT_POS,
     }
 
+    public enum JudgementType
+    {
+        CPERFECT,
+        PERFECT,
+        GOOD,
+        DAMAGE,
+        MISS,
+    }
+
     [Header("Input Actions")]
     [SerializeField] InputAction inputAnyKey;
     [SerializeField] InputAction inputLeftTeleport;
@@ -36,6 +45,27 @@ public class EditorManager : MonoBehaviour
     [Header("Gameplay")]
     public float scrollSpeed;
     [SerializeField] GameObject scrollPlayfield;
+
+    [Header("Judgement VFX")]
+    public GameObject tapCPerfectPrefab;
+    public GameObject tapPerfectPrefab;
+    public GameObject tapGoodPrefab;
+    [Space(10.0f)]
+    public GameObject blackCPerfectPrefab;
+    [Space(10.0f)]
+    public GameObject sliceCPerfectPrefab;
+    public GameObject slicePerfectPrefab;
+    public GameObject sliceGoodPrefab;
+    [Space(10.0f)]
+    public GameObject leftTeleportCPerfectPrefab;
+    public GameObject leftTeleportPerfectPrefab;
+    public GameObject leftTeleportGoodPrefab;
+    [Space(10.0f)]
+    public GameObject rightTeleportCPerfectPrefab;
+    public GameObject rightTeleportPerfectPrefab;
+    public GameObject rightTeleportGoodPrefab;
+    [Space(10.0f)]
+    public GameObject spikesPrefab;
 
     private void Awake()
     {
