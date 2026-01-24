@@ -6,7 +6,10 @@ using UnityEngine.InputSystem;
 public class EditorManager : MonoBehaviour
 {
     //Other shenanigans
-    private HashSet<Key> reservedKeys;
+    private HashSet<Key> reservedTapKeys;
+    private HashSet<Key> reservedBlackKeys;
+    private bool isAnyKeyHolding = false;
+    private bool isBlackKeyReserved = false;
 
     public enum LanePosition
     {
@@ -36,7 +39,8 @@ public class EditorManager : MonoBehaviour
 
     private void Awake()
     {
-        reservedKeys = new HashSet<Key>();
+        reservedTapKeys = new HashSet<Key>();
+        reservedBlackKeys = new HashSet<Key>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -49,16 +53,25 @@ public class EditorManager : MonoBehaviour
     void Update()
     {
         scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
+
+        if (isAnyKeyHolding && isBlackKeyReserved)
+        {
+            ExecuteInput(blackFolder);
+        }
     }
 
     private void OnEnable()
     {
         inputAnyKey.Enable();
+
         inputLeftTeleport.Enable();
         inputRightTeleport.Enable();
         inputSlice.Enable();
 
-        inputAnyKey.performed           += _ => ExecuteInput(tapFolder);
+        inputAnyKey.started     += OnAnyKeyStarted;
+        inputAnyKey.canceled    += OnAnyKeyCanceled;
+        inputAnyKey.performed   += CheckReservedTapKeys;
+
         inputLeftTeleport.performed     += _ => ExecuteInput(leftTeleportFolder);
         inputRightTeleport.performed    += _ => ExecuteInput(rightTeleportFolder);
         inputSlice.performed            += _ => ExecuteInput(sliceFolder);
@@ -67,17 +80,19 @@ public class EditorManager : MonoBehaviour
     private void OnDisable()
     {
         inputAnyKey.Disable();
+
         inputLeftTeleport.Disable();
         inputRightTeleport.Disable();
         inputSlice.Disable();
 
-        inputAnyKey.performed           -= _ => { };
+        inputAnyKey.performed -= CheckReservedTapKeys;
+
         inputLeftTeleport.performed     -= _ => { };
         inputRightTeleport.performed    -= _ => { };
         inputSlice.performed            -= _ => { };
     }
 
-    void AddReservedKeys(InputAction inputAction)
+    void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
     {
         foreach (var binding in inputAction.bindings)
         {
@@ -96,10 +111,68 @@ public class EditorManager : MonoBehaviour
 
     void RebuildReservedKeys()
     {
-        reservedKeys.Clear();
-        AddReservedKeys(inputLeftTeleport);
-        AddReservedKeys(inputRightTeleport);
-        AddReservedKeys(inputSlice);
+        reservedTapKeys.Clear();
+        AddReservedKeys(inputLeftTeleport, ref reservedTapKeys);
+        AddReservedKeys(inputRightTeleport, ref reservedTapKeys);
+        AddReservedKeys(inputSlice, ref reservedTapKeys);
+
+        reservedBlackKeys.Clear();
+        AddReservedKeys(inputLeftTeleport, ref reservedBlackKeys);
+        AddReservedKeys(inputRightTeleport, ref reservedBlackKeys);
+    }
+
+    void CheckReservedTapKeys(InputAction.CallbackContext context)
+    {
+        if (IsAnyKeyReserved(reservedTapKeys))
+        {
+            ExecuteInput(tapFolder);
+        }
+    }
+
+    void OnAnyKeyStarted(InputAction.CallbackContext context)
+    {
+        isAnyKeyHolding = true;
+
+        isBlackKeyReserved = IsAnyKeyReserved(reservedBlackKeys);
+        if (isBlackKeyReserved)
+        {
+            ExecuteInput(blackFolder);
+        }
+    }
+
+    void OnAnyKeyCanceled(InputAction.CallbackContext context)
+    {
+        isAnyKeyHolding = false;
+        isBlackKeyReserved = false;
+    }
+
+    private bool IsAnyKeyReserved(HashSet<Key> keySet)
+    {
+        var keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            return false;
+        }
+
+        foreach (var keyControl in keyboard.allKeys)
+        {
+            if (keyControl == null)
+            {
+                continue;
+            }
+
+            if (!keyControl.wasPressedThisFrame)
+            {
+                continue;
+            }
+
+            if (keySet.Contains(keyControl.keyCode))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     void ExecuteInput(GameObject folder)

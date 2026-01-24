@@ -18,6 +18,7 @@ public class MusicNote : MonoBehaviour
     }
 
     [SerializeField] NoteType noteType;
+    [SerializeField] bool isBlackActivated = false;
 
     private void Awake()
     {
@@ -33,6 +34,12 @@ public class MusicNote : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (this.transform.position.y <= 0 && noteType == NoteType.BLACK_NOTE && isBlackActivated)
+        {
+            SwitchToUsedFolder();
+            return;
+        }
+
         if (this.transform.position.y < -ValueStorer.goodJudgement * editorManager.scrollSpeed)
         {
             SwitchToUsedFolder();
@@ -48,6 +55,12 @@ public class MusicNote : MonoBehaviour
 
         if (Mathf.Abs(this.transform.position.y) > ValueStorer.goodJudgement * editorManager.scrollSpeed)
         {
+            return;
+        }
+
+        if (noteType == NoteType.BLACK_NOTE)
+        {
+            isBlackActivated = true;
             return;
         }
 
