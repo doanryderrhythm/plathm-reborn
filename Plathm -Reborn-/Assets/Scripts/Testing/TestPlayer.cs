@@ -89,4 +89,13 @@ public class TestPlayer : MonoBehaviour
             this.transform.position = ValueStorer.playerRightPosition;
         }
     }
+
+    #region GETTERS
+
+    public EditorManager.LanePosition GetLanePosition()
+    {
+        return lanePosition;
+    }
+
+    #endregion
 }

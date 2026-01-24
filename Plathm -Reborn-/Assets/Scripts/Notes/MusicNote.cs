@@ -4,6 +4,7 @@ public class MusicNote : MonoBehaviour
 {
     //Other shenanigans
     EditorManager editorManager;
+    TestPlayer player;
 
     //Note details
     public enum NoteType
@@ -23,6 +24,7 @@ public class MusicNote : MonoBehaviour
     private void Awake()
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+        player = GameObject.FindFirstObjectByType<TestPlayer>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -34,12 +36,41 @@ public class MusicNote : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (this.transform.position.y <= 0 && noteType == NoteType.BLACK_NOTE && isBlackActivated)
+        //Not checking negative timing in notes
+        if (this.transform.position.y > 0)
+        {
+            return;
+        }
+
+        if (noteType == NoteType.BLACK_NOTE && isBlackActivated)
         {
             SwitchToUsedFolder();
             return;
         }
 
+        if (noteType == NoteType.MIDDLE_SPIKE)
+        {
+            if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
+            {
+                Debug.Log("Damaged by MIDDLE SPIKE");
+            }
+
+            SwitchToUsedFolder();
+            return;
+        }
+
+        if (noteType == NoteType.SIDE_SPIKE)
+        {
+            if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
+            {
+                Debug.Log("Damaged by SIDE SPIKE");
+            }
+
+            SwitchToUsedFolder();
+            return;
+        }
+
+        //Check missed notes
         if (this.transform.position.y < -ValueStorer.goodJudgement * editorManager.scrollSpeed)
         {
             SwitchToUsedFolder();
