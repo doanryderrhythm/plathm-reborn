@@ -5,14 +5,9 @@ using UnityEngine.InputSystem;
 
 public class EditorManager : MonoBehaviour
 {
-    //Other shenanigans
-    private HashSet<Key> reservedTapKeys;
-    private HashSet<Key> reservedBlackKeys;
-    private bool isAnyKeyHolding = false;
-    private bool isBlackKeyReserved = false;
-
     public enum LanePosition
     {
+        NONE,
         LEFT_POS,
         MIDDLE_POS,
         RIGHT_POS,
@@ -26,6 +21,30 @@ public class EditorManager : MonoBehaviour
         DAMAGE,
         MISS,
     }
+
+    public enum NoteTypeGeneral
+    {
+        TAP_NOTE,
+        BLACK_NOTE,
+        LEFT_TELEPORT,
+        RIGHT_TELEPORT,
+        SLICE_NOTE,
+        SPIKE,
+    }
+
+    //Chart shenanigans
+    private Camera mainCamera;
+    private Vector3 worldPosition;
+
+    //Gameplay shenanigans
+    private HashSet<Key> reservedTapKeys;
+    private HashSet<Key> reservedBlackKeys;
+    private bool isAnyKeyHolding = false;
+    private bool isBlackKeyReserved = false;
+
+    //Note selection
+    [SerializeField] bool isNoteTypeSelected;
+    [SerializeField] NoteTypeGeneral selectedNoteType;
 
     [Header("Input Actions")]
     [SerializeField] InputAction inputAnyKey;
@@ -41,6 +60,15 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject rightTeleportFolder;
     [SerializeField] GameObject spikeFolder;
     [SerializeField] GameObject usedNotesFolder;
+
+    [Header("Note Types")]
+    [SerializeField] GameObject tapNotePrefab;
+    [SerializeField] GameObject blackNotePrefab;
+    [SerializeField] GameObject leftTeleportPrefab;
+    [SerializeField] GameObject rightTeleportPrefab;
+    [SerializeField] GameObject sliceNotePrefab;
+    [SerializeField] GameObject middleSpikePrefab;
+    [SerializeField] GameObject sideSpikePrefab;
 
     [Header("Gameplay")]
     public float scrollSpeed;
@@ -69,6 +97,10 @@ public class EditorManager : MonoBehaviour
 
     private void Awake()
     {
+        mainCamera = GameObject.FindFirstObjectByType<Camera>();
+
+        isNoteTypeSelected = false;
+
         reservedTapKeys = new HashSet<Key>();
         reservedBlackKeys = new HashSet<Key>();
     }
@@ -82,7 +114,16 @@ public class EditorManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
+        if (isNoteTypeSelected && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Vector3 mousePos = Mouse.current.position.ReadValue();
+            mousePos.z = mainCamera.nearClipPlane;
+            worldPosition = mainCamera.ScreenToWorldPoint(mousePos);
+
+            InsertNote(worldPosition);
+        }
+
+        //scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
 
         if (isAnyKeyHolding && isBlackKeyReserved)
         {
@@ -229,12 +270,130 @@ public class EditorManager : MonoBehaviour
         }
 
         MusicNote musicNote = lowestNote.gameObject.GetComponent<MusicNote>();
-
-        musicNote.ExecuteNote();
+        musicNote?.ExecuteNote();
     }
 
     public void SwitchToUsedFolder(Transform usedNote)
     {
         usedNote.SetParent(usedNotesFolder.transform);
+    }
+
+    public void SelectNoteType(int index)
+    {
+        if (index == 0)
+        {
+            isNoteTypeSelected = false;
+        }
+        else
+        {
+            isNoteTypeSelected = true;
+            if (index == 1) selectedNoteType = NoteTypeGeneral.TAP_NOTE;
+            else if (index == 2) selectedNoteType = NoteTypeGeneral.BLACK_NOTE;
+            else if (index == 3) selectedNoteType = NoteTypeGeneral.LEFT_TELEPORT;
+            else if (index == 4) selectedNoteType = NoteTypeGeneral.RIGHT_TELEPORT;
+            else if (index == 5) selectedNoteType = NoteTypeGeneral.SLICE_NOTE;
+            else if (index == 6) selectedNoteType = NoteTypeGeneral.SPIKE;
+        }
+    }
+
+    void InsertNote(Vector3 targetPosition)
+    {
+        if (!isNoteTypeSelected)
+        {
+            return;
+        }
+
+        LanePosition confirmedLane = CheckCorrectLane(targetPosition);
+        GameObject confirmedNote = null;
+
+        if (confirmedLane == LanePosition.NONE)
+        {
+            return;
+        }
+
+        switch (selectedNoteType)
+        {
+            case NoteTypeGeneral.TAP_NOTE:
+            {
+                confirmedNote = Instantiate(tapNotePrefab, targetPosition, Quaternion.identity) as GameObject;
+                confirmedNote.transform.SetParent(tapFolder.transform, true);
+                break;
+            }
+            case NoteTypeGeneral.BLACK_NOTE:
+            {
+                confirmedNote = Instantiate(blackNotePrefab, targetPosition, Quaternion.identity) as GameObject;
+                confirmedNote.transform.SetParent(blackFolder.transform, true);
+                break;
+            }
+            case NoteTypeGeneral.LEFT_TELEPORT:
+            {
+                Vector3 confirmedPosition = Vector3.zero;
+
+                if (confirmedLane == LanePosition.LEFT_POS)
+                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, targetPosition.y, 0);
+                else if (confirmedLane == LanePosition.MIDDLE_POS)
+                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, targetPosition.y, 0);
+                else if (confirmedLane == LanePosition.RIGHT_POS)
+                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
+
+                confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
+                confirmedNote.transform.SetParent(leftTeleportFolder.transform, true);
+                break;
+            }
+            case NoteTypeGeneral.RIGHT_TELEPORT:
+            {
+                Vector3 confirmedPosition = Vector3.zero;
+
+                if (confirmedLane == LanePosition.LEFT_POS)
+                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, targetPosition.y, 0);
+                else if (confirmedLane == LanePosition.MIDDLE_POS)
+                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, targetPosition.y, 0);
+                else if (confirmedLane == LanePosition.RIGHT_POS)
+                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
+
+                confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
+                confirmedNote.transform.SetParent(rightTeleportFolder.transform, true);
+                break;
+            }
+            case NoteTypeGeneral.SLICE_NOTE:
+            {
+                confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote.transform.SetParent(sliceFolder.transform, true);
+                break;
+            }
+            case NoteTypeGeneral.SPIKE:
+            {
+                if (targetPosition.x >= ValueStorer.minMiddleLaneX && targetPosition.x <= ValueStorer.maxMiddleLaneX)
+                {
+                    confirmedNote = Instantiate(middleSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                }
+                else if ((targetPosition.x >= ValueStorer.minLeftLaneX && targetPosition.x <= ValueStorer.maxLeftLaneX)
+                        || (targetPosition.x >= ValueStorer.minRightLaneX && targetPosition.x <= ValueStorer.maxRightLaneX))
+                {
+                    confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                }
+                confirmedNote.transform.SetParent(spikeFolder.transform, true);
+                break;
+            }
+            default: break;
+        }
+    }
+
+    LanePosition CheckCorrectLane(Vector3 targetPosition)
+    {
+        if (targetPosition.x >= ValueStorer.minLeftLaneX && targetPosition.x <= ValueStorer.maxLeftLaneX)
+        {
+            return LanePosition.LEFT_POS;
+        }
+        else if (targetPosition.x >= ValueStorer.minMiddleLaneX && targetPosition.x <= ValueStorer.maxMiddleLaneX)
+        {
+            return LanePosition.MIDDLE_POS;
+        }
+        else if (targetPosition.x >= ValueStorer.minRightLaneX && targetPosition.x <= ValueStorer.maxRightLaneX)
+        {
+            return LanePosition.RIGHT_POS;
+        }
+
+        return LanePosition.NONE;
     }
 }
