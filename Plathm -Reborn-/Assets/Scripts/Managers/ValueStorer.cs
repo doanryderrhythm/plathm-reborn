@@ -3,6 +3,7 @@ using UnityEngine;
 public class ValueStorer : MonoBehaviour
 {
     public static float laneWidth = 3f;
+    public static float gapWidth = 0.75f;
 
     public static float playerXMoveAbs = 3.75f;
     public static float playerYPosition = -0.375f;
@@ -29,4 +30,18 @@ public class ValueStorer : MonoBehaviour
     public static float cPerfectJudgement = 0.04f;
     public static float perfectJudgement = 0.075f;
     public static float goodJudgement = 0.14f;
+
+    //Note's width
+    public static float tapWidth = 1.0f;
+    public static float blackWidth = 0.8f;
+    public static float teleportWidth = 2.6f;
+    public static float sliceWidth = 12.0f;
+    public static float spikeWidth = 3f;
+
+    //Note's height
+    public static float tapHeight = 1.0f;
+    public static float blackHeight = 0.8f;
+    public static float teleportHeight = 1.0f;
+    public static float sliceHeight = 0.8f;
+    public static float spikeHeight = 0.3f;
 }

@@ -3,6 +3,9 @@ using UnityEngine.InputSystem;
 
 public class TestPlayer : MonoBehaviour
 {
+    //Other shenanigans
+    private EditorManager editorManager;
+
     [SerializeField] EditorManager.LanePosition lanePosition = EditorManager.LanePosition.MIDDLE_POS;
 
     [SerializeField] InputAction moveLeftAction;
@@ -10,6 +13,8 @@ public class TestPlayer : MonoBehaviour
 
     private void Awake()
     {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+
         moveLeftAction.performed += MoveLeft;
         moveRightAction.performed += MoveRight;
     }
@@ -40,6 +45,11 @@ public class TestPlayer : MonoBehaviour
 
     void MoveLeft(InputAction.CallbackContext context)
     {
+        if (editorManager != null && !editorManager.playMode)
+        {
+            return;
+        }
+
         if (lanePosition == EditorManager.LanePosition.LEFT_POS)
         {
             return;
@@ -57,6 +67,11 @@ public class TestPlayer : MonoBehaviour
 
     void MoveRight(InputAction.CallbackContext context)
     {
+        if (editorManager != null && !editorManager.playMode)
+        {
+            return;
+        }
+
         if (lanePosition == EditorManager.LanePosition.RIGHT_POS)
         {
             return;

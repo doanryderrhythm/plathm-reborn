@@ -46,6 +46,9 @@ public class EditorManager : MonoBehaviour
     [SerializeField] bool isNoteTypeSelected;
     [SerializeField] NoteTypeGeneral selectedNoteType;
 
+    [Header("Editor Settings")]
+    public bool playMode = false;
+
     [Header("Input Actions")]
     [SerializeField] InputAction inputAnyKey;
     [SerializeField] InputAction inputLeftTeleport;
@@ -114,16 +117,30 @@ public class EditorManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        ConvertFromMouseToWorld();
+
         if (isNoteTypeSelected && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            Vector3 mousePos = Mouse.current.position.ReadValue();
-            mousePos.z = mainCamera.nearClipPlane;
-            worldPosition = mainCamera.ScreenToWorldPoint(mousePos);
-
-            InsertNote(worldPosition);
+            if (worldPosition.y >= 0f)
+            {
+                InsertNote(worldPosition);
+            }
         }
 
-        //scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
+        if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+        {
+            ExecuteDeleteInFolder(tapFolder.transform);
+            ExecuteDeleteInFolder(blackFolder.transform);
+            ExecuteDeleteInFolder(sliceFolder.transform);
+            ExecuteDeleteInFolder(leftTeleportFolder.transform);
+            ExecuteDeleteInFolder(rightTeleportFolder.transform);
+            ExecuteDeleteInFolder(spikeFolder.transform);
+        }
+
+        if (playMode)
+        {
+            scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
+        }
 
         if (isAnyKeyHolding && isBlackKeyReserved)
         {
@@ -202,6 +219,11 @@ public class EditorManager : MonoBehaviour
 
     void OnAnyKeyStarted(InputAction.CallbackContext context)
     {
+        if (!playMode)
+        {
+            return;
+        }
+
         isAnyKeyHolding = true;
 
         isBlackKeyReserved = IsAnyKeyReserved(reservedBlackKeys);
@@ -248,6 +270,11 @@ public class EditorManager : MonoBehaviour
 
     void ExecuteInput(GameObject folder)
     {
+        if (!playMode)
+        {
+            return;
+        }
+
         Transform lowestNote = null;
 
         foreach (Transform child in folder.transform)
@@ -294,6 +321,34 @@ public class EditorManager : MonoBehaviour
             else if (index == 5) selectedNoteType = NoteTypeGeneral.SLICE_NOTE;
             else if (index == 6) selectedNoteType = NoteTypeGeneral.SPIKE;
         }
+    }
+
+    public void ExecuteDeleteInFolder(Transform folder)
+    {
+        bool isWithinArea;
+        foreach (Transform noteTransform in folder.transform)
+        {
+            MusicNote note = noteTransform.gameObject.GetComponent<MusicNote>();
+
+            if (!note)
+            {
+                continue;
+            }
+
+            isWithinArea = note.IsWithinArea(worldPosition);
+
+            if (isWithinArea)
+            {
+                Destroy(note.gameObject);
+            }
+        }
+    }
+
+    void ConvertFromMouseToWorld()
+    {
+        Vector3 mousePos = Mouse.current.position.ReadValue();
+        mousePos.z = mainCamera.nearClipPlane;
+        worldPosition = mainCamera.ScreenToWorldPoint(mousePos);
     }
 
     void InsertNote(Vector3 targetPosition)

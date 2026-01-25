@@ -36,6 +36,11 @@ public class MusicNote : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!editorManager.playMode)
+        {
+            return;
+        }
+
         //Not checking negative timing in notes
         if (this.transform.position.y > 0)
         {
@@ -83,7 +88,7 @@ public class MusicNote : MonoBehaviour
         }
 
         //Check missed notes
-        if (this.transform.position.y < -ValueStorer.goodJudgement * editorManager.scrollSpeed)
+        if (this.transform.position.y < -ValueStorer.goodJudgement * editorManager.scrollSpeed && editorManager.playMode)
         {
             SwitchToUsedFolder();
         }    
@@ -171,5 +176,65 @@ public class MusicNote : MonoBehaviour
         }
 
         return null;
+    }
+
+    public bool IsWithinArea(Vector3 mousePosition)
+    {
+        if (editorManager.playMode)
+        {
+            return false;
+        }
+
+        if (noteType == NoteType.TAP_NOTE)
+        {
+            if ((mousePosition.x > transform.position.x - ValueStorer.tapWidth * 0.5 && mousePosition.x < transform.position.x + ValueStorer.tapWidth * 0.5)
+                && (mousePosition.y > transform.position.y - ValueStorer.tapHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.tapHeight * 0.5))
+            {
+                return true;
+            }
+        }
+        else if (noteType == NoteType.BLACK_NOTE)
+        {
+            if ((mousePosition.x > transform.position.x - ValueStorer.blackWidth * 0.5 && mousePosition.x < transform.position.x + ValueStorer.blackWidth * 0.5)
+                && (mousePosition.y > transform.position.y - ValueStorer.blackHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.blackHeight * 0.5))
+            {
+                return true;
+            }
+        }
+        else if (noteType == NoteType.SLICE_NOTE)
+        {
+            if ((mousePosition.x > transform.position.x - ValueStorer.sliceWidth * 0.5 && mousePosition.x < transform.position.x + ValueStorer.sliceWidth * 0.5)
+                && (mousePosition.y > transform.position.y - ValueStorer.sliceHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.sliceHeight * 0.5))
+            {
+                return true;
+            }
+        }
+        else if (noteType == NoteType.LEFT_TELEPORT || noteType == NoteType.RIGHT_TELEPORT)
+        {
+            if ((mousePosition.x > transform.position.x - ValueStorer.teleportWidth * 0.5 && mousePosition.x < transform.position.x + ValueStorer.teleportWidth * 0.5)
+                && (mousePosition.y > transform.position.y - ValueStorer.teleportHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.teleportHeight * 0.5))
+            {
+                return true;
+            }
+        }
+        else if (noteType == NoteType.MIDDLE_SPIKE)
+        {
+            if ((mousePosition.x > transform.position.x - ValueStorer.spikeWidth * 0.5 && mousePosition.x < transform.position.x + ValueStorer.spikeWidth * 0.5)
+                && (mousePosition.y > transform.position.y - ValueStorer.spikeHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.spikeHeight * 0.5))
+            {
+                return true;
+            }
+        }
+        else if (noteType == NoteType.SIDE_SPIKE)
+        {
+            if ((mousePosition.x > ValueStorer.minLeftLaneX && mousePosition.x < ValueStorer.maxRightLaneX)
+                && (mousePosition.x < ValueStorer.maxLeftLaneX || mousePosition.x > ValueStorer.minRightLaneX)
+                && (mousePosition.y > transform.position.y - ValueStorer.spikeHeight * 0.5 && mousePosition.y < transform.position.y + ValueStorer.spikeHeight * 0.5))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
