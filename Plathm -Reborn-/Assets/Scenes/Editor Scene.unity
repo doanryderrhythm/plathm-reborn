@@ -322,13 +322,13 @@ MonoBehaviour:
   sliceCPerfectPrefab: {fileID: 9141352313010921072, guid: b9fe750ddbb4001438a92312222de74d, type: 3}
   slicePerfectPrefab: {fileID: 9141352313010921072, guid: b5c62072af9ff674692b264c92d29f60, type: 3}
   sliceGoodPrefab: {fileID: 9141352313010921072, guid: 9b885b8d7a4ee5f439a6fc389d50a333, type: 3}
-  leftTeleportCPerfectPrefab: {fileID: 0}
-  leftTeleportPerfectPrefab: {fileID: 0}
-  leftTeleportGoodPrefab: {fileID: 0}
-  rightTeleportCPerfectPrefab: {fileID: 0}
-  rightTeleportPerfectPrefab: {fileID: 0}
-  rightTeleportGoodPrefab: {fileID: 0}
-  spikesPrefab: {fileID: 0}
+  leftTeleportCPerfectPrefab: {fileID: 9141352313010921072, guid: 8b92babb45bf58d46aaab79c4af628e7, type: 3}
+  leftTeleportPerfectPrefab: {fileID: 9141352313010921072, guid: d711faf5365dac04c82d11aefed05526, type: 3}
+  leftTeleportGoodPrefab: {fileID: 9141352313010921072, guid: fa3e55899dab4a049bfc33e01827e87d, type: 3}
+  rightTeleportCPerfectPrefab: {fileID: 9141352313010921072, guid: 0170b37a7ddc72547a87ba8ef37361c8, type: 3}
+  rightTeleportPerfectPrefab: {fileID: 9141352313010921072, guid: 2c3693506873f68468469bf3cda5ae36, type: 3}
+  rightTeleportGoodPrefab: {fileID: 9141352313010921072, guid: 0b0e3bd9746a2ce42bf5bb58b9e0ae51, type: 3}
+  spikesPrefab: {fileID: 8907948089654706144, guid: 4e295e855ace9b1479c68fd5904fd50f, type: 3}
 --- !u!4 &217819813
 Transform:
   m_ObjectHideFlags: 0

@@ -9,6 +9,10 @@ public class ValueStorer : MonoBehaviour
     public static Vector3 playerMiddlePosition = new Vector3(0, playerYPosition, 0);
     public static Vector3 playerRightPosition = new Vector3(playerXMoveAbs, playerYPosition, 0);
 
+    public static Vector3 leftLanePosition = new Vector3(-playerXMoveAbs, 0, 0);
+    public static Vector3 middleLanePosition = new Vector3(0, 0, 0);
+    public static Vector3 rightLanePosition = new Vector3(playerXMoveAbs, 0, 0);
+
     public static float cPerfectJudgement = 0.04f;
     public static float perfectJudgement = 0.075f;
     public static float goodJudgement = 0.14f;

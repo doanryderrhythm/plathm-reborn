@@ -57,6 +57,10 @@ public class MusicNote : MonoBehaviour
             {
                 Debug.Log("Damaged by MIDDLE SPIKE");
             }
+            else
+            {
+                Instantiate(editorManager.spikesPrefab, ValueStorer.middleLanePosition, Quaternion.identity);
+            }
 
             SwitchToUsedFolder();
             return;
@@ -67,6 +71,11 @@ public class MusicNote : MonoBehaviour
             if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
             {
                 Debug.Log("Damaged by SIDE SPIKE");
+            }
+            else
+            {
+                Instantiate(editorManager.spikesPrefab, ValueStorer.leftLanePosition, Quaternion.identity);
+                Instantiate(editorManager.spikesPrefab, ValueStorer.rightLanePosition, Quaternion.identity);
             }
 
             SwitchToUsedFolder();
@@ -143,16 +152,22 @@ public class MusicNote : MonoBehaviour
         {
             if (noteType == NoteType.TAP_NOTE) return editorManager.tapCPerfectPrefab;
             else if (noteType == NoteType.SLICE_NOTE) return editorManager.sliceCPerfectPrefab;
+            else if (noteType == NoteType.LEFT_TELEPORT) return editorManager.leftTeleportCPerfectPrefab;
+            else if (noteType == NoteType.RIGHT_TELEPORT) return editorManager.rightTeleportCPerfectPrefab;
         }
         else if (judgementType == EditorManager.JudgementType.PERFECT)
         {
             if (noteType == NoteType.TAP_NOTE) return editorManager.tapPerfectPrefab;
             else if (noteType == NoteType.SLICE_NOTE) return editorManager.slicePerfectPrefab;
+            else if (noteType == NoteType.LEFT_TELEPORT) return editorManager.leftTeleportPerfectPrefab;
+            else if (noteType == NoteType.RIGHT_TELEPORT) return editorManager.rightTeleportPerfectPrefab;
         }
         else if (judgementType == EditorManager.JudgementType.GOOD)
         {
             if (noteType == NoteType.TAP_NOTE) return editorManager.tapGoodPrefab;
             else if (noteType == NoteType.SLICE_NOTE) return editorManager.sliceGoodPrefab;
+            else if (noteType == NoteType.LEFT_TELEPORT) return editorManager.leftTeleportGoodPrefab;
+            else if (noteType == NoteType.RIGHT_TELEPORT) return editorManager.rightTeleportGoodPrefab;
         }
 
         return null;
