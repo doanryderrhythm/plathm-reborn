@@ -237,4 +237,16 @@ public class MusicNote : MonoBehaviour
 
         return false;
     }
+
+    public float DistanceFromPosition(Vector3 targetPosition)
+    {
+        return Mathf.Sqrt(
+            Mathf.Pow(targetPosition.x - transform.position.x, 2) +
+            Mathf.Pow(targetPosition.y - transform.position.y, 2));
+    }
+
+    public NoteType GetNoteType()
+    {
+        return noteType;
+    }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
 public class EditorManager : MonoBehaviour
@@ -32,10 +34,18 @@ public class EditorManager : MonoBehaviour
         SPIKE,
     }
 
+    public enum EditOption
+    {
+        NOTE_ADD,
+        NOTE_DRAG,
+    }
+
     //Chart shenanigans
     private Camera mainCamera;
     private Vector3 worldPosition;
+    [SerializeField] EditOption editOption;
 
+    [Space(10.0f)]
     //Gameplay shenanigans
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
@@ -45,6 +55,7 @@ public class EditorManager : MonoBehaviour
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
     [SerializeField] NoteTypeGeneral selectedNoteType;
+    [SerializeField] MusicNote draggedNote;
 
     [Header("Editor Settings")]
     public bool playMode = false;
@@ -98,11 +109,15 @@ public class EditorManager : MonoBehaviour
     [Space(10.0f)]
     public GameObject spikesPrefab;
 
+    [Header("UI")]
+    [SerializeField] TMP_Dropdown noteSelectDropDown;
+
     private void Awake()
     {
         mainCamera = GameObject.FindFirstObjectByType<Camera>();
 
         isNoteTypeSelected = false;
+        draggedNote = null;
 
         reservedTapKeys = new HashSet<Key>();
         reservedBlackKeys = new HashSet<Key>();
@@ -119,7 +134,11 @@ public class EditorManager : MonoBehaviour
     {
         ConvertFromMouseToWorld();
 
-        if (isNoteTypeSelected && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        if (!playMode
+            && editOption == EditOption.NOTE_ADD
+            && isNoteTypeSelected
+            && Mouse.current != null
+            && Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (worldPosition.y >= 0f)
             {
@@ -127,7 +146,25 @@ public class EditorManager : MonoBehaviour
             }
         }
 
-        if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+        if (!playMode
+            && editOption == EditOption.NOTE_DRAG
+            && Mouse.current != null)
+        {
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                draggedNote = FindSmallestDistanceNote(worldPosition);
+            }
+            else if (Mouse.current.leftButton.wasReleasedThisFrame)
+            {
+                draggedNote = null;
+            }
+            else if (Mouse.current.leftButton.isPressed && draggedNote)
+            {
+                MoveNote();
+            }
+        }
+
+        if (!playMode && Mouse.current != null && Mouse.current.rightButton.isPressed)
         {
             ExecuteDeleteInFolder(tapFolder.transform);
             ExecuteDeleteInFolder(blackFolder.transform);
@@ -434,6 +471,131 @@ public class EditorManager : MonoBehaviour
         }
     }
 
+    void MoveNote()
+    {
+        float currentXPos = draggedNote.gameObject.transform.position.x;
+
+        float xPos = worldPosition.x;
+        float yPos = worldPosition.y >= 0 ? worldPosition.y : 0;
+
+        if (draggedNote.GetNoteType() == MusicNote.NoteType.MIDDLE_SPIKE
+            || draggedNote.GetNoteType() == MusicNote.NoteType.SIDE_SPIKE
+            || draggedNote.GetNoteType() == MusicNote.NoteType.SLICE_NOTE)
+        {
+            xPos = 0;
+        }
+        else if (draggedNote.GetNoteType() == MusicNote.NoteType.LEFT_TELEPORT
+            || draggedNote.GetNoteType() == MusicNote.NoteType.RIGHT_TELEPORT)
+        {
+            if (xPos >= ValueStorer.minLeftLaneX && xPos <= ValueStorer.maxLeftLaneX) xPos = ValueStorer.leftLanePosition.x;
+            else if (xPos >= ValueStorer.minMiddleLaneX && xPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.middleLanePosition.x;
+            else if (xPos >= ValueStorer.minRightLaneX && xPos <= ValueStorer.maxRightLaneX) xPos = ValueStorer.rightLanePosition.x;
+            else if (xPos < ValueStorer.minLeftLaneX) xPos = ValueStorer.leftLanePosition.x;
+            else if (xPos > ValueStorer.maxLeftLaneX && xPos < ValueStorer.minMiddleLaneX)
+            {
+                if (currentXPos >= ValueStorer.minLeftLaneX && currentXPos <= ValueStorer.maxLeftLaneX) xPos = ValueStorer.leftLanePosition.x;
+                else if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.middleLanePosition.x;
+            }
+            else if (xPos > ValueStorer.maxMiddleLaneX && xPos < ValueStorer.minRightLaneX)
+            {
+                if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.middleLanePosition.x;
+                else if (currentXPos >= ValueStorer.minRightLaneX && currentXPos <= ValueStorer.maxRightLaneX) xPos = ValueStorer.rightLanePosition.x;
+            }
+            else if (xPos > ValueStorer.maxRightLaneX) xPos = ValueStorer.rightLanePosition.x;
+        }
+        else if (draggedNote.GetNoteType() == MusicNote.NoteType.TAP_NOTE
+            || draggedNote.GetNoteType() == MusicNote.NoteType.BLACK_NOTE)
+        {
+            if (xPos < ValueStorer.minLeftLaneX)
+            {
+                xPos = ValueStorer.minLeftLaneX;
+            }
+            else if (xPos > ValueStorer.maxLeftLaneX && xPos < ValueStorer.minMiddleLaneX)
+            {
+                if (currentXPos >= ValueStorer.minLeftLaneX && currentXPos <= ValueStorer.maxLeftLaneX) xPos = ValueStorer.maxLeftLaneX;
+                else if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.minMiddleLaneX;
+            }
+            else if (xPos > ValueStorer.maxMiddleLaneX && xPos < ValueStorer.minRightLaneX)
+            {
+                if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.maxMiddleLaneX;
+                else if (currentXPos >= ValueStorer.minRightLaneX && currentXPos <= ValueStorer.maxRightLaneX) xPos = ValueStorer.minRightLaneX;
+            }
+            else if (xPos > ValueStorer.maxRightLaneX)
+            {
+                xPos = ValueStorer.maxRightLaneX;
+            }
+        }
+
+        draggedNote.gameObject.transform.position = new Vector3(xPos, yPos, 0);
+    }
+
+    List<Transform> FindAppropriateNotesInFolder(Vector3 targetPosition, Transform folder)
+    {
+        List<Transform> foundNotes = new List<Transform>();
+
+        foreach (Transform note in folder)
+        {
+            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+
+            if (!musicNote) continue;
+
+            bool isWithinArea = musicNote.IsWithinArea(targetPosition);
+            if (isWithinArea)
+            {
+                foundNotes.Add(note);
+            }
+        }
+
+        return foundNotes;
+    }
+
+    MusicNote FindSmallestDistanceNote(Vector3 targetPosition)
+    {
+        List<Transform> foundNotes = new List<Transform>();
+
+        List<Transform> foundTapNotes = FindAppropriateNotesInFolder(targetPosition, tapFolder.transform);
+        List<Transform> foundBlackNotes = FindAppropriateNotesInFolder(targetPosition, blackFolder.transform);
+        List<Transform> foundLeftTeleports = FindAppropriateNotesInFolder(targetPosition, leftTeleportFolder.transform);
+        List<Transform> foundRightTeleports = FindAppropriateNotesInFolder(targetPosition, rightTeleportFolder.transform);
+        List<Transform> foundSliceNotes = FindAppropriateNotesInFolder(targetPosition, sliceFolder.transform);
+        List<Transform> foundSpikes = FindAppropriateNotesInFolder(targetPosition, spikeFolder.transform);
+
+        foreach (Transform note in foundTapNotes) foundNotes.Add(note);
+        foreach (Transform note in foundBlackNotes) foundNotes.Add(note);
+        foreach (Transform note in foundLeftTeleports) foundNotes.Add(note);
+        foreach (Transform note in foundRightTeleports) foundNotes.Add(note);
+        foreach (Transform note in foundSliceNotes) foundNotes.Add(note);
+        foreach (Transform note in foundSpikes) foundNotes.Add(note);
+
+        MusicNote inConfirmedNote = null;
+        float distanceFromMouseToNote = 0f;
+        foreach (Transform note in foundNotes)
+        {
+            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+
+            if (!musicNote)
+            {
+                continue;
+            }
+
+            if (!inConfirmedNote)
+            {
+                inConfirmedNote = musicNote;
+                distanceFromMouseToNote = musicNote.DistanceFromPosition(worldPosition);
+                continue;
+            }
+
+            if (musicNote.DistanceFromPosition(worldPosition) >= distanceFromMouseToNote)
+            {
+                continue;
+            }
+
+            inConfirmedNote = musicNote;
+        }
+
+        return inConfirmedNote;
+    }
+
     LanePosition CheckCorrectLane(Vector3 targetPosition)
     {
         if (targetPosition.x >= ValueStorer.minLeftLaneX && targetPosition.x <= ValueStorer.maxLeftLaneX)
@@ -450,5 +612,19 @@ public class EditorManager : MonoBehaviour
         }
 
         return LanePosition.NONE;
+    }
+
+    public void ConfirmEditOption(int index)
+    {
+        editOption = (EditOption)index;
+
+        if (editOption == EditOption.NOTE_ADD)
+        {
+            noteSelectDropDown.gameObject.SetActive(true);
+        }
+        else if (editOption == EditOption.NOTE_DRAG)
+        {
+            noteSelectDropDown.gameObject.SetActive(false);
+        }
     }
 }
