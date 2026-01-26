@@ -61,10 +61,10 @@ public class EditorManager : MonoBehaviour
     public bool playMode = false;
 
     [Header("Input Actions")]
-    [SerializeField] InputAction inputAnyKey;
-    [SerializeField] InputAction inputLeftTeleport;
-    [SerializeField] InputAction inputRightTeleport;
-    [SerializeField] InputAction inputSlice;
+    [SerializeField] InputActionReference inputAnyKey;
+    [SerializeField] InputActionReference inputLeftTeleport;
+    [SerializeField] InputActionReference inputRightTeleport;
+    [SerializeField] InputActionReference inputSlice;
 
     [Header("Note Folders")]
     [SerializeField] GameObject tapFolder;
@@ -187,34 +187,22 @@ public class EditorManager : MonoBehaviour
 
     private void OnEnable()
     {
-        inputAnyKey.Enable();
+        inputAnyKey.action.started     += OnAnyKeyStarted;
+        inputAnyKey.action.canceled    += OnAnyKeyCanceled;
+        inputAnyKey.action.performed   += CheckReservedTapKeys;
 
-        inputLeftTeleport.Enable();
-        inputRightTeleport.Enable();
-        inputSlice.Enable();
-
-        inputAnyKey.started     += OnAnyKeyStarted;
-        inputAnyKey.canceled    += OnAnyKeyCanceled;
-        inputAnyKey.performed   += CheckReservedTapKeys;
-
-        inputLeftTeleport.performed     += _ => ExecuteInput(leftTeleportFolder);
-        inputRightTeleport.performed    += _ => ExecuteInput(rightTeleportFolder);
-        inputSlice.performed            += _ => ExecuteInput(sliceFolder);
+        inputLeftTeleport.action.performed  += _ => ExecuteInput(leftTeleportFolder);
+        inputRightTeleport.action.performed += _ => ExecuteInput(rightTeleportFolder);
+        inputSlice.action.performed         += _ => ExecuteInput(sliceFolder);
     }
 
     private void OnDisable()
     {
-        inputAnyKey.Disable();
+        inputAnyKey.action.performed -= CheckReservedTapKeys;
 
-        inputLeftTeleport.Disable();
-        inputRightTeleport.Disable();
-        inputSlice.Disable();
-
-        inputAnyKey.performed -= CheckReservedTapKeys;
-
-        inputLeftTeleport.performed     -= _ => { };
-        inputRightTeleport.performed    -= _ => { };
-        inputSlice.performed            -= _ => { };
+        inputLeftTeleport.action.performed  -= _ => { };
+        inputRightTeleport.action.performed -= _ => { };
+        inputSlice.action.performed         -= _ => { };
     }
 
     void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
@@ -625,6 +613,16 @@ public class EditorManager : MonoBehaviour
         else if (editOption == EditOption.NOTE_DRAG)
         {
             noteSelectDropDown.gameObject.SetActive(false);
+        }
+    }
+
+    public void SetPlayMode(bool isPlayMode)
+    {
+        playMode = isPlayMode;
+
+        if (playMode == false)
+        {
+            scrollPlayfield.transform.position = Vector3.zero;
         }
     }
 }
