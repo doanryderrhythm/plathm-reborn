@@ -60,11 +60,11 @@ public class MusicNote : MonoBehaviour
         {
             if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
             {
-                Debug.Log("Damaged by MIDDLE SPIKE");
+                Instantiate(editorManager.spikesPrefab, ValueStorer.middleLanePosition, Quaternion.identity);
             }
             else
             {
-                Instantiate(editorManager.spikesPrefab, ValueStorer.middleLanePosition, Quaternion.identity);
+                Debug.Log("Avoided MIDDLE SPIKE");
             }
 
             SwitchToUsedFolder();
@@ -75,12 +75,12 @@ public class MusicNote : MonoBehaviour
         {
             if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
             {
-                Debug.Log("Damaged by SIDE SPIKE");
+                Instantiate(editorManager.spikesPrefab, ValueStorer.leftLanePosition, Quaternion.identity);
+                Instantiate(editorManager.spikesPrefab, ValueStorer.rightLanePosition, Quaternion.identity);
             }
             else
             {
-                Instantiate(editorManager.spikesPrefab, ValueStorer.leftLanePosition, Quaternion.identity);
-                Instantiate(editorManager.spikesPrefab, ValueStorer.rightLanePosition, Quaternion.identity);
+                Debug.Log("Avoided SIDE SPIKE");
             }
 
             SwitchToUsedFolder();

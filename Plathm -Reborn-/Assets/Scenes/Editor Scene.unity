@@ -2446,7 +2446,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27250647137a75d4ea944bb2d3c2890b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestPlayer
-  lanePosition: 1
+  lanePosition: 2
   moveLeftAction:
     m_Name: Move Left
     m_Type: 0

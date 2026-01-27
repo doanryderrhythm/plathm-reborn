@@ -623,6 +623,41 @@ public class EditorManager : MonoBehaviour
         if (playMode == false)
         {
             scrollPlayfield.transform.position = Vector3.zero;
+            ReenableNotes();
+        }
+    }
+
+    void ReenableNotes()
+    {
+        var usedNotes = usedNotesFolder.transform;
+
+        for (int i = usedNotes.childCount - 1; i >= 0; i--)
+        {
+            Transform note = usedNotes.GetChild(i);
+            if (!note)
+            {
+                continue;
+            }
+
+            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+            if (!musicNote)
+            {
+                continue;
+            }
+
+            switch (musicNote.GetNoteType())
+            {
+                case MusicNote.NoteType.TAP_NOTE: note.SetParent(tapFolder.transform, false); break;
+                case MusicNote.NoteType.BLACK_NOTE: note.SetParent(blackFolder.transform, false); break;
+                case MusicNote.NoteType.LEFT_TELEPORT: note.SetParent(leftTeleportFolder.transform, false); break;
+                case MusicNote.NoteType.RIGHT_TELEPORT: note.SetParent(rightTeleportFolder.transform, false); break;
+                case MusicNote.NoteType.SLICE_NOTE: note.SetParent(sliceFolder.transform, false); break;
+                case MusicNote.NoteType.MIDDLE_SPIKE: note.SetParent(spikeFolder.transform, false); break;
+                case MusicNote.NoteType.SIDE_SPIKE: note.SetParent(spikeFolder.transform, false); break;
+                default: continue;
+            }
+
+            note.gameObject.SetActive(true);
         }
     }
 }
