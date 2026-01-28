@@ -4,6 +4,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using System.Collections;
+using System.Linq;
 
 public class EditorManager : MonoBehaviour
 {
@@ -45,6 +47,11 @@ public class EditorManager : MonoBehaviour
     private Vector3 worldPosition;
     [SerializeField] EditOption editOption;
 
+    //Undo & Redo System shenanigans
+    private Stack<EditorCommand> undoCommandStack;
+    private Stack<EditorCommand> redoCommandStack;
+    private Vector3 noteOriginalPosition; //move note
+
     [Space(10.0f)]
     //Gameplay shenanigans
     private HashSet<Key> reservedTapKeys;
@@ -74,6 +81,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject rightTeleportFolder;
     [SerializeField] GameObject spikeFolder;
     [SerializeField] GameObject usedNotesFolder;
+    [SerializeField] GameObject undoRedoFolder;
 
     [Header("Note Types")]
     [SerializeField] GameObject tapNotePrefab;
@@ -112,6 +120,8 @@ public class EditorManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] TMP_Dropdown noteSelectDropDown;
 
+    //[Header("Undo & Redo")]
+
     private void Awake()
     {
         mainCamera = GameObject.FindFirstObjectByType<Camera>();
@@ -121,6 +131,11 @@ public class EditorManager : MonoBehaviour
 
         reservedTapKeys = new HashSet<Key>();
         reservedBlackKeys = new HashSet<Key>();
+
+        undoCommandStack = new Stack<EditorCommand>();
+        undoCommandStack.Clear();
+        redoCommandStack = new Stack<EditorCommand>();
+        redoCommandStack.Clear();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -153,9 +168,16 @@ public class EditorManager : MonoBehaviour
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
                 draggedNote = FindSmallestDistanceNote(worldPosition);
+                if (draggedNote)
+                {
+                    noteOriginalPosition = draggedNote.gameObject.transform.position;
+                }
             }
-            else if (Mouse.current.leftButton.wasReleasedThisFrame)
+            else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote)
             {
+                CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(draggedNote.gameObject, noteOriginalPosition, draggedNote.gameObject.transform.position);
+                OverrideCommand(commandMoveOneNote);
+
                 draggedNote = null;
             }
             else if (Mouse.current.leftButton.isPressed && draggedNote)
@@ -364,7 +386,13 @@ public class EditorManager : MonoBehaviour
 
             if (isWithinArea)
             {
-                Destroy(note.gameObject);
+                CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, noteTransform.position);
+                OverrideCommand(commandDeleteOneNote);
+
+                noteTransform.SetParent(undoRedoFolder.transform, true);
+                note.gameObject.SetActive(false);
+
+                Debug.Log(undoCommandStack.Count);
             }
         }
     }
@@ -457,6 +485,9 @@ public class EditorManager : MonoBehaviour
             }
             default: break;
         }
+
+        CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.transform.position);
+        OverrideCommand(commandAddOneNote);
     }
 
     void MoveNote()
@@ -660,4 +691,100 @@ public class EditorManager : MonoBehaviour
             note.gameObject.SetActive(true);
         }
     }
+
+    void ReenableOneNote(GameObject note)
+    {
+        MusicNote musicNote = note.GetComponent<MusicNote>();
+        Transform noteTransform = musicNote.transform;
+
+        switch (musicNote.GetNoteType())
+        {
+            case MusicNote.NoteType.TAP_NOTE: noteTransform.SetParent(tapFolder.transform, false); break;
+            case MusicNote.NoteType.BLACK_NOTE: noteTransform.SetParent(blackFolder.transform, false); break;
+            case MusicNote.NoteType.LEFT_TELEPORT: noteTransform.SetParent(leftTeleportFolder.transform, false); break;
+            case MusicNote.NoteType.RIGHT_TELEPORT: noteTransform.SetParent(rightTeleportFolder.transform, false); break;
+            case MusicNote.NoteType.SLICE_NOTE: noteTransform.SetParent(sliceFolder.transform, false); break;
+            case MusicNote.NoteType.MIDDLE_SPIKE: noteTransform.SetParent(spikeFolder.transform, false); break;
+            case MusicNote.NoteType.SIDE_SPIKE: noteTransform.SetParent(spikeFolder.transform, false); break;
+            default: break;
+        }
+
+        musicNote.gameObject.SetActive(true);
+    }
+
+    public void UndoCommand()
+    {
+        if (undoCommandStack.Count == 0)
+        {
+            return;
+        }
+
+        EditorCommand poppedCommand = undoCommandStack.Pop();
+        poppedCommand.UndoCommand();
+        redoCommandStack.Push(poppedCommand);
+    }
+
+    public void RedoCommand()
+    {
+        if (redoCommandStack.Count == 0)
+        {
+            return;
+        }
+
+        EditorCommand poppedCommand = redoCommandStack.Pop();
+        poppedCommand.RedoCommand();
+        undoCommandStack.Push(poppedCommand);
+    }
+
+    void OverrideCommand(EditorCommand command)
+    {
+        undoCommandStack.Push(command);
+        foreach (var cmd in redoCommandStack)
+        {
+            cmd.FreeCommand();
+        }
+        redoCommandStack.Clear();
+    }
+
+    #region Undo
+
+    public void UndoAddOneNote(GameObject noteObject)
+    {
+        noteObject.SetActive(false);
+        noteObject.transform.SetParent(undoRedoFolder.transform, true);
+    }
+
+    public void UndoMoveOneNote(GameObject noteObject, Vector3 noteOriginalPosition)
+    {
+        noteObject.transform.position = noteOriginalPosition;
+    }
+
+    public void UndoDeleteOneNote(GameObject noteObject, Vector3 notePosition)
+    {
+        ReenableOneNote(noteObject);
+        noteObject.transform.position = notePosition;
+    }
+
+    #endregion
+
+    #region Redo
+
+    public void RedoAddOneNote(GameObject noteObject, Vector3 notePosition)
+    {
+        ReenableOneNote(noteObject);
+        noteObject.transform.position = notePosition;
+    }
+
+    public void RedoMoveOneNote(GameObject noteObject, Vector3 noteNewPosition)
+    {
+        noteObject.transform.position = noteNewPosition;
+    }
+
+    public void RedoDeleteOneNote(GameObject noteObject)
+    {
+        noteObject.SetActive(false);
+        noteObject.transform.SetParent(undoRedoFolder.transform, true);
+    }
+
+    #endregion
 }
