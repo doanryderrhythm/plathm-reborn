@@ -44,7 +44,8 @@ public class EditorManager : MonoBehaviour
 
     //Chart shenanigans
     private Camera mainCamera;
-    private Vector3 worldPosition;
+    public Vector3 worldPosition;
+    public float verticalGridValue;
     [SerializeField] EditOption editOption;
 
     //Undo & Redo System shenanigans
@@ -62,7 +63,7 @@ public class EditorManager : MonoBehaviour
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
     [SerializeField] NoteTypeGeneral selectedNoteType;
-    [SerializeField] MusicNote draggedNote;
+    public MusicNote draggedNote;
 
     [Header("Editor Settings")]
     public bool playMode = false;
@@ -171,6 +172,11 @@ public class EditorManager : MonoBehaviour
                 if (draggedNote)
                 {
                     noteOriginalPosition = draggedNote.gameObject.transform.position;
+                    if (draggedNote.GetNoteType() == MusicNote.NoteType.TAP_NOTE ||
+                        draggedNote.GetNoteType() == MusicNote.NoteType.BLACK_NOTE)
+                    {
+                        verticalGridValue = noteOriginalPosition.x;
+                    }
                 }
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote)
@@ -423,13 +429,25 @@ public class EditorManager : MonoBehaviour
         {
             case NoteTypeGeneral.TAP_NOTE:
             {
-                confirmedNote = Instantiate(tapNotePrefab, targetPosition, Quaternion.identity) as GameObject;
+                GameObject hoveredVerticalGrid = GetHoveredVerticalGrid();
+                if (!hoveredVerticalGrid)
+                {
+                    return;
+                }
+
+                confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 confirmedNote.transform.SetParent(tapFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.BLACK_NOTE:
             {
-                confirmedNote = Instantiate(blackNotePrefab, targetPosition, Quaternion.identity) as GameObject;
+                GameObject hoveredVerticalGrid = GetHoveredVerticalGrid();
+                if (!hoveredVerticalGrid)
+                {
+                    return;
+                }
+
+                confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 confirmedNote.transform.SetParent(blackFolder.transform, true);
                 break;
             }
@@ -529,19 +547,13 @@ public class EditorManager : MonoBehaviour
             {
                 xPos = ValueStorer.minLeftLaneX;
             }
-            else if (xPos > ValueStorer.maxLeftLaneX && xPos < ValueStorer.minMiddleLaneX)
-            {
-                if (currentXPos >= ValueStorer.minLeftLaneX && currentXPos <= ValueStorer.maxLeftLaneX) xPos = ValueStorer.maxLeftLaneX;
-                else if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.minMiddleLaneX;
-            }
-            else if (xPos > ValueStorer.maxMiddleLaneX && xPos < ValueStorer.minRightLaneX)
-            {
-                if (currentXPos >= ValueStorer.minMiddleLaneX && currentXPos <= ValueStorer.maxMiddleLaneX) xPos = ValueStorer.maxMiddleLaneX;
-                else if (currentXPos >= ValueStorer.minRightLaneX && currentXPos <= ValueStorer.maxRightLaneX) xPos = ValueStorer.minRightLaneX;
-            }
             else if (xPos > ValueStorer.maxRightLaneX)
             {
                 xPos = ValueStorer.maxRightLaneX;
+            }
+            else
+            {
+                xPos = verticalGridValue;
             }
         }
 
@@ -617,15 +629,18 @@ public class EditorManager : MonoBehaviour
 
     LanePosition CheckCorrectLane(Vector3 targetPosition)
     {
-        if (targetPosition.x >= ValueStorer.minLeftLaneX && targetPosition.x <= ValueStorer.maxLeftLaneX)
+        if (targetPosition.x >= ValueStorer.minLeftLaneX - ValueStorer.gridOffset &&
+            targetPosition.x <= ValueStorer.maxLeftLaneX + ValueStorer.gridOffset)
         {
             return LanePosition.LEFT_POS;
         }
-        else if (targetPosition.x >= ValueStorer.minMiddleLaneX && targetPosition.x <= ValueStorer.maxMiddleLaneX)
+        else if (targetPosition.x >= ValueStorer.minMiddleLaneX - ValueStorer.gridOffset &&
+            targetPosition.x <= ValueStorer.maxMiddleLaneX + ValueStorer.gridOffset)
         {
             return LanePosition.MIDDLE_POS;
         }
-        else if (targetPosition.x >= ValueStorer.minRightLaneX && targetPosition.x <= ValueStorer.maxRightLaneX)
+        else if (targetPosition.x >= ValueStorer.minRightLaneX - ValueStorer.gridOffset &&
+            targetPosition.x <= ValueStorer.maxRightLaneX + ValueStorer.gridOffset)
         {
             return LanePosition.RIGHT_POS;
         }
@@ -710,6 +725,20 @@ public class EditorManager : MonoBehaviour
         }
 
         musicNote.gameObject.SetActive(true);
+    }
+
+    GameObject GetHoveredVerticalGrid()
+    {
+        GameObject[] grids = GameObject.FindGameObjectsWithTag(ValueStorer.tagVerticalGrid);
+        foreach (GameObject grid in grids)
+        {
+            VerticalGrid verticalGrid = grid.GetComponent<VerticalGrid>();
+            if (verticalGrid.isHovered)
+            {
+                return grid;
+            }
+        }
+        return null;
     }
 
     public void UndoCommand()

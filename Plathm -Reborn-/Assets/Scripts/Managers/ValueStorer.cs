@@ -44,4 +44,11 @@ public class ValueStorer : MonoBehaviour
     public static float teleportHeight = 1.0f;
     public static float sliceHeight = 0.8f;
     public static float spikeHeight = 0.3f;
+
+    public static Color32 gridDefaultColor = new Color32(180, 180, 180, 255);
+    public static Color32 gridSelectedColor = new Color32(255, 255, 75, 255);
+    public static float gridOffset = 0.2f;
+
+    public static string tagVerticalGrid = "Vertical Grid";
+    public static string tagGrid = "Grid";
 }
