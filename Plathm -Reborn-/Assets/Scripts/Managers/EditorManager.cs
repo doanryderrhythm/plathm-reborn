@@ -93,6 +93,9 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject middleSpikePrefab;
     [SerializeField] GameObject sideSpikePrefab;
 
+    [Header("Music")]
+    [SerializeField] AudioSource audioSource;
+
     [Header("Gameplay")]
     public float scrollSpeed;
     [SerializeField] GameObject scrollPlayfield;
@@ -120,6 +123,7 @@ public class EditorManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] TMP_Dropdown noteSelectDropDown;
+    [SerializeField] TMP_Text currentTimingText;
 
     //[Header("Undo & Redo")]
 
@@ -148,6 +152,15 @@ public class EditorManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (audioSource != null && audioSource.clip != null)
+        {
+            currentTimingText.text = ValueStorer.currentTimingText + ((int)(audioSource.time * 100)).ToString();
+        }
+        else
+        {
+            currentTimingText.text = ValueStorer.currentTimingText + "0";
+        }
+
         ConvertFromMouseToWorld();
 
         if (!playMode

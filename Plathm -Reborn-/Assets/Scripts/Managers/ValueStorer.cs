@@ -51,4 +51,6 @@ public class ValueStorer : MonoBehaviour
 
     public static string tagVerticalGrid = "Vertical Grid";
     public static string tagGrid = "Grid";
+
+    public static string currentTimingText = "Current Timing: ";
 }
