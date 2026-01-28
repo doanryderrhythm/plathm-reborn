@@ -97,6 +97,9 @@ public class CommandDeleteOneNote : EditorCommand
     }
     public override void FreeCommand()
     {
-        
+        if (noteObject != null && !noteObject.activeSelf)
+        {
+            MonoBehaviour.Destroy(this.noteObject);
+        }
     }
 }
