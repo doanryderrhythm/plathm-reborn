@@ -67,6 +67,9 @@ public class EditorManager : MonoBehaviour
     [SerializeField] NoteTypeGeneral selectedNoteType;
     public MusicNote draggedNote;
 
+    [Space(10.0f)]
+    [SerializeField] GameObject mainBeatPrefab;
+
     [Header("Editor Settings")]
     public bool playMode = false;
     public float chartOffset = 0f;
@@ -87,6 +90,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject spikeFolder;
     [SerializeField] GameObject usedNotesFolder;
     [SerializeField] GameObject undoRedoFolder;
+    [SerializeField] GameObject beatLinesFolder;
 
     [Header("Note Types")]
     [SerializeField] GameObject tapNotePrefab;
@@ -125,6 +129,7 @@ public class EditorManager : MonoBehaviour
     public GameObject spikesPrefab;
 
     [Header("UI")]
+    [SerializeField] UIManager uiManager;
     [SerializeField] TMP_Dropdown noteSelectDropDown;
     //Texts
     [Space(10.0f)]
@@ -166,7 +171,7 @@ public class EditorManager : MonoBehaviour
     {
         if (audioSource != null && audioSource.clip != null)
         {
-            currentTimingText.text = ValueStorer.currentTimingText + ((int)(audioSource.time * 100)).ToString();
+            currentTimingText.text = ValueStorer.currentTimingText + ((int)(audioSource.time * 1000)).ToString();
         }
         else
         {
@@ -842,6 +847,55 @@ public class EditorManager : MonoBehaviour
         return null;
     }
 
+    public void ApplyTimingBPM()
+    {
+        foreach (Transform beatLineT in beatLinesFolder.transform)
+        {
+            if (beatLineT)
+            {
+                Destroy(beatLineT.gameObject);
+            }
+        }
+        
+        if (!audioSource.clip || chartSpeed == 0)
+        {
+            return;
+        }
+
+        float tempTiming = 0;
+        BPMStorer[] timingItems = uiManager.GetTimingItems().ToArray();
+
+        for (int i = 0; i < timingItems.Length; i++)
+        {
+            tempTiming = timingItems[i].timing;
+            int mainBeatCount = 0;
+
+            while (i + 1 != timingItems.Length && tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
+            {
+                Debug.Log(tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f);
+                float totalTiming = tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f;
+                GameObject beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
+                mainBeatCount++;
+            }
+
+            mainBeatCount = 0;
+
+            while (i + 1 == timingItems.Length && tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
+            {
+                Debug.Log(tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f);
+                float totalTiming = tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f;
+                GameObject beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
+                mainBeatCount++;
+            }
+
+            mainBeatCount = 0;
+        }
+    }
+
+    #region Undo & Redo Stack
+
     public void UndoCommand()
     {
         if (undoCommandStack.Count == 0)
@@ -875,6 +929,8 @@ public class EditorManager : MonoBehaviour
         }
         redoCommandStack.Clear();
     }
+
+    #endregion
 
     #region Undo
 
