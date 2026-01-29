@@ -52,6 +52,7 @@ public class EditorManager : MonoBehaviour
     //Undo & Redo System shenanigans
     private Stack<EditorCommand> undoCommandStack;
     private Stack<EditorCommand> redoCommandStack;
+    private float noteOriginalTiming;     //move note
     private Vector3 noteOriginalPosition; //move note
 
     [Space(10.0f)]
@@ -195,6 +196,7 @@ public class EditorManager : MonoBehaviour
                 draggedNote = FindSmallestDistanceNote(worldPosition);
                 if (draggedNote)
                 {
+                    noteOriginalTiming = draggedNote.timing;
                     noteOriginalPosition = draggedNote.gameObject.transform.position;
                     if (draggedNote.GetNoteType() == MusicNote.NoteType.TAP_NOTE ||
                         draggedNote.GetNoteType() == MusicNote.NoteType.BLACK_NOTE)
@@ -205,7 +207,12 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote)
             {
-                CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(draggedNote.gameObject, noteOriginalPosition, draggedNote.gameObject.transform.position);
+                CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(
+                    draggedNote.gameObject, 
+                    noteOriginalTiming, 
+                    draggedNote.timing, 
+                    noteOriginalPosition.x, 
+                    draggedNote.gameObject.transform.position.x);
                 OverrideCommand(commandMoveOneNote);
 
                 draggedNote = null;
@@ -432,7 +439,7 @@ public class EditorManager : MonoBehaviour
 
             if (isWithinArea)
             {
-                CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, noteTransform.position);
+                CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, note.timing, noteTransform.position.x);
                 OverrideCommand(commandDeleteOneNote);
 
                 noteTransform.SetParent(undoRedoFolder.transform, true);
@@ -556,7 +563,7 @@ public class EditorManager : MonoBehaviour
             default: break;
         }
 
-        CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.transform.position);
+        CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.GetComponent<MusicNote>().timing, confirmedNote.transform.position.x);
         OverrideCommand(commandAddOneNote);
     }
 
@@ -877,30 +884,49 @@ public class EditorManager : MonoBehaviour
         noteObject.transform.SetParent(undoRedoFolder.transform, true);
     }
 
-    public void UndoMoveOneNote(GameObject noteObject, Vector3 noteOriginalPosition)
+    public void UndoMoveOneNote(GameObject noteObject, float originalTiming, float noteOriginalPosition)
     {
-        noteObject.transform.position = noteOriginalPosition;
+        noteObject.transform.position = new Vector3(noteOriginalPosition, originalTiming * chartSpeed, 0);
     }
 
-    public void UndoDeleteOneNote(GameObject noteObject, Vector3 notePosition)
+    public void UndoDeleteOneNote(GameObject noteObject, float timing, float notePosition)
     {
         ReenableOneNote(noteObject);
-        noteObject.transform.position = notePosition;
+        noteObject.transform.position = new Vector3(notePosition, timing * chartSpeed, 0);
+    }
+
+    public void UndoChangeOffset(float offset)
+    {
+        float originalOffset = chartOffset;
+        chartOffset = offset;
+
+        offsetInputField.text = chartOffset.ToString();
+
+        ReloadChartOffsetVisuals(originalOffset);
+    }
+
+    public void UndoChangeSpeed(float speed)
+    {
+        chartSpeed = speed;
+
+        speedInputField.text = chartSpeed.ToString();
+
+        ReloadChartSpeedVisuals();
     }
 
     #endregion
 
     #region Redo
 
-    public void RedoAddOneNote(GameObject noteObject, Vector3 notePosition)
+    public void RedoAddOneNote(GameObject noteObject, float timing, float notePosition)
     {
         ReenableOneNote(noteObject);
-        noteObject.transform.position = notePosition;
+        noteObject.transform.position = new Vector3(notePosition, timing * chartSpeed, 0);
     }
 
-    public void RedoMoveOneNote(GameObject noteObject, Vector3 noteNewPosition)
+    public void RedoMoveOneNote(GameObject noteObject, float newTiming, float noteNewPosition)
     {
-        noteObject.transform.position = noteNewPosition;
+        noteObject.transform.position = new Vector3(noteNewPosition, newTiming * chartSpeed, 0);
     }
 
     public void RedoDeleteOneNote(GameObject noteObject)
@@ -909,20 +935,31 @@ public class EditorManager : MonoBehaviour
         noteObject.transform.SetParent(undoRedoFolder.transform, true);
     }
 
+    public void RedoChangeOffset(float offset)
+    {
+        float originalOffset = chartOffset;
+        chartOffset = offset;
+
+        offsetInputField.text = chartOffset.ToString();
+
+        ReloadChartOffsetVisuals(originalOffset);
+    }
+
+    public void RedoChangeSpeed(float speed)
+    {
+        chartSpeed = speed;
+
+        speedInputField.text = chartSpeed.ToString();
+
+        ReloadChartSpeedVisuals();
+    }
+
     #endregion
 
     #region Chart Properties
 
-    public void ChangeChartOffset()
+    void ReloadChartOffsetVisuals(float originalOffset)
     {
-        float originalOffset = chartOffset;
-
-        bool isParsed = float.TryParse(offsetInputField.text, out chartOffset);
-        if (!isParsed)
-        {
-            chartOffset = 0;
-        }
-
         chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
 
         ChangePositionsThroughOffset(tapFolder.transform, originalOffset);
@@ -935,14 +972,8 @@ public class EditorManager : MonoBehaviour
         ChangePositionsThroughOffset(undoRedoFolder.transform, originalOffset);
     }
 
-    public void ChangeChartSpeed()
+    void ReloadChartSpeedVisuals()
     {
-        bool isParsed = float.TryParse(speedInputField.text, out chartSpeed);
-        if (!isParsed)
-        {
-            chartSpeed = 1;
-        }
-
         chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
 
         ChangePositionsThroughSpeed(tapFolder.transform);
@@ -953,6 +984,38 @@ public class EditorManager : MonoBehaviour
         ChangePositionsThroughSpeed(spikeFolder.transform);
         ChangePositionsThroughSpeed(usedNotesFolder.transform);
         ChangePositionsThroughSpeed(undoRedoFolder.transform);
+    }
+
+    public void ChangeChartOffset()
+    {
+        float originalOffset = chartOffset;
+
+        bool isParsed = float.TryParse(offsetInputField.text, out chartOffset);
+        if (!isParsed)
+        {
+            chartOffset = 0;
+        }
+
+        ReloadChartOffsetVisuals(originalOffset);
+
+        CommandChangeOffset commandChangeOffset = new CommandChangeOffset(originalOffset, chartOffset);
+        OverrideCommand(commandChangeOffset);
+    }
+
+    public void ChangeChartSpeed()
+    {
+        float originalSpeed = chartSpeed;
+
+        bool isParsed = float.TryParse(speedInputField.text, out chartSpeed);
+        if (!isParsed)
+        {
+            chartSpeed = 1;
+        }
+
+        ReloadChartSpeedVisuals();
+
+        CommandChangeSpeed commandChangeSpeed = new CommandChangeSpeed(originalSpeed, chartSpeed);
+        OverrideCommand(commandChangeSpeed);
     }
 
     #endregion

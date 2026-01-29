@@ -21,13 +21,15 @@ public class EditorCommand
 public class CommandAddOneNote : EditorCommand
 {
     private GameObject noteObject;
-    private Vector3 notePosition;
+    private float timing;
+    private float notePosition;
 
-    public CommandAddOneNote(GameObject noteObject, Vector3 notePosition)
+    public CommandAddOneNote(GameObject noteObject, float timing, float notePosition)
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
 
         this.noteObject = noteObject;
+        this.timing = timing;
         this.notePosition = notePosition;
     }
 
@@ -37,7 +39,7 @@ public class CommandAddOneNote : EditorCommand
     }
     public override void RedoCommand()
     {
-        editorManager.RedoAddOneNote(this.noteObject, this.notePosition);
+        editorManager.RedoAddOneNote(this.noteObject, this.timing, this.notePosition);
     }
     public override void FreeCommand()
     {
@@ -48,25 +50,29 @@ public class CommandAddOneNote : EditorCommand
 public class CommandMoveOneNote : EditorCommand
 {
     private GameObject noteObject;
-    private Vector3 noteOriginalPosition;
-    private Vector3 noteNewPosition;
+    private float originalTiming;
+    private float newTiming;
+    private float noteOriginalPosition;
+    private float noteNewPosition;
 
-    public CommandMoveOneNote(GameObject noteObject, Vector3 noteOriginalPosition, Vector3 noteNewPosition)
+    public CommandMoveOneNote(GameObject noteObject, float originalTiming, float newTiming, float noteOriginalPosition, float noteNewPosition)
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
 
         this.noteObject = noteObject;
+        this.originalTiming = originalTiming;
+        this.newTiming = newTiming;
         this.noteOriginalPosition = noteOriginalPosition;
         this.noteNewPosition = noteNewPosition;
     }
 
     public override void UndoCommand()
     {
-        editorManager.UndoMoveOneNote(noteObject, noteOriginalPosition);
+        editorManager.UndoMoveOneNote(this.noteObject, this.originalTiming, this.noteOriginalPosition);
     }
     public override void RedoCommand()
     {
-        editorManager.RedoMoveOneNote(noteObject, noteNewPosition);
+        editorManager.RedoMoveOneNote(this.noteObject, this.newTiming, this.noteNewPosition);
     }
     public override void FreeCommand()
     {
@@ -77,19 +83,21 @@ public class CommandMoveOneNote : EditorCommand
 public class CommandDeleteOneNote : EditorCommand
 {
     private GameObject noteObject;
-    private Vector3 noteDeletedPosition;
+    private float timing;
+    private float noteDeletedPosition;
 
-    public CommandDeleteOneNote(GameObject noteObject, Vector3 noteDeletedPosition)
+    public CommandDeleteOneNote(GameObject noteObject, float timing, float noteDeletedPosition)
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
 
         this.noteObject = noteObject;
+        this.timing = timing;
         this.noteDeletedPosition = noteDeletedPosition;
     }
 
     public override void UndoCommand()
     {
-        editorManager.UndoDeleteOneNote(noteObject, noteDeletedPosition);
+        editorManager.UndoDeleteOneNote(this.noteObject, this.timing, this.noteDeletedPosition);
     }
     public override void RedoCommand()
     {
@@ -101,5 +109,63 @@ public class CommandDeleteOneNote : EditorCommand
         {
             MonoBehaviour.Destroy(this.noteObject);
         }
+    }
+}
+
+public class CommandChangeOffset : EditorCommand
+{
+    private float previousOffset;
+    private float nextOffset;
+
+    public CommandChangeOffset(float previousOffset, float nextOffset)
+    {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+
+        this.previousOffset = previousOffset;
+        this.nextOffset = nextOffset;
+    }
+
+    public override void UndoCommand()
+    {
+        editorManager.UndoChangeOffset(this.previousOffset);
+    }
+
+    public override void RedoCommand()
+    {
+        editorManager.RedoChangeOffset(this.nextOffset);
+    }
+
+    public override void FreeCommand()
+    {
+        
+    }
+}
+
+public class CommandChangeSpeed : EditorCommand
+{
+    private float previousSpeed;
+    private float nextSpeed;
+
+    public CommandChangeSpeed(float previousSpeed, float nextSpeed)
+    {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+
+        this.previousSpeed = previousSpeed;
+        this.nextSpeed = nextSpeed;
+    }
+
+    public override void UndoCommand()
+    {
+        editorManager.UndoChangeSpeed(this.previousSpeed);
+    }
+
+    public override void RedoCommand()
+    {
+        editorManager.RedoChangeSpeed(this.nextSpeed);
+    }
+
+    public override void FreeCommand()
+    {
+
     }
 }

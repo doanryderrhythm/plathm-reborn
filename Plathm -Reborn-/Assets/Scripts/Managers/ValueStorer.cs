@@ -55,4 +55,7 @@ public class ValueStorer : MonoBehaviour
     public static string currentTimingText = "Current Timing: ";
     public static string chartOffsetText = "Chart Offset: ";
     public static string chartSpeedText = "Chart Speed: ";
+
+    public static string triggerInfoOpen = "Chart Info Open";
+    public static string triggerInfoClose = "Chart Info Close";
 }
