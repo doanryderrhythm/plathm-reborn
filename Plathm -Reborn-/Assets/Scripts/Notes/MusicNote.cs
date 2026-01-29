@@ -18,6 +18,8 @@ public class MusicNote : MonoBehaviour
         SIDE_SPIKE,
     }
 
+    public float timing;
+
     [SerializeField] NoteType noteType;
     [SerializeField] bool isBlackActivated = false;
 
@@ -42,7 +44,7 @@ public class MusicNote : MonoBehaviour
         }
 
         //Not checking negative timing in notes
-        if (this.transform.position.y > 0)
+        if (timing > 0)
         {
             return;
         }
@@ -88,7 +90,7 @@ public class MusicNote : MonoBehaviour
         }
 
         //Check missed notes
-        if (this.transform.position.y < -ValueStorer.goodJudgement * editorManager.scrollSpeed && editorManager.playMode)
+        if (timing - editorManager.audioSource.time < -ValueStorer.goodJudgement && editorManager.playMode)
         {
             SwitchToUsedFolder();
         }    
@@ -101,7 +103,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (Mathf.Abs(this.transform.position.y) > ValueStorer.goodJudgement * editorManager.scrollSpeed)
+        if (Mathf.Abs(timing - editorManager.audioSource.time) > ValueStorer.goodJudgement)
         {
             return;
         }
@@ -129,21 +131,21 @@ public class MusicNote : MonoBehaviour
     {
         GameObject judgementSelected = null;
 
-        if (Mathf.Abs(this.transform.position.y) <= ValueStorer.cPerfectJudgement * editorManager.scrollSpeed)
+        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.cPerfectJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.CPERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             return;
         }
 
-        if (Mathf.Abs(this.transform.position.y) <= ValueStorer.perfectJudgement * editorManager.scrollSpeed)
+        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.perfectJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.PERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             return;
         }
 
-        if (Mathf.Abs(this.transform.position.y) <= ValueStorer.goodJudgement * editorManager.scrollSpeed)
+        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.goodJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.GOOD);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);

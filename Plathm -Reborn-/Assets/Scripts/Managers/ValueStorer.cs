@@ -53,4 +53,6 @@ public class ValueStorer : MonoBehaviour
     public static string tagGrid = "Grid";
 
     public static string currentTimingText = "Current Timing: ";
+    public static string chartOffsetText = "Chart Offset: ";
+    public static string chartSpeedText = "Chart Speed: ";
 }

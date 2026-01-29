@@ -1,11 +1,12 @@
 using System;
-using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.InputSystem;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using TMPro;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class EditorManager : MonoBehaviour
 {
@@ -67,6 +68,8 @@ public class EditorManager : MonoBehaviour
 
     [Header("Editor Settings")]
     public bool playMode = false;
+    public float chartOffset = 0f;
+    public float chartSpeed = 1f;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
@@ -94,10 +97,9 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject sideSpikePrefab;
 
     [Header("Music")]
-    [SerializeField] AudioSource audioSource;
+    public AudioSource audioSource;
 
     [Header("Gameplay")]
-    public float scrollSpeed;
     [SerializeField] GameObject scrollPlayfield;
 
     [Header("Judgement VFX")]
@@ -123,7 +125,15 @@ public class EditorManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] TMP_Dropdown noteSelectDropDown;
+    //Texts
+    [Space(10.0f)]
     [SerializeField] TMP_Text currentTimingText;
+    [SerializeField] TMP_Text chartOffsetText;
+    [SerializeField] TMP_Text chartSpeedText;
+    //Input Fields
+    [Space(10.0f)]
+    [SerializeField] TMP_InputField offsetInputField;
+    [SerializeField] TMP_InputField speedInputField;
 
     //[Header("Undo & Redo")]
 
@@ -146,6 +156,7 @@ public class EditorManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        InitiateUI();
         RebuildReservedKeys();
     }
 
@@ -217,7 +228,7 @@ public class EditorManager : MonoBehaviour
 
         if (playMode)
         {
-            scrollPlayfield.transform.position -= new Vector3(0, scrollSpeed * Time.deltaTime, 0);
+            scrollPlayfield.transform.position = new Vector3(0, - chartSpeed * audioSource.time, 0);
         }
 
         if (isAnyKeyHolding && isBlackKeyReserved)
@@ -261,6 +272,12 @@ public class EditorManager : MonoBehaviour
                 reservedKeys.Add(key);
             }
         }
+    }
+
+    void InitiateUI()
+    {
+        chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
+        chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
     }
 
     void RebuildReservedKeys()
@@ -341,19 +358,30 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        Transform lowestNote = null;
+        MusicNote lowestNote = null;
 
         foreach (Transform child in folder.transform)
         {
-            if (!lowestNote)
+            if (!child)
             {
-                lowestNote = child;
                 continue;
             }
 
-            if (child.position.y < lowestNote.position.y)
+            MusicNote note = child.gameObject.GetComponent<MusicNote>();
+            if (!note)
             {
-                lowestNote = child;
+                continue;
+            }
+
+            if (!lowestNote)
+            {
+                lowestNote = note;
+                continue;
+            }
+
+            if (note.timing < lowestNote.timing)
+            {
+                lowestNote = note;
             }
         }
 
@@ -362,8 +390,7 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        MusicNote musicNote = lowestNote.gameObject.GetComponent<MusicNote>();
-        musicNote?.ExecuteNote();
+        lowestNote.ExecuteNote();
     }
 
     public void SwitchToUsedFolder(Transform usedNote)
@@ -425,6 +452,12 @@ public class EditorManager : MonoBehaviour
 
     void InsertNote(Vector3 targetPosition)
     {
+        if (chartSpeed == 0f)
+        {
+            Debug.Log("You can only run the chart with speed being 0.");
+            return;
+        }
+
         if (!isNoteTypeSelected)
         {
             return;
@@ -449,6 +482,7 @@ public class EditorManager : MonoBehaviour
                 }
 
                 confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(tapFolder.transform, true);
                 break;
             }
@@ -461,6 +495,7 @@ public class EditorManager : MonoBehaviour
                 }
 
                 confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(blackFolder.transform, true);
                 break;
             }
@@ -476,6 +511,7 @@ public class EditorManager : MonoBehaviour
                     confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
 
                 confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(leftTeleportFolder.transform, true);
                 break;
             }
@@ -491,12 +527,14 @@ public class EditorManager : MonoBehaviour
                     confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
 
                 confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(rightTeleportFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.SLICE_NOTE:
             {
                 confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(sliceFolder.transform, true);
                 break;
             }
@@ -511,6 +549,7 @@ public class EditorManager : MonoBehaviour
                 {
                     confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 }
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(spikeFolder.transform, true);
                 break;
             }
@@ -523,6 +562,12 @@ public class EditorManager : MonoBehaviour
 
     void MoveNote()
     {
+        if (chartSpeed == 0f)
+        {
+            Debug.Log("You can only run the chart with speed being 0.");
+            return;
+        }
+
         float currentXPos = draggedNote.gameObject.transform.position.x;
 
         float xPos = worldPosition.x;
@@ -571,6 +616,7 @@ public class EditorManager : MonoBehaviour
         }
 
         draggedNote.gameObject.transform.position = new Vector3(xPos, yPos, 0);
+        draggedNote.timing = draggedNote.gameObject.transform.localPosition.y / chartSpeed;
     }
 
     List<Transform> FindAppropriateNotesInFolder(Vector3 targetPosition, Transform folder)
@@ -681,8 +727,14 @@ public class EditorManager : MonoBehaviour
 
         if (playMode == false)
         {
+            audioSource.Stop();
+
             scrollPlayfield.transform.position = Vector3.zero;
             ReenableNotes();
+        }
+        else
+        {
+            audioSource.Play();
         }
     }
 
@@ -738,6 +790,35 @@ public class EditorManager : MonoBehaviour
         }
 
         musicNote.gameObject.SetActive(true);
+    }
+
+    void ChangePositionsThroughSpeed(Transform folder)
+    {
+        foreach (Transform note in folder.transform)
+        {
+            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+            if (!musicNote)
+            {
+                continue;
+            }
+
+            note.position = new Vector3(note.position.x, musicNote.timing * chartSpeed, 0);
+        }
+    }
+
+    void ChangePositionsThroughOffset(Transform folder, float originalOffset)
+    {
+        foreach (Transform note in folder.transform)
+        {
+            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+            if (!musicNote)
+            {
+                continue;
+            }
+
+            musicNote.timing = musicNote.timing - originalOffset + chartOffset;
+            note.position = new Vector3(note.position.x, musicNote.timing * chartSpeed, 0);
+        }
     }
 
     GameObject GetHoveredVerticalGrid()
@@ -826,6 +907,52 @@ public class EditorManager : MonoBehaviour
     {
         noteObject.SetActive(false);
         noteObject.transform.SetParent(undoRedoFolder.transform, true);
+    }
+
+    #endregion
+
+    #region Chart Properties
+
+    public void ChangeChartOffset()
+    {
+        float originalOffset = chartOffset;
+
+        bool isParsed = float.TryParse(offsetInputField.text, out chartOffset);
+        if (!isParsed)
+        {
+            chartOffset = 0;
+        }
+
+        chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
+
+        ChangePositionsThroughOffset(tapFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(blackFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(sliceFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(leftTeleportFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(rightTeleportFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(spikeFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(usedNotesFolder.transform, originalOffset);
+        ChangePositionsThroughOffset(undoRedoFolder.transform, originalOffset);
+    }
+
+    public void ChangeChartSpeed()
+    {
+        bool isParsed = float.TryParse(speedInputField.text, out chartSpeed);
+        if (!isParsed)
+        {
+            chartSpeed = 1;
+        }
+
+        chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
+
+        ChangePositionsThroughSpeed(tapFolder.transform);
+        ChangePositionsThroughSpeed(blackFolder.transform);
+        ChangePositionsThroughSpeed(sliceFolder.transform);
+        ChangePositionsThroughSpeed(leftTeleportFolder.transform);
+        ChangePositionsThroughSpeed(rightTeleportFolder.transform);
+        ChangePositionsThroughSpeed(spikeFolder.transform);
+        ChangePositionsThroughSpeed(usedNotesFolder.transform);
+        ChangePositionsThroughSpeed(undoRedoFolder.transform);
     }
 
     #endregion
