@@ -936,13 +936,62 @@ public class EditorManager : MonoBehaviour
 
     public void ApplyTimingSpeed()
     {
+        beatLinesFolder.SetActive(false);
+
         speedItems = uiManager.GetSpeedItems();
+
+        if (speedItems.Count <= 0)
+        {
+            return;
+        }
+
+        List<MusicNote> notes = null;
+
+        float tempSpeedMulti = 1f;
+        float totalLength = 0f;
+
+        for (int i = 0; i < speedItems.Count; i++)
+        {
+            if (i == 0)
+            {
+                tempSpeedMulti = 1f;
+                totalLength += (speedItems[i].timing * tempSpeedMulti / 1000f);
+            }
+            else
+            {
+                tempSpeedMulti = speedItems[i - 1].speedMulti;
+                notes = FindAllNotesWithTiming(speedItems[i - 1].timing, speedItems[i].timing);
+                foreach (MusicNote note in notes)
+                {
+                    note.ChangeSpeedPosition(totalLength, chartSpeed, speedItems[i - 1].timing, tempSpeedMulti);
+                }
+
+                totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * tempSpeedMulti;
+            }
+            Debug.Log(totalLength);
+        }
+        tempSpeedMulti = speedItems[speedItems.Count - 1].speedMulti;
+        notes = FindAllNotesWithTiming(speedItems[speedItems.Count - 1].timing, audioSource.clip.length * 1000f);
+        foreach (MusicNote note in notes)
+        {
+            note.ChangeSpeedPosition(totalLength, chartSpeed, speedItems[speedItems.Count - 1].timing, tempSpeedMulti);
+        }
+
+        totalLength += (audioSource.clip.length - speedItems[speedItems.Count - 1].timing / 1000f) * tempSpeedMulti;
+        Debug.Log(totalLength);
     }
 
     public void RejectTimingSpeed()
     {
         speedItems = null;
+        beatLinesFolder.SetActive(true);
         scrollPlayfield.transform.position = Vector3.zero;
+
+        List<MusicNote> notes = FindAllNotesWithTiming(0, audioSource.clip.length * 1000f);
+        foreach (MusicNote note in notes)
+        {
+            note.ResetSpeedPosition(chartSpeed);
+        }
     }
 
     public void ChangeSpeedThroughTiming(float timing)
@@ -952,104 +1001,50 @@ public class EditorManager : MonoBehaviour
             speedMulti = 1f;
             return;
         }
-        else
-        {
-            float totalLength = 0f;
-            for (int i = 0; i < speedItems.Count; i++)
-            {
-                if (timing < speedItems[i].timing)
-                {
-                    if (i == 0)
-                    {
-                        speedMulti = 1f;
-                        totalLength += (timing * speedMulti / 1000f);
-                    }
-                    else
-                    {
-                        speedMulti = speedItems[i - 1].speedMulti;
-                        totalLength += (timing - speedItems[i - 1].timing) / 1000f * speedMulti;
-                    }
-                    scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
-                    return;
-                }
 
+        float totalLength = 0f;
+        for (int i = 0; i < speedItems.Count; i++)
+        {
+            if (timing < speedItems[i].timing)
+            {
                 if (i == 0)
                 {
                     speedMulti = 1f;
-                    totalLength += (speedItems[i].timing * speedMulti / 1000f);
+                    totalLength += (timing * speedMulti / 1000f);
                 }
                 else
                 {
                     speedMulti = speedItems[i - 1].speedMulti;
-                    totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * speedMulti;
+                    totalLength += (timing - speedItems[i - 1].timing) / 1000f * speedMulti;
                 }
+                scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                return;
             }
-            speedMulti = speedItems[speedItems.Count - 1].speedMulti;
-            totalLength += (timing - speedItems[speedItems.Count - 1].timing) / 1000f * speedMulti;
-            scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
-        }
-    }
-    /*
-    public void ApplyTimingSpeed()
-    {
-        List<SpeedStorer> speedItems = uiManager.GetSpeedItems();
-        float totalLength = 0;
 
-        int itemsCount = speedItems.Count;
-
-        if (itemsCount <= 0)
-        {
-            return;
-        }
-
-        if (itemsCount == 1)
-        {
-            totalLength = speedItems[0].timing / 1000f * chartSpeed;
-            List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[0].timing);
-            foreach (MusicNote note in foundNotes)
+            if (i == 0)
             {
-                note.gameObject.transform.position = new Vector3(
-                    note.gameObject.transform.position.x,
-                    totalLength + (note.gameObject.transform.position.y - totalLength) * speedItems[0].speedMulti, 0);
+                speedMulti = 1f;
+                totalLength += (speedItems[i].timing * speedMulti / 1000f);
             }
-            return;
-        }
-
-        for (int i = 0; i < speedItems.Count; i++)
-        {
-            if (i == 0 && speedItems[i].timing == 0)
+            else
             {
-                totalLength += (speedItems[i + 1].timing - speedItems[i].timing) * speedItems[i].speedMulti / 1000f;
-                List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[i].timing);
-                foreach (MusicNote note in foundNotes)
-                {
-                    note.gameObject.transform.position = new Vector3(
-                        note.gameObject.transform.position.x,
-                        totalLength+(note.gameObject.transform.position.y - totalLength))
-                }
-            }
-            else if (i == 0 && speedItems[i].timing != 0)
-            {
-                totalLength += speedItems[i].timing / 1000f;
-                List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[i].timing);
-                foreach (MusicNote note in foundNotes)
-                {
-                    note.gameObject.transform.position = new Vector3(
-                        note.gameObject.transform.position.x,
-                        totalLength + (note.gameObject.transform.position.y - totalLength) * speedItems[0].speedMulti, 0);
-                }
+                speedMulti = speedItems[i - 1].speedMulti;
+                totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * speedMulti;
             }
         }
+        speedMulti = speedItems[speedItems.Count - 1].speedMulti;
+        totalLength += (timing - speedItems[speedItems.Count - 1].timing) / 1000f * speedMulti;
+        scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
     }
 
-    List<MusicNote> FindAllNotesWithTiming(float timing)
+    List<MusicNote> FindAllNotesWithTiming(float beginTiming, float endTiming)
     {
-        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(timing, tapFolder.transform);
-        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(timing,  blackFolder.transform);
-        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(timing, sliceFolder.transform);
-        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(timing, spikeFolder.transform);
-        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(timing, leftTeleportFolder.transform);
-        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(timing, rightTeleportFolder.transform);
+        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, tapFolder.transform);
+        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(beginTiming, endTiming,  blackFolder.transform);
+        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, sliceFolder.transform);
+        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, spikeFolder.transform);
+        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, leftTeleportFolder.transform);
+        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, rightTeleportFolder.transform);
 
         List<MusicNote> foundAllNotes = new List<MusicNote>();
         foundAllNotes.AddRange(foundTaps);
@@ -1062,20 +1057,20 @@ public class EditorManager : MonoBehaviour
         return foundAllNotes;
     }
 
-    List<MusicNote> FindAllNotesWithTimingFromFolder(float timing, Transform folder)
+    List<MusicNote> FindAllNotesWithTimingFromFolder(float beginTiming, float endTiming, Transform folder)
     {
         List<MusicNote> foundNotes = new List<MusicNote>();
         foreach (Transform note in folder)
         {
             MusicNote musicNote = note.GetComponent<MusicNote>();
-            if (musicNote != null && musicNote.timing > timing)
+            if (musicNote != null && musicNote.timing * 1000f >= beginTiming && musicNote.timing * 1000f < endTiming)
             {
                 foundNotes.Add(musicNote);
             }
         }
         return foundNotes;
     }
-    */
+
     #region Undo & Redo Stack
 
     public void UndoCommand()

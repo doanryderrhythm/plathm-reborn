@@ -247,6 +247,18 @@ public class MusicNote : MonoBehaviour
             Mathf.Pow(targetPosition.y - transform.position.y, 2));
     }
 
+    public void ChangeSpeedPosition(float totalLength, float chartSpeed, float beginTiming, float speedMulti)
+    {
+        this.transform.position = new Vector3(
+            this.transform.position.x, 
+            ((this.timing * 1000f - beginTiming) / 1000f * speedMulti + totalLength) * chartSpeed, 0);
+    }
+
+    public void ResetSpeedPosition(float chartSpeed)
+    {
+        this.transform.position = new Vector3(this.transform.position.x, this.timing * chartSpeed, 0);
+    }
+
     public NoteType GetNoteType()
     {
         return noteType;
