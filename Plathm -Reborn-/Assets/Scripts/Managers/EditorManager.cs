@@ -61,6 +61,7 @@ public class EditorManager : MonoBehaviour
     private HashSet<Key> reservedBlackKeys;
     private bool isAnyKeyHolding = false;
     private bool isBlackKeyReserved = false;
+    private List<SpeedStorer> speedItems = null;
 
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
@@ -68,12 +69,15 @@ public class EditorManager : MonoBehaviour
     public MusicNote draggedNote;
 
     [Space(10.0f)]
+    [SerializeField] GameObject stepBeatPrefab;
     [SerializeField] GameObject mainBeatPrefab;
 
     [Header("Editor Settings")]
     public bool playMode = false;
     public float chartOffset = 0f;
     public float chartSpeed = 1f;
+    public float speedMulti = 1f;
+    public int beatDensity = 1;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
@@ -240,7 +244,7 @@ public class EditorManager : MonoBehaviour
 
         if (playMode)
         {
-            scrollPlayfield.transform.position = new Vector3(0, - chartSpeed * audioSource.time, 0);
+            ChangeSpeedThroughTiming(audioSource.time * 1000f);
         }
 
         if (isAnyKeyHolding && isBlackKeyReserved)
@@ -743,9 +747,13 @@ public class EditorManager : MonoBehaviour
 
             scrollPlayfield.transform.position = Vector3.zero;
             ReenableNotes();
+
+            RejectTimingSpeed();
+            speedMulti = 1;
         }
         else
         {
+            ApplyTimingSpeed();
             audioSource.Play();
         }
     }
@@ -863,37 +871,211 @@ public class EditorManager : MonoBehaviour
         }
 
         float tempTiming = 0;
-        BPMStorer[] timingItems = uiManager.GetTimingItems().ToArray();
+        List<BPMStorer> timingItems = uiManager.GetTimingItems();
 
-        for (int i = 0; i < timingItems.Length; i++)
+        if (timingItems.Exists(item => item.BPM == 0))
+        {
+            return;
+        }
+
+        for (int i = 0; i < timingItems.Count; i++)
         {
             tempTiming = timingItems[i].timing;
             int mainBeatCount = 0;
+            int stepBeatCount = 0;
 
-            while (i + 1 != timingItems.Length && tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
+            while (i + 1 != timingItems.Count && tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
             {
-                Debug.Log(tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f);
-                float totalTiming = tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f;
-                GameObject beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                GameObject beat = null;
+                if (stepBeatCount != 0)
+                {
+                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
+                }
+                else
+                {
+                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
-                mainBeatCount++;
+                stepBeatCount++;
+                if (stepBeatCount == beatDensity)
+                {
+                    stepBeatCount = 0;
+                    mainBeatCount++;
+                }
             }
 
             mainBeatCount = 0;
+            stepBeatCount = 0;
 
-            while (i + 1 == timingItems.Length && tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
+            while (i + 1 == timingItems.Count && tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
             {
-                Debug.Log(tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f);
-                float totalTiming = tempTiming + (float)mainBeatCount * 60f / timingItems[i].BPM * 1000f;
-                GameObject beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                GameObject beat = null;
+                if (stepBeatCount != 0)
+                {
+                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
+                }
+                else
+                {
+                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
-                mainBeatCount++;
+                stepBeatCount++;
+                if (stepBeatCount == beatDensity)
+                {
+                    stepBeatCount = 0;
+                    mainBeatCount++;
+                }
             }
 
             mainBeatCount = 0;
+            stepBeatCount = 0;
         }
     }
 
+    public void ApplyTimingSpeed()
+    {
+        speedItems = uiManager.GetSpeedItems();
+    }
+
+    public void RejectTimingSpeed()
+    {
+        speedItems = null;
+        scrollPlayfield.transform.position = Vector3.zero;
+    }
+
+    public void ChangeSpeedThroughTiming(float timing)
+    {
+        if (speedItems.Count <= 0)
+        {
+            speedMulti = 1f;
+            return;
+        }
+        else
+        {
+            float totalLength = 0f;
+            for (int i = 0; i < speedItems.Count; i++)
+            {
+                if (timing < speedItems[i].timing)
+                {
+                    if (i == 0)
+                    {
+                        speedMulti = 1f;
+                        totalLength += (timing * speedMulti / 1000f);
+                    }
+                    else
+                    {
+                        speedMulti = speedItems[i - 1].speedMulti;
+                        totalLength += (timing - speedItems[i - 1].timing) / 1000f * speedMulti;
+                    }
+                    scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                    return;
+                }
+
+                if (i == 0)
+                {
+                    speedMulti = 1f;
+                    totalLength += (speedItems[i].timing * speedMulti / 1000f);
+                }
+                else
+                {
+                    speedMulti = speedItems[i - 1].speedMulti;
+                    totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * speedMulti;
+                }
+            }
+            speedMulti = speedItems[speedItems.Count - 1].speedMulti;
+            totalLength += (timing - speedItems[speedItems.Count - 1].timing) / 1000f * speedMulti;
+            scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+        }
+    }
+    /*
+    public void ApplyTimingSpeed()
+    {
+        List<SpeedStorer> speedItems = uiManager.GetSpeedItems();
+        float totalLength = 0;
+
+        int itemsCount = speedItems.Count;
+
+        if (itemsCount <= 0)
+        {
+            return;
+        }
+
+        if (itemsCount == 1)
+        {
+            totalLength = speedItems[0].timing / 1000f * chartSpeed;
+            List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[0].timing);
+            foreach (MusicNote note in foundNotes)
+            {
+                note.gameObject.transform.position = new Vector3(
+                    note.gameObject.transform.position.x,
+                    totalLength + (note.gameObject.transform.position.y - totalLength) * speedItems[0].speedMulti, 0);
+            }
+            return;
+        }
+
+        for (int i = 0; i < speedItems.Count; i++)
+        {
+            if (i == 0 && speedItems[i].timing == 0)
+            {
+                totalLength += (speedItems[i + 1].timing - speedItems[i].timing) * speedItems[i].speedMulti / 1000f;
+                List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[i].timing);
+                foreach (MusicNote note in foundNotes)
+                {
+                    note.gameObject.transform.position = new Vector3(
+                        note.gameObject.transform.position.x,
+                        totalLength+(note.gameObject.transform.position.y - totalLength))
+                }
+            }
+            else if (i == 0 && speedItems[i].timing != 0)
+            {
+                totalLength += speedItems[i].timing / 1000f;
+                List<MusicNote> foundNotes = FindAllNotesWithTiming(speedItems[i].timing);
+                foreach (MusicNote note in foundNotes)
+                {
+                    note.gameObject.transform.position = new Vector3(
+                        note.gameObject.transform.position.x,
+                        totalLength + (note.gameObject.transform.position.y - totalLength) * speedItems[0].speedMulti, 0);
+                }
+            }
+        }
+    }
+
+    List<MusicNote> FindAllNotesWithTiming(float timing)
+    {
+        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(timing, tapFolder.transform);
+        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(timing,  blackFolder.transform);
+        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(timing, sliceFolder.transform);
+        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(timing, spikeFolder.transform);
+        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(timing, leftTeleportFolder.transform);
+        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(timing, rightTeleportFolder.transform);
+
+        List<MusicNote> foundAllNotes = new List<MusicNote>();
+        foundAllNotes.AddRange(foundTaps);
+        foundAllNotes.AddRange(foundBlacks);
+        foundAllNotes.AddRange(foundSlice);
+        foundAllNotes.AddRange(foundSpikes);
+        foundAllNotes.AddRange(foundLeftTeleports);
+        foundAllNotes.AddRange(foundRightTeleport);
+
+        return foundAllNotes;
+    }
+
+    List<MusicNote> FindAllNotesWithTimingFromFolder(float timing, Transform folder)
+    {
+        List<MusicNote> foundNotes = new List<MusicNote>();
+        foreach (Transform note in folder)
+        {
+            MusicNote musicNote = note.GetComponent<MusicNote>();
+            if (musicNote != null && musicNote.timing > timing)
+            {
+                foundNotes.Add(musicNote);
+            }
+        }
+        return foundNotes;
+    }
+    */
     #region Undo & Redo Stack
 
     public void UndoCommand()

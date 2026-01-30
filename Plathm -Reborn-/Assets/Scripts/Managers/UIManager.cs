@@ -1,8 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
+    private EditorManager editorManager;
+
     [Header("Chart Information")]
     [SerializeField] Animator infoStorer;
     [SerializeField] bool isInfoStorerToggled = true;
@@ -12,10 +15,23 @@ public class UIManager : MonoBehaviour
     [SerializeField] GameObject timingItemStorer;
     [SerializeField] GameObject timingItemPrefab;
 
+    [Header("Speed Field")]
+    [SerializeField] List<SpeedStorer> speedItems;
+    [SerializeField] GameObject speedItemStorer;
+    [SerializeField] GameObject speedItemPrefab;
+
+    [Header("Beat Density")]
+    [SerializeField] TMP_InputField beatDensityInputField;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+
         timingItems = new List<BPMStorer>();
+        speedItems = new List<SpeedStorer>();
+
+        ChangeBeatDensity();
     }
 
     // Update is called once per frame
@@ -52,6 +68,20 @@ public class UIManager : MonoBehaviour
         timingItem.transform.SetParent(timingItemStorer.transform, false);
     }
 
+    public void AddSpeedItem()
+    {
+        GameObject speedItem = Instantiate(speedItemPrefab) as GameObject;
+
+        SpeedStorer speedStorer = speedItem.GetComponent<SpeedStorer>();
+        if (speedStorer)
+        {
+            speedItems.Add(speedStorer);
+            speedStorer.ChangeNumberLabel(speedItems.IndexOf(speedStorer));
+        }
+
+        speedItem.transform.SetParent(speedItemStorer.transform, false);
+    }
+
     public void SwitchTimingItems(int selectedIndex, int targetIndex)
     {
         if (targetIndex < 0 || targetIndex >= timingItems.Count)
@@ -68,6 +98,24 @@ public class UIManager : MonoBehaviour
         BPMStorer tempBPMStorer = timingItems[selectedIndex];
         timingItems[selectedIndex] = timingItems[targetIndex];
         timingItems[targetIndex] = tempBPMStorer;
+    }
+
+    public void SwitchSpeedItems(int selectedIndex, int targetIndex)
+    {
+        if (targetIndex < 0 || targetIndex >= speedItems.Count)
+        {
+            return;
+        }
+
+        speedItems[selectedIndex].transform.SetSiblingIndex(targetIndex);
+        speedItems[targetIndex].transform.SetSiblingIndex(selectedIndex);
+
+        speedItems[selectedIndex].ChangeNumberLabel(targetIndex);
+        speedItems[targetIndex].ChangeNumberLabel(selectedIndex);
+
+        SpeedStorer tempSpeedStorer = speedItems[selectedIndex];
+        speedItems[selectedIndex] = speedItems[targetIndex];
+        speedItems[targetIndex] = tempSpeedStorer;
     }
 
     public void RemoveTimingItem(int index)
@@ -94,6 +142,42 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public void RemoveSpeedItem(int index)
+    {
+        if (index < 0 || index >= speedItems.Count)
+        {
+            return;
+        }
+
+        SpeedStorer speedStorer = speedItems[index];
+        if (!speedStorer)
+        {
+            return;
+        }
+        speedItems.RemoveAt(index);
+        Destroy(speedStorer.gameObject);
+
+        if (speedItems.Count != 0 && index < speedItems.Count)
+        {
+            for (int i = index; i < speedItems.Count; i++)
+            {
+                speedItems[i].ChangeNumberLabel(i);
+            }
+        }
+    }
+
+    public void ChangeBeatDensity()
+    {
+        bool isParsed = int.TryParse(beatDensityInputField.text, out editorManager.beatDensity);
+        if (!isParsed || editorManager.beatDensity <= 0)
+        {
+            editorManager.beatDensity = 1;
+        }
+
+        beatDensityInputField.text = editorManager.beatDensity.ToString();
+        editorManager.ApplyTimingBPM();
+    }
+
     public bool IsBPMZero()
     {
         return timingItems.Exists(item => item.BPM == 0);
@@ -102,5 +186,10 @@ public class UIManager : MonoBehaviour
     public List<BPMStorer> GetTimingItems()
     {
         return timingItems;
+    }
+
+    public List<SpeedStorer> GetSpeedItems()
+    {
+        return speedItems;
     }
 }
