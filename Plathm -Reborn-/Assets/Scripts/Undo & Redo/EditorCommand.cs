@@ -35,11 +35,11 @@ public class CommandAddOneNote : EditorCommand
 
     public override void UndoCommand()
     {
-        editorManager.UndoAddOneNote(this.noteObject);
+        //editorManager.UndoAddOneNote(this.noteObject);
     }
     public override void RedoCommand()
     {
-        editorManager.RedoAddOneNote(this.noteObject, this.timing, this.notePosition);
+        //editorManager.RedoAddOneNote(this.noteObject, this.timing, this.notePosition);
     }
     public override void FreeCommand()
     {
@@ -68,11 +68,11 @@ public class CommandMoveOneNote : EditorCommand
 
     public override void UndoCommand()
     {
-        editorManager.UndoMoveOneNote(this.noteObject, this.originalTiming, this.noteOriginalPosition);
+        //editorManager.UndoMoveOneNote(this.noteObject, this.originalTiming, this.noteOriginalPosition);
     }
     public override void RedoCommand()
     {
-        editorManager.RedoMoveOneNote(this.noteObject, this.newTiming, this.noteNewPosition);
+        //editorManager.RedoMoveOneNote(this.noteObject, this.newTiming, this.noteNewPosition);
     }
     public override void FreeCommand()
     {
@@ -97,11 +97,11 @@ public class CommandDeleteOneNote : EditorCommand
 
     public override void UndoCommand()
     {
-        editorManager.UndoDeleteOneNote(this.noteObject, this.timing, this.noteDeletedPosition);
+        //editorManager.UndoDeleteOneNote(this.noteObject, this.timing, this.noteDeletedPosition);
     }
     public override void RedoCommand()
     {
-        editorManager.RedoDeleteOneNote(noteObject);
+        //editorManager.RedoDeleteOneNote(noteObject);
     }
     public override void FreeCommand()
     {
@@ -127,12 +127,12 @@ public class CommandChangeOffset : EditorCommand
 
     public override void UndoCommand()
     {
-        editorManager.UndoChangeOffset(this.previousOffset);
+        //editorManager.UndoChangeOffset(this.previousOffset);
     }
 
     public override void RedoCommand()
     {
-        editorManager.RedoChangeOffset(this.nextOffset);
+        //editorManager.RedoChangeOffset(this.nextOffset);
     }
 
     public override void FreeCommand()
@@ -156,12 +156,12 @@ public class CommandChangeSpeed : EditorCommand
 
     public override void UndoCommand()
     {
-        editorManager.UndoChangeSpeed(this.previousSpeed);
+        //editorManager.UndoChangeSpeed(this.previousSpeed);
     }
 
     public override void RedoCommand()
     {
-        editorManager.RedoChangeSpeed(this.nextSpeed);
+        //editorManager.RedoChangeSpeed(this.nextSpeed);
     }
 
     public override void FreeCommand()

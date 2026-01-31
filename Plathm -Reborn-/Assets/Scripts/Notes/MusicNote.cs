@@ -123,7 +123,14 @@ public class MusicNote : MonoBehaviour
 
     void SwitchToUsedFolder()
     {
-        editorManager.SwitchToUsedFolder(transform);
+        GameObject timingGroupObj = transform.root.gameObject;
+        TimingGroup timingGroup = timingGroupObj.GetComponent<TimingGroup>();
+        if (!timingGroup)
+        {
+            return;
+        }
+
+        transform.SetParent(timingGroup.usedNotesFolder.transform);
         gameObject.SetActive(false);
     }
 

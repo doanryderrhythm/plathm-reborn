@@ -18,6 +18,8 @@ public class BPMStorer : MonoBehaviour
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
         uiManager = GameObject.FindFirstObjectByType<UIManager>();
+
+        ConvertFromValueToText();
     }
 
     // Update is called once per frame
@@ -30,6 +32,12 @@ public class BPMStorer : MonoBehaviour
     {
         this.index = index;
         numberLabel.text = this.index.ToString();
+    }
+
+    public void ConvertFromValueToText()
+    {
+        timingInputField.text = timing.ToString();
+        BPMInputField.text = BPM.ToString();
     }
 
     public void ConvertFromTextToValue()
@@ -50,16 +58,16 @@ public class BPMStorer : MonoBehaviour
 
     public void MoveUp()
     {
-        uiManager.SwitchTimingItems(this.index, this.index - 1);
+        uiManager.SwitchTimingItems(editorManager.timingGroupIndex, this.index, this.index - 1);
     }
 
     public void MoveDown()
     {
-        uiManager.SwitchTimingItems(this.index, this.index + 1);
+        uiManager.SwitchTimingItems(editorManager.timingGroupIndex, this.index, this.index + 1);
     }
 
     public void DeleteItem()
     {
-        uiManager.RemoveTimingItem(this.index);
+        uiManager.RemoveTimingItem(editorManager.timingGroupIndex, this.index);
     }
 }

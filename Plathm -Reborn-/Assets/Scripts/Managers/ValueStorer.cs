@@ -58,4 +58,12 @@ public class ValueStorer : MonoBehaviour
 
     public static string triggerInfoOpen = "Chart Info Open";
     public static string triggerInfoClose = "Chart Info Close";
+
+    public static string noTimingGroupText = "No Timing Groups";
+    public static string hasTimingGroupText = "Timing Group ";
+
+    public static string noSpeedGroupText = "No Speed Groups";
+    public static string hasSpeedGroupText = "Speed Group ";
+
+    public static float mouseScrollSpeed = 0.2f;
 }

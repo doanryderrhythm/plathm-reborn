@@ -65,7 +65,7 @@ public class EditorManager : MonoBehaviour
     private HashSet<Key> reservedBlackKeys;
     private bool isAnyKeyHolding = false;
     private bool isBlackKeyReserved = false;
-    private List<SpeedStorer> speedItems = null;
+    private List<List<SpeedStorer>> speedItems = null;
 
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
@@ -82,23 +82,15 @@ public class EditorManager : MonoBehaviour
     public float chartSpeed = 1f;
     public float speedMulti = 1f;
     public int beatDensity = 1;
+    private float editorCurrentTiming = 0f;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
     [SerializeField] InputActionReference inputLeftTeleport;
     [SerializeField] InputActionReference inputRightTeleport;
     [SerializeField] InputActionReference inputSlice;
-
-    [Header("Note Folders")]
-    [SerializeField] GameObject tapFolder;
-    [SerializeField] GameObject blackFolder;
-    [SerializeField] GameObject sliceFolder;
-    [SerializeField] GameObject leftTeleportFolder;
-    [SerializeField] GameObject rightTeleportFolder;
-    [SerializeField] GameObject spikeFolder;
-    [SerializeField] GameObject usedNotesFolder;
-    [SerializeField] GameObject undoRedoFolder;
-    [SerializeField] GameObject beatLinesFolder;
+    [Space(10.0f)]
+    [SerializeField] InputActionReference editorInputScroll;
 
     [Header("Note Types")]
     [SerializeField] GameObject tapNotePrefab;
@@ -113,7 +105,10 @@ public class EditorManager : MonoBehaviour
     public AudioSource audioSource;
 
     [Header("Gameplay")]
-    [SerializeField] GameObject scrollPlayfield;
+    public int timingGroupIndex = 0;
+    [SerializeField] GameObject timingGroupStorer;
+    [SerializeField] TimingGroup timingGroupPrefab;
+    [SerializeField] List<TimingGroup> timingGroups;
 
     [Header("Judgement VFX")]
     public GameObject tapCPerfectPrefab;
@@ -165,6 +160,8 @@ public class EditorManager : MonoBehaviour
         undoCommandStack.Clear();
         redoCommandStack = new Stack<EditorCommand>();
         redoCommandStack.Clear();
+
+        timingGroups = new List<TimingGroup>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -172,19 +169,14 @@ public class EditorManager : MonoBehaviour
     {
         InitiateUI();
         RebuildReservedKeys();
+
+        UpdateGroupIndicators();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (audioSource != null && audioSource.clip != null)
-        {
-            currentTimingText.text = ValueStorer.currentTimingText + ((int)(audioSource.time * 1000)).ToString();
-        }
-        else
-        {
-            currentTimingText.text = ValueStorer.currentTimingText + "0";
-        }
+        currentTimingText.text = ValueStorer.currentTimingText + ((int)(editorCurrentTiming * 1000)).ToString();
 
         ConvertFromMouseToWorld();
 
@@ -220,6 +212,7 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote)
             {
+                /*
                 CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(
                     draggedNote.gameObject, 
                     noteOriginalTiming, 
@@ -227,6 +220,7 @@ public class EditorManager : MonoBehaviour
                     noteOriginalPosition.x, 
                     draggedNote.gameObject.transform.position.x);
                 OverrideCommand(commandMoveOneNote);
+                */
 
                 draggedNote = null;
             }
@@ -238,22 +232,26 @@ public class EditorManager : MonoBehaviour
 
         if (!playMode && Mouse.current != null && Mouse.current.rightButton.isPressed)
         {
-            ExecuteDeleteInFolder(tapFolder.transform);
-            ExecuteDeleteInFolder(blackFolder.transform);
-            ExecuteDeleteInFolder(sliceFolder.transform);
-            ExecuteDeleteInFolder(leftTeleportFolder.transform);
-            ExecuteDeleteInFolder(rightTeleportFolder.transform);
-            ExecuteDeleteInFolder(spikeFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].tapFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].blackFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].sliceFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].leftTeleportFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].rightTeleportFolder.transform);
+            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].spikeFolder.transform);
         }
 
         if (playMode)
         {
             ChangeSpeedThroughTiming(audioSource.time * 1000f);
         }
+        else
+        {
+            ExecuteScrolling();
+        }
 
         if (isAnyKeyHolding && isBlackKeyReserved)
         {
-            ExecuteInput(blackFolder);
+            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
         }
     }
 
@@ -263,9 +261,11 @@ public class EditorManager : MonoBehaviour
         inputAnyKey.action.canceled    += OnAnyKeyCanceled;
         inputAnyKey.action.performed   += CheckReservedTapKeys;
 
-        inputLeftTeleport.action.performed  += _ => ExecuteInput(leftTeleportFolder);
-        inputRightTeleport.action.performed += _ => ExecuteInput(rightTeleportFolder);
-        inputSlice.action.performed         += _ => ExecuteInput(sliceFolder);
+        inputLeftTeleport.action.performed  += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.LEFT_TELEPORT);
+        inputRightTeleport.action.performed += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.RIGHT_TELEPORT);
+        inputSlice.action.performed         += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.SLICE_NOTE);
+
+        editorInputScroll.action.Enable();
     }
 
     private void OnDisable()
@@ -275,6 +275,8 @@ public class EditorManager : MonoBehaviour
         inputLeftTeleport.action.performed  -= _ => { };
         inputRightTeleport.action.performed -= _ => { };
         inputSlice.action.performed         -= _ => { };
+
+        editorInputScroll.action.Disable();
     }
 
     void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
@@ -316,7 +318,7 @@ public class EditorManager : MonoBehaviour
     {
         if (IsAnyKeyReserved(reservedTapKeys))
         {
-            ExecuteInput(tapFolder);
+            ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
         }
     }
 
@@ -332,7 +334,7 @@ public class EditorManager : MonoBehaviour
         isBlackKeyReserved = IsAnyKeyReserved(reservedBlackKeys);
         if (isBlackKeyReserved)
         {
-            ExecuteInput(blackFolder);
+            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
         }
     }
 
@@ -369,6 +371,19 @@ public class EditorManager : MonoBehaviour
         }
 
         return true;
+    }
+
+    void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
+    {
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            if (noteType == NoteTypeGeneral.TAP_NOTE) ExecuteInput(timingGroups[i].tapFolder);
+            else if (noteType == NoteTypeGeneral.BLACK_NOTE) ExecuteInput(timingGroups[i].blackFolder);
+            else if (noteType == NoteTypeGeneral.SLICE_NOTE) ExecuteInput(timingGroups[i].sliceFolder);
+            else if (noteType == NoteTypeGeneral.LEFT_TELEPORT) ExecuteInput(timingGroups[i].leftTeleportFolder);
+            else if (noteType == NoteTypeGeneral.RIGHT_TELEPORT) ExecuteInput(timingGroups[i].rightTeleportFolder);
+            else if (noteType == NoteTypeGeneral.SPIKE) ExecuteInput(timingGroups[i].spikeFolder);
+        }
     }
 
     void ExecuteInput(GameObject folder)
@@ -413,9 +428,21 @@ public class EditorManager : MonoBehaviour
         lowestNote.ExecuteNote();
     }
 
-    public void SwitchToUsedFolder(Transform usedNote)
+    void ExecuteScrolling()
     {
-        usedNote.SetParent(usedNotesFolder.transform);
+        Vector2 value = editorInputScroll.action.ReadValue<Vector2>();
+        editorCurrentTiming = editorCurrentTiming - value.y * ValueStorer.mouseScrollSpeed;
+        if (editorCurrentTiming < 0)
+        {
+            editorCurrentTiming = 0;
+        }
+
+        ChangeAllTimingGroupsScrolling();
+    }
+
+    void ChangeAllTimingGroupsScrolling()
+    {
+        timingGroupStorer.transform.position = new Vector3(0, -editorCurrentTiming * chartSpeed, 0);
     }
 
     public void SelectNoteType(int index)
@@ -452,13 +479,19 @@ public class EditorManager : MonoBehaviour
 
             if (isWithinArea)
             {
-                CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, note.timing, noteTransform.position.x);
-                OverrideCommand(commandDeleteOneNote);
+                //CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, note.timing, noteTransform.position.x);
+                //OverrideCommand(commandDeleteOneNote);
 
-                noteTransform.SetParent(undoRedoFolder.transform, true);
+                GameObject timingGroupObj = folder.root.gameObject;
+                TimingGroup timingGroup = timingGroupObj.GetComponent<TimingGroup>();
+
+                if (!timingGroup)
+                {
+                    return;
+                }
+
+                noteTransform.SetParent(timingGroup.undoRedoFolder.transform, true);
                 note.gameObject.SetActive(false);
-
-                Debug.Log(undoCommandStack.Count);
             }
         }
     }
@@ -503,7 +536,7 @@ public class EditorManager : MonoBehaviour
 
                 confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(tapFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].tapFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.BLACK_NOTE:
@@ -516,7 +549,7 @@ public class EditorManager : MonoBehaviour
 
                 confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(blackFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].blackFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.LEFT_TELEPORT:
@@ -532,7 +565,7 @@ public class EditorManager : MonoBehaviour
 
                 confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(leftTeleportFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].leftTeleportFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.RIGHT_TELEPORT:
@@ -548,14 +581,14 @@ public class EditorManager : MonoBehaviour
 
                 confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(rightTeleportFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].rightTeleportFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.SLICE_NOTE:
             {
                 confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(sliceFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].sliceFolder.transform, true);
                 break;
             }
             case NoteTypeGeneral.SPIKE:
@@ -570,14 +603,14 @@ public class EditorManager : MonoBehaviour
                     confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
                 }
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
-                confirmedNote.transform.SetParent(spikeFolder.transform, true);
+                confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].spikeFolder.transform, true);
                 break;
             }
             default: break;
         }
 
-        CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.GetComponent<MusicNote>().timing, confirmedNote.transform.position.x);
-        OverrideCommand(commandAddOneNote);
+        //CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.GetComponent<MusicNote>().timing, confirmedNote.transform.position.x);
+        //OverrideCommand(commandAddOneNote);
     }
 
     void MoveNote()
@@ -668,12 +701,12 @@ public class EditorManager : MonoBehaviour
     {
         List<Transform> foundNotes = new List<Transform>();
 
-        List<Transform> foundTapNotes = FindAppropriateNotesInFolder(targetPosition, tapFolder.transform);
-        List<Transform> foundBlackNotes = FindAppropriateNotesInFolder(targetPosition, blackFolder.transform);
-        List<Transform> foundLeftTeleports = FindAppropriateNotesInFolder(targetPosition, leftTeleportFolder.transform);
-        List<Transform> foundRightTeleports = FindAppropriateNotesInFolder(targetPosition, rightTeleportFolder.transform);
-        List<Transform> foundSliceNotes = FindAppropriateNotesInFolder(targetPosition, sliceFolder.transform);
-        List<Transform> foundSpikes = FindAppropriateNotesInFolder(targetPosition, spikeFolder.transform);
+        List<Transform> foundTapNotes = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].tapFolder.transform);
+        List<Transform> foundBlackNotes = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].blackFolder.transform);
+        List<Transform> foundLeftTeleports = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].leftTeleportFolder.transform);
+        List<Transform> foundRightTeleports = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].rightTeleportFolder.transform);
+        List<Transform> foundSliceNotes = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].sliceFolder.transform);
+        List<Transform> foundSpikes = FindAppropriateNotesInFolder(targetPosition, timingGroups[timingGroupIndex].spikeFolder.transform);
 
         foreach (Transform note in foundTapNotes) foundNotes.Add(note);
         foreach (Transform note in foundBlackNotes) foundNotes.Add(note);
@@ -754,11 +787,13 @@ public class EditorManager : MonoBehaviour
         {
             audioSource.Stop();
 
-            scrollPlayfield.transform.position = Vector3.zero;
+            foreach (TimingGroup group in timingGroups)
+            {
+                group.gameObject.transform.position = Vector3.zero;
+            }
             ReenableNotes();
 
             RejectTimingSpeed();
-            speedMulti = 1;
         }
         else
         {
@@ -769,35 +804,38 @@ public class EditorManager : MonoBehaviour
 
     void ReenableNotes()
     {
-        var usedNotes = usedNotesFolder.transform;
-
-        for (int i = usedNotes.childCount - 1; i >= 0; i--)
+        foreach (TimingGroup group in timingGroups)
         {
-            Transform note = usedNotes.GetChild(i);
-            if (!note)
-            {
-                continue;
-            }
+            var usedNotes = group.usedNotesFolder.transform;
 
-            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
-            if (!musicNote)
+            for (int i = usedNotes.childCount - 1; i >= 0; i--)
             {
-                continue;
-            }
+                Transform note = usedNotes.GetChild(i);
+                if (!note)
+                {
+                    continue;
+                }
 
-            switch (musicNote.GetNoteType())
-            {
-                case MusicNote.NoteType.TAP_NOTE: note.SetParent(tapFolder.transform, false); break;
-                case MusicNote.NoteType.BLACK_NOTE: note.SetParent(blackFolder.transform, false); break;
-                case MusicNote.NoteType.LEFT_TELEPORT: note.SetParent(leftTeleportFolder.transform, false); break;
-                case MusicNote.NoteType.RIGHT_TELEPORT: note.SetParent(rightTeleportFolder.transform, false); break;
-                case MusicNote.NoteType.SLICE_NOTE: note.SetParent(sliceFolder.transform, false); break;
-                case MusicNote.NoteType.MIDDLE_SPIKE: note.SetParent(spikeFolder.transform, false); break;
-                case MusicNote.NoteType.SIDE_SPIKE: note.SetParent(spikeFolder.transform, false); break;
-                default: continue;
-            }
+                MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
+                if (!musicNote)
+                {
+                    continue;
+                }
 
-            note.gameObject.SetActive(true);
+                switch (musicNote.GetNoteType())
+                {
+                    case MusicNote.NoteType.TAP_NOTE: note.SetParent(group.tapFolder.transform, false); break;
+                    case MusicNote.NoteType.BLACK_NOTE: note.SetParent(group.blackFolder.transform, false); break;
+                    case MusicNote.NoteType.LEFT_TELEPORT: note.SetParent(group.leftTeleportFolder.transform, false); break;
+                    case MusicNote.NoteType.RIGHT_TELEPORT: note.SetParent(group.rightTeleportFolder.transform, false); break;
+                    case MusicNote.NoteType.SLICE_NOTE: note.SetParent(group.sliceFolder.transform, false); break;
+                    case MusicNote.NoteType.MIDDLE_SPIKE: note.SetParent(group.spikeFolder.transform, false); break;
+                    case MusicNote.NoteType.SIDE_SPIKE: note.SetParent(group.spikeFolder.transform, false); break;
+                    default: continue;
+                }
+
+                note.gameObject.SetActive(true);
+            }
         }
     }
 
@@ -806,19 +844,32 @@ public class EditorManager : MonoBehaviour
         MusicNote musicNote = note.GetComponent<MusicNote>();
         Transform noteTransform = musicNote.transform;
 
+        GameObject timingGroupObj = note.transform.root.gameObject;
+        TimingGroup group = timingGroupObj.GetComponent<TimingGroup>();
+
         switch (musicNote.GetNoteType())
         {
-            case MusicNote.NoteType.TAP_NOTE: noteTransform.SetParent(tapFolder.transform, false); break;
-            case MusicNote.NoteType.BLACK_NOTE: noteTransform.SetParent(blackFolder.transform, false); break;
-            case MusicNote.NoteType.LEFT_TELEPORT: noteTransform.SetParent(leftTeleportFolder.transform, false); break;
-            case MusicNote.NoteType.RIGHT_TELEPORT: noteTransform.SetParent(rightTeleportFolder.transform, false); break;
-            case MusicNote.NoteType.SLICE_NOTE: noteTransform.SetParent(sliceFolder.transform, false); break;
-            case MusicNote.NoteType.MIDDLE_SPIKE: noteTransform.SetParent(spikeFolder.transform, false); break;
-            case MusicNote.NoteType.SIDE_SPIKE: noteTransform.SetParent(spikeFolder.transform, false); break;
+            case MusicNote.NoteType.TAP_NOTE: noteTransform.SetParent(group.tapFolder.transform, false); break;
+            case MusicNote.NoteType.BLACK_NOTE: noteTransform.SetParent(group.blackFolder.transform, false); break;
+            case MusicNote.NoteType.LEFT_TELEPORT: noteTransform.SetParent(group.leftTeleportFolder.transform, false); break;
+            case MusicNote.NoteType.RIGHT_TELEPORT: noteTransform.SetParent(group.rightTeleportFolder.transform, false); break;
+            case MusicNote.NoteType.SLICE_NOTE: noteTransform.SetParent(group.sliceFolder.transform, false); break;
+            case MusicNote.NoteType.MIDDLE_SPIKE: noteTransform.SetParent(group.spikeFolder.transform, false); break;
+            case MusicNote.NoteType.SIDE_SPIKE: noteTransform.SetParent(group.spikeFolder.transform, false); break;
             default: break;
         }
 
         musicNote.gameObject.SetActive(true);
+    }
+
+    public void AddTimingItem()
+    {
+        uiManager.AddTimingItem(timingGroupIndex);
+    }
+
+    public void AddSpeedItem()
+    {
+        uiManager.AddSpeedItem(timingGroupIndex);
     }
 
     void ChangePositionsThroughSpeed(Transform folder)
@@ -866,7 +917,12 @@ public class EditorManager : MonoBehaviour
 
     public void ApplyTimingBPM()
     {
-        foreach (Transform beatLineT in beatLinesFolder.transform)
+        if (timingGroups.Count == 0)
+        {
+            return;
+        }
+
+        foreach (Transform beatLineT in timingGroups[timingGroupIndex].beatLinesFolder.transform)
         {
             if (beatLineT)
             {
@@ -880,30 +936,31 @@ public class EditorManager : MonoBehaviour
         }
 
         float tempTiming = 0;
-        List<BPMStorer> timingItems = uiManager.GetTimingItems();
+        List<List<BPMStorer>> timingItems = uiManager.timingItems;
 
-        if (timingItems.Exists(item => item.BPM == 0))
+        if (timingItems[timingGroupIndex].Exists(item => item.BPM == 0))
         {
             return;
         }
 
-        for (int i = 0; i < timingItems.Count; i++)
+        for (int i = 0; i < timingItems[timingGroupIndex].Count; i++)
         {
-            tempTiming = timingItems[i].timing;
+            tempTiming = timingItems[timingGroupIndex][i].timing;
             int mainBeatCount = 0;
             int stepBeatCount = 0;
 
-            while (i + 1 != timingItems.Count && tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
+            while (i + 1 != timingItems[timingGroupIndex].Count &&
+                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f < timingItems[timingGroupIndex][i + 1].timing)
             {
-                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {
-                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
+                    beat = Instantiate(stepBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
                 }
                 else
                 {
-                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                    beat = Instantiate(mainBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
                 }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
                 stepBeatCount++;
@@ -917,17 +974,18 @@ public class EditorManager : MonoBehaviour
             mainBeatCount = 0;
             stepBeatCount = 0;
 
-            while (i + 1 == timingItems.Count && tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
+            while (i + 1 == timingItems[timingGroupIndex].Count &&
+                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f < audioSource.clip.length * 1000)
             {
-                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {
-                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
+                    beat = Instantiate(stepBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
                 }
                 else
                 {
-                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
+                    beat = Instantiate(mainBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
                 }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
                 stepBeatCount++;
@@ -945,115 +1003,146 @@ public class EditorManager : MonoBehaviour
 
     public void ApplyTimingSpeed()
     {
-        beatLinesFolder.SetActive(false);
-
-        speedItems = uiManager.GetSpeedItems();
-
-        if (speedItems.Count <= 0)
+        timingGroupStorer.transform.position = Vector3.zero;
+        for (int index = 0; index < timingGroups.Count; index++)
         {
-            return;
-        }
+            timingGroups[index].gameObject.SetActive(true);
+            timingGroups[index].beatLinesFolder.SetActive(false);
 
-        List<MusicNote> notes = null;
-
-        float tempSpeedMulti = 1f;
-        float totalLength = 0f;
-
-        for (int i = 0; i < speedItems.Count; i++)
-        {
-            if (i == 0)
+            List<SpeedStorer> speeds = uiManager.speedItems[index];
+            if (speeds.Count <= 0)
             {
-                tempSpeedMulti = 1f;
-                totalLength += (speedItems[i].timing * tempSpeedMulti / 1000f);
+                continue;
             }
-            else
+
+            List<MusicNote> notes = null;
+
+            float tempSpeedMulti = 1f;
+            float totalLength = 0f;
+
+            for (int i = 0; i < speeds.Count; i++)
             {
-                tempSpeedMulti = speedItems[i - 1].speedMulti;
-                notes = FindAllNotesWithTiming(speedItems[i - 1].timing, speedItems[i].timing);
-                foreach (MusicNote note in notes)
+                if (i == 0)
                 {
-                    note.ChangeSpeedPosition(totalLength, chartSpeed, speedItems[i - 1].timing, tempSpeedMulti);
+                    tempSpeedMulti = 1f;
+                    totalLength += (speeds[i].timing * tempSpeedMulti / 1000f);
                 }
+                else
+                {
+                    tempSpeedMulti = speeds[i - 1].speedMulti;
+                    notes = FindAllNotesWithTiming(index, speeds[i - 1].timing, speeds[i].timing);
+                    foreach (MusicNote note in notes)
+                    {
+                        note.ChangeSpeedPosition(totalLength, chartSpeed, speeds[i - 1].timing, tempSpeedMulti);
+                    }
 
-                totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * tempSpeedMulti;
+                    totalLength += (speeds[i].timing - speeds[i - 1].timing) / 1000f * tempSpeedMulti;
+                }
             }
-            Debug.Log(totalLength);
-        }
-        tempSpeedMulti = speedItems[speedItems.Count - 1].speedMulti;
-        notes = FindAllNotesWithTiming(speedItems[speedItems.Count - 1].timing, audioSource.clip.length * 1000f);
-        foreach (MusicNote note in notes)
-        {
-            note.ChangeSpeedPosition(totalLength, chartSpeed, speedItems[speedItems.Count - 1].timing, tempSpeedMulti);
-        }
+            tempSpeedMulti = speeds[speeds.Count - 1].speedMulti;
+            notes = FindAllNotesWithTiming(index, speeds[speeds.Count - 1].timing, audioSource.clip.length * 1000f);
+            foreach (MusicNote note in notes)
+            {
+                note.ChangeSpeedPosition(totalLength, chartSpeed, speeds[speeds.Count - 1].timing, tempSpeedMulti);
+            }
 
-        totalLength += (audioSource.clip.length - speedItems[speedItems.Count - 1].timing / 1000f) * tempSpeedMulti;
-        Debug.Log(totalLength);
+            totalLength += (audioSource.clip.length - speeds[speeds.Count - 1].timing / 1000f) * tempSpeedMulti;
+        }
     }
 
     public void RejectTimingSpeed()
     {
-        speedItems = null;
-        beatLinesFolder.SetActive(true);
-        scrollPlayfield.transform.position = Vector3.zero;
-
-        List<MusicNote> notes = FindAllNotesWithTiming(0, audioSource.clip.length * 1000f);
-        foreach (MusicNote note in notes)
+        for (int i = 0; i < timingGroups.Count; i++)
         {
-            note.ResetSpeedPosition(chartSpeed);
+            speedItems = null;
+
+            if (i == timingGroupIndex)
+            {
+                timingGroups[i].gameObject.SetActive(true);
+                timingGroups[i].beatLinesFolder.SetActive(true);
+            }
+            else
+            {
+                timingGroups[i].gameObject.SetActive(false);
+                timingGroups[i].beatLinesFolder.SetActive(false);
+            }
+
+            List<MusicNote> notes = FindAllNotesWithTiming(i, 0, audioSource.clip.length * 1000f);
+            foreach (MusicNote note in notes)
+            {
+                note.ResetSpeedPosition(chartSpeed);
+            }
+
+            timingGroups[i].transform.position = new Vector3(0, -editorCurrentTiming * chartSpeed, 0);
         }
     }
 
     public void ChangeSpeedThroughTiming(float timing)
     {
-        if (speedItems.Count <= 0)
+        for (int index = 0; index < timingGroups.Count; index++)
         {
-            speedMulti = 1f;
-            return;
-        }
+            List<SpeedStorer> speeds = uiManager.speedItems[index];
 
-        float totalLength = 0f;
-        for (int i = 0; i < speedItems.Count; i++)
-        {
-            if (timing < speedItems[i].timing)
+            float tempSpeedMulti = 1f;
+            float totalLength = 0f;
+
+            if (speeds.Count <= 0)
             {
+                tempSpeedMulti = 1f;
+                totalLength += (timing * tempSpeedMulti / 1000f);
+                timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                continue;
+            }
+
+            bool isChecked = false;
+            for (int i = 0; i < speeds.Count; i++)
+            {
+                if (timing < speeds[i].timing)
+                {
+                    if (i == 0)
+                    {
+                        tempSpeedMulti = 1f;
+                        totalLength += (timing * tempSpeedMulti / 1000f);
+                    }
+                    else
+                    {
+                        tempSpeedMulti = speeds[i - 1].speedMulti;
+                        totalLength += (timing - speeds[i - 1].timing) / 1000f * tempSpeedMulti;
+                    }
+                    timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                    isChecked = true;
+                    break;
+                }
+
                 if (i == 0)
                 {
-                    speedMulti = 1f;
-                    totalLength += (timing * speedMulti / 1000f);
+                    tempSpeedMulti = 1f;
+                    totalLength += (speeds[i].timing * tempSpeedMulti / 1000f);
                 }
                 else
                 {
-                    speedMulti = speedItems[i - 1].speedMulti;
-                    totalLength += (timing - speedItems[i - 1].timing) / 1000f * speedMulti;
+                    tempSpeedMulti = speeds[i - 1].speedMulti;
+                    totalLength += (speeds[i].timing - speeds[i - 1].timing) / 1000f * tempSpeedMulti;
                 }
-                scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
-                return;
             }
 
-            if (i == 0)
+            if (!isChecked)
             {
-                speedMulti = 1f;
-                totalLength += (speedItems[i].timing * speedMulti / 1000f);
-            }
-            else
-            {
-                speedMulti = speedItems[i - 1].speedMulti;
-                totalLength += (speedItems[i].timing - speedItems[i - 1].timing) / 1000f * speedMulti;
+                tempSpeedMulti = speeds[speeds.Count - 1].speedMulti;
+                totalLength += (timing - speeds[speeds.Count - 1].timing) / 1000f * tempSpeedMulti;
+                timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
             }
         }
-        speedMulti = speedItems[speedItems.Count - 1].speedMulti;
-        totalLength += (timing - speedItems[speedItems.Count - 1].timing) / 1000f * speedMulti;
-        scrollPlayfield.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
     }
 
-    List<MusicNote> FindAllNotesWithTiming(float beginTiming, float endTiming)
+    List<MusicNote> FindAllNotesWithTiming(int index, float beginTiming, float endTiming)
     {
-        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, tapFolder.transform);
-        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(beginTiming, endTiming,  blackFolder.transform);
-        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, sliceFolder.transform);
-        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, spikeFolder.transform);
-        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, leftTeleportFolder.transform);
-        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, rightTeleportFolder.transform);
+        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].tapFolder.transform);
+        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].blackFolder.transform);
+        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].sliceFolder.transform);
+        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].spikeFolder.transform);
+        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].leftTeleportFolder.transform);
+        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].rightTeleportFolder.transform);
 
         List<MusicNote> foundAllNotes = new List<MusicNote>();
         foundAllNotes.AddRange(foundTaps);
@@ -1080,6 +1169,112 @@ public class EditorManager : MonoBehaviour
         return foundNotes;
     }
 
+    void UpdateGroupIndicators()
+    {
+        List<List<BPMStorer>> timingGroups = uiManager.timingItems;
+        int count = timingGroups.Count;
+        if (count == 0)
+        {
+            uiManager.timingIndicator.text = ValueStorer.noTimingGroupText;
+            uiManager.speedIndicator.text = ValueStorer.noSpeedGroupText;
+        }
+        else
+        {
+            if (timingGroupIndex >= count)
+            {
+                timingGroupIndex = count - 1;
+            }
+            else if (timingGroupIndex < 0)
+            {
+                timingGroupIndex = 0;
+            }
+            uiManager.timingIndicator.text = ValueStorer.hasTimingGroupText + timingGroupIndex.ToString();
+            uiManager.speedIndicator.text = ValueStorer.hasSpeedGroupText + timingGroupIndex.ToString();
+        }
+    }
+
+    public void AddTimingGroup()
+    {
+        foreach (TimingGroup currentTG in timingGroups)
+        {
+            currentTG.gameObject.SetActive(false);
+        }
+
+        GameObject timingGroupObj = Instantiate(timingGroupPrefab.gameObject, Vector3.zero, Quaternion.identity) as GameObject;
+        timingGroupObj.transform.SetParent(timingGroupStorer.transform, false);
+
+        TimingGroup newTimingGroup = timingGroupObj.GetComponent<TimingGroup>();
+        timingGroups.Add(newTimingGroup);
+
+        List<BPMStorer> newTimingItems = new List<BPMStorer>();
+        List<SpeedStorer> newSpeedItems = new List<SpeedStorer>();
+
+        uiManager.timingItems.Add(newTimingItems);
+        uiManager.speedItems.Add(newSpeedItems);
+
+        timingGroupIndex = uiManager.timingItems.Count - 1;
+
+        UpdateGroupIndicators();
+        uiManager.RefreshTimingItems(timingGroupIndex);
+        uiManager.RefreshSpeedItems(timingGroupIndex);
+    }
+
+    public void DeleteTimingGroup()
+    {
+        if (timingGroupIndex < 0 || timingGroupIndex >= uiManager.timingItems.Count)
+        {
+            return;
+        }
+
+        uiManager.timingItems.RemoveAt(timingGroupIndex);
+        uiManager.speedItems.RemoveAt(timingGroupIndex);
+
+        Destroy(timingGroups[timingGroupIndex].gameObject);
+        timingGroups.RemoveAt(timingGroupIndex);
+
+        if (timingGroupIndex >= uiManager.timingItems.Count)
+        {
+            timingGroupIndex -= 1;
+        }
+
+        UpdateGroupIndicators();
+        uiManager.RefreshTimingItems(timingGroupIndex);
+        uiManager.RefreshSpeedItems(timingGroupIndex);
+    }
+
+    public void MoveTimingGroupLeft()
+    {
+        if (timingGroupIndex <= 0)
+        {
+            return;
+        }
+
+        timingGroups[timingGroupIndex].gameObject.SetActive(false);
+        timingGroupIndex -= 1;
+        timingGroups[timingGroupIndex].gameObject.SetActive(true);
+
+        UpdateGroupIndicators();
+        uiManager.RefreshTimingItems(timingGroupIndex);
+        uiManager.RefreshSpeedItems(timingGroupIndex);
+    }
+
+    public void MoveTimingGroupRight()
+    {
+        if (timingGroupIndex >= uiManager.timingItems.Count - 1)
+        {
+            return;
+        }
+
+        timingGroups[timingGroupIndex].gameObject.SetActive(false);
+        timingGroupIndex += 1;
+        timingGroups[timingGroupIndex].gameObject.SetActive(true);
+
+        UpdateGroupIndicators();
+        uiManager.RefreshTimingItems(timingGroupIndex);
+        uiManager.RefreshSpeedItems(timingGroupIndex);
+    }
+
+    /*
     #region Undo & Redo Stack
 
     public void UndoCommand()
@@ -1123,7 +1318,7 @@ public class EditorManager : MonoBehaviour
     public void UndoAddOneNote(GameObject noteObject)
     {
         noteObject.SetActive(false);
-        noteObject.transform.SetParent(undoRedoFolder.transform, true);
+        noteObject.transform.SetParent(timingundoRedoFolder.transform, true);
     }
 
     public void UndoMoveOneNote(GameObject noteObject, float originalTiming, float noteOriginalPosition)
@@ -1197,35 +1392,41 @@ public class EditorManager : MonoBehaviour
     }
 
     #endregion
-
+    */
     #region Chart Properties
 
     void ReloadChartOffsetVisuals(float originalOffset)
     {
         chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
 
-        ChangePositionsThroughOffset(tapFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(blackFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(sliceFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(leftTeleportFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(rightTeleportFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(spikeFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(usedNotesFolder.transform, originalOffset);
-        ChangePositionsThroughOffset(undoRedoFolder.transform, originalOffset);
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            ChangePositionsThroughOffset(timingGroups[i].tapFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].blackFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].sliceFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].leftTeleportFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].rightTeleportFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].spikeFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].usedNotesFolder.transform, originalOffset);
+            ChangePositionsThroughOffset(timingGroups[i].undoRedoFolder.transform, originalOffset);
+        }
     }
 
     void ReloadChartSpeedVisuals()
     {
         chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
 
-        ChangePositionsThroughSpeed(tapFolder.transform);
-        ChangePositionsThroughSpeed(blackFolder.transform);
-        ChangePositionsThroughSpeed(sliceFolder.transform);
-        ChangePositionsThroughSpeed(leftTeleportFolder.transform);
-        ChangePositionsThroughSpeed(rightTeleportFolder.transform);
-        ChangePositionsThroughSpeed(spikeFolder.transform);
-        ChangePositionsThroughSpeed(usedNotesFolder.transform);
-        ChangePositionsThroughSpeed(undoRedoFolder.transform);
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            ChangePositionsThroughSpeed(timingGroups[i].tapFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].blackFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].sliceFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].leftTeleportFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].rightTeleportFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].spikeFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].usedNotesFolder.transform);
+            ChangePositionsThroughSpeed(timingGroups[i].undoRedoFolder.transform);
+        }
     }
 
     public void ChangeChartOffset()
@@ -1240,8 +1441,8 @@ public class EditorManager : MonoBehaviour
 
         ReloadChartOffsetVisuals(originalOffset);
 
-        CommandChangeOffset commandChangeOffset = new CommandChangeOffset(originalOffset, chartOffset);
-        OverrideCommand(commandChangeOffset);
+        //CommandChangeOffset commandChangeOffset = new CommandChangeOffset(originalOffset, chartOffset);
+        //OverrideCommand(commandChangeOffset);
     }
 
     public void ChangeChartSpeed()
@@ -1253,11 +1454,15 @@ public class EditorManager : MonoBehaviour
         {
             chartSpeed = 1;
         }
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            timingGroups[i].transform.position = new Vector3(0, -editorCurrentTiming * chartSpeed, 0);
+        }
 
         ReloadChartSpeedVisuals();
 
-        CommandChangeSpeed commandChangeSpeed = new CommandChangeSpeed(originalSpeed, chartSpeed);
-        OverrideCommand(commandChangeSpeed);
+        //CommandChangeSpeed commandChangeSpeed = new CommandChangeSpeed(originalSpeed, chartSpeed);
+        //OverrideCommand(commandChangeSpeed);
     }
 
     #endregion

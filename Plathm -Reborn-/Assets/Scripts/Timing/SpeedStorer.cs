@@ -18,6 +18,8 @@ public class SpeedStorer : MonoBehaviour
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
         uiManager = GameObject.FindFirstObjectByType<UIManager>();
+
+        ConvertFromValueToText();
     }
 
     // Update is called once per frame
@@ -30,6 +32,12 @@ public class SpeedStorer : MonoBehaviour
     {
         this.index = index;
         numberLabel.text = this.index.ToString();
+    }
+
+    public void ConvertFromValueToText()
+    {
+        timingInputField.text = timing.ToString();
+        speedMultiInputField.text = speedMulti.ToString();
     }
 
     public void ConvertFromTextToValue()
@@ -50,16 +58,16 @@ public class SpeedStorer : MonoBehaviour
 
     public void MoveUp()
     {
-        uiManager.SwitchSpeedItems(this.index, this.index - 1);
+        uiManager.SwitchSpeedItems(editorManager.timingGroupIndex, this.index, this.index - 1);
     }
 
     public void MoveDown()
     {
-        uiManager.SwitchSpeedItems(this.index, this.index + 1);
+        uiManager.SwitchSpeedItems(editorManager.timingGroupIndex, this.index, this.index + 1);
     }
 
     public void DeleteItem()
     {
-        uiManager.RemoveSpeedItem(this.index);
+        uiManager.RemoveSpeedItem(editorManager.timingGroupIndex, this.index);
     }
 }
