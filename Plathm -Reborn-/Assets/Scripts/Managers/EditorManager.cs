@@ -46,6 +46,10 @@ public class EditorManager : MonoBehaviour
     //Chart shenanigans
     private Camera mainCamera;
     public Vector3 worldPosition;
+    [Space(10.0f)]
+    public float horizontalGridValue;
+    public HorizontalGrid confirmedHorizontalGrid = null;
+    public bool isTimingGridConfirm = false;
     public float verticalGridValue;
     [SerializeField] EditOption editOption;
 
@@ -629,6 +633,11 @@ public class EditorManager : MonoBehaviour
             {
                 xPos = verticalGridValue;
             }
+        }
+
+        if (isTimingGridConfirm && confirmedHorizontalGrid)
+        {
+            yPos = horizontalGridValue >= 0 ? horizontalGridValue : 0;
         }
 
         draggedNote.gameObject.transform.position = new Vector3(xPos, yPos, 0);

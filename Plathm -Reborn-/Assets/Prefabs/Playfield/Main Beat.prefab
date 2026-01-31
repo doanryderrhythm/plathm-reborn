@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7234359896515295356}
   - component: {fileID: 2795534122129527505}
+  - component: {fileID: -7807682980826755937}
   m_Layer: 0
   m_Name: Main Beat
   m_TagString: Untagged
@@ -90,3 +91,16 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-7807682980826755937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3906374917543184561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4b3bbcad0f84a4a8dfae4ce540ccf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HorizontalGrid
+  isHovered: 0
