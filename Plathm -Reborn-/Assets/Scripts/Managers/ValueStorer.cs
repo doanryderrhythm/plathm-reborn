@@ -50,6 +50,7 @@ public class ValueStorer : MonoBehaviour
     public static float gridOffset = 0.2f;
 
     public static string tagVerticalGrid = "Vertical Grid";
+    public static string tagHorizontalGrid = "Horizontal Grid";
     public static string tagGrid = "Grid";
 
     public static string currentTimingText = "Current Timing: ";

@@ -18,6 +18,8 @@ public class MusicNote : MonoBehaviour
         SIDE_SPIKE,
     }
 
+    public TimingGroup timingGroup;
+
     public float timing;
 
     [SerializeField] NoteType noteType;
@@ -40,16 +42,14 @@ public class MusicNote : MonoBehaviour
     {
         if (!editorManager.playMode)
         {
+            if (noteType == NoteType.BLACK_NOTE && isBlackActivated)
+            {
+                isBlackActivated = false;
+            }
             return;
         }
 
-        //Not checking negative timing in notes
-        if (timing > 0)
-        {
-            return;
-        }
-
-        if (noteType == NoteType.BLACK_NOTE && isBlackActivated)
+        if (noteType == NoteType.BLACK_NOTE && isBlackActivated && editorManager.audioSource.time > timing)
         {
             Instantiate(editorManager.blackCPerfectPrefab,
                 new Vector3(this.transform.position.x, 0, 0),
@@ -92,6 +92,7 @@ public class MusicNote : MonoBehaviour
         //Check missed notes
         if (timing - editorManager.audioSource.time < -ValueStorer.goodJudgement && editorManager.playMode)
         {
+            Debug.Log("MISSED, " + timingGroup);
             SwitchToUsedFolder();
         }    
     }
@@ -123,8 +124,6 @@ public class MusicNote : MonoBehaviour
 
     void SwitchToUsedFolder()
     {
-        GameObject timingGroupObj = transform.root.gameObject;
-        TimingGroup timingGroup = timingGroupObj.GetComponent<TimingGroup>();
         if (!timingGroup)
         {
             return;

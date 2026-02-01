@@ -65,7 +65,6 @@ public class EditorManager : MonoBehaviour
     private HashSet<Key> reservedBlackKeys;
     private bool isAnyKeyHolding = false;
     private bool isBlackKeyReserved = false;
-    private List<List<SpeedStorer>> speedItems = null;
 
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
@@ -482,15 +481,14 @@ public class EditorManager : MonoBehaviour
                 //CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, note.timing, noteTransform.position.x);
                 //OverrideCommand(commandDeleteOneNote);
 
-                GameObject timingGroupObj = folder.root.gameObject;
-                TimingGroup timingGroup = timingGroupObj.GetComponent<TimingGroup>();
+                TimingGroup timingGroup = note.timingGroup;
 
                 if (!timingGroup)
                 {
                     return;
                 }
 
-                noteTransform.SetParent(timingGroup.undoRedoFolder.transform, true);
+                noteTransform.SetParent(timingGroup.undoRedoFolder.transform, false);
                 note.gameObject.SetActive(false);
             }
         }
@@ -524,6 +522,13 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
+        float finalYPosition = targetPosition.y;
+        GameObject hoveredHorizontalGrid = GetHoveredHorizontalGrid();
+        if (hoveredHorizontalGrid)
+        {
+            finalYPosition = hoveredHorizontalGrid.transform.position.y;
+        }
+
         switch (selectedNoteType)
         {
             case NoteTypeGeneral.TAP_NOTE:
@@ -534,7 +539,7 @@ public class EditorManager : MonoBehaviour
                     return;
                 }
 
-                confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, finalYPosition, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].tapFolder.transform, true);
                 break;
@@ -547,7 +552,7 @@ public class EditorManager : MonoBehaviour
                     return;
                 }
 
-                confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, finalYPosition, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].blackFolder.transform, true);
                 break;
@@ -557,11 +562,11 @@ public class EditorManager : MonoBehaviour
                 Vector3 confirmedPosition = Vector3.zero;
 
                 if (confirmedLane == LanePosition.LEFT_POS)
-                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, finalYPosition, 0);
                 else if (confirmedLane == LanePosition.MIDDLE_POS)
-                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, finalYPosition, 0);
                 else if (confirmedLane == LanePosition.RIGHT_POS)
-                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, finalYPosition, 0);
 
                 confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
@@ -573,11 +578,11 @@ public class EditorManager : MonoBehaviour
                 Vector3 confirmedPosition = Vector3.zero;
 
                 if (confirmedLane == LanePosition.LEFT_POS)
-                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.leftLanePosition.x, finalYPosition, 0);
                 else if (confirmedLane == LanePosition.MIDDLE_POS)
-                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.middleLanePosition.x, finalYPosition, 0);
                 else if (confirmedLane == LanePosition.RIGHT_POS)
-                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, targetPosition.y, 0);
+                    confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, finalYPosition, 0);
 
                 confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
@@ -586,7 +591,7 @@ public class EditorManager : MonoBehaviour
             }
             case NoteTypeGeneral.SLICE_NOTE:
             {
-                confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, finalYPosition, 0), Quaternion.identity) as GameObject;
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].sliceFolder.transform, true);
                 break;
@@ -595,12 +600,12 @@ public class EditorManager : MonoBehaviour
             {
                 if (targetPosition.x >= ValueStorer.minMiddleLaneX && targetPosition.x <= ValueStorer.maxMiddleLaneX)
                 {
-                    confirmedNote = Instantiate(middleSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                    confirmedNote = Instantiate(middleSpikePrefab, new Vector3(0, finalYPosition, 0), Quaternion.identity) as GameObject;
                 }
                 else if ((targetPosition.x >= ValueStorer.minLeftLaneX && targetPosition.x <= ValueStorer.maxLeftLaneX)
                         || (targetPosition.x >= ValueStorer.minRightLaneX && targetPosition.x <= ValueStorer.maxRightLaneX))
                 {
-                    confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, targetPosition.y, 0), Quaternion.identity) as GameObject;
+                    confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, finalYPosition, 0), Quaternion.identity) as GameObject;
                 }
                 confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].spikeFolder.transform, true);
@@ -608,6 +613,13 @@ public class EditorManager : MonoBehaviour
             }
             default: break;
         }
+
+        if (!confirmedNote)
+        {
+            return;
+        }
+
+        confirmedNote.GetComponent<MusicNote>().timingGroup = timingGroups[timingGroupIndex];
 
         //CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.GetComponent<MusicNote>().timing, confirmedNote.transform.position.x);
         //OverrideCommand(commandAddOneNote);
@@ -915,6 +927,20 @@ public class EditorManager : MonoBehaviour
         return null;
     }
 
+    GameObject GetHoveredHorizontalGrid()
+    {
+        GameObject[] grids = GameObject.FindGameObjectsWithTag(ValueStorer.tagHorizontalGrid);
+        foreach (GameObject grid in grids)
+        {
+            HorizontalGrid horizontalGrid = grid.GetComponent<HorizontalGrid>();
+            if (horizontalGrid.isHovered && grid.activeSelf)
+            {
+                return grid;
+            }
+        }
+        return null;
+    }
+
     public void ApplyTimingBPM()
     {
         if (timingGroups.Count == 0)
@@ -1054,8 +1080,6 @@ public class EditorManager : MonoBehaviour
     {
         for (int i = 0; i < timingGroups.Count; i++)
         {
-            speedItems = null;
-
             if (i == timingGroupIndex)
             {
                 timingGroups[i].gameObject.SetActive(true);
