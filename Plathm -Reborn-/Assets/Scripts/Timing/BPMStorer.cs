@@ -58,16 +58,16 @@ public class BPMStorer : MonoBehaviour
 
     public void MoveUp()
     {
-        uiManager.SwitchTimingItems(editorManager.timingGroupIndex, this.index, this.index - 1);
+        uiManager.SwitchTimingItems(this.index, this.index - 1);
     }
 
     public void MoveDown()
     {
-        uiManager.SwitchTimingItems(editorManager.timingGroupIndex, this.index, this.index + 1);
+        uiManager.SwitchTimingItems(this.index, this.index + 1);
     }
 
     public void DeleteItem()
     {
-        uiManager.RemoveTimingItem(editorManager.timingGroupIndex, this.index);
+        uiManager.RemoveTimingItem(this.index);
     }
 }

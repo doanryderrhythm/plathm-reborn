@@ -12,7 +12,7 @@ public class UIManager : MonoBehaviour
 
     [Header("Timing Field")]
     public TMP_Text timingIndicator;
-    public List<List<BPMStorer>> timingItems;
+    public List<BPMStorer> timingItems;
     [SerializeField] GameObject timingItemStorer;
     [SerializeField] GameObject timingItemPrefab;
 
@@ -30,7 +30,7 @@ public class UIManager : MonoBehaviour
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
 
-        timingItems = new List<List<BPMStorer>>();
+        timingItems = new List<BPMStorer>();
         speedItems = new List<List<SpeedStorer>>();
 
         ChangeBeatDensity();
@@ -56,20 +56,15 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void AddTimingItem(int index)
+    public void AddTimingItem()
     {
-        if (index < 0 || index >= timingItems.Count)
-        {
-            return;
-        }
-
         GameObject timingItem = Instantiate(timingItemPrefab) as GameObject;
 
         BPMStorer BPMStorer = timingItem.GetComponent<BPMStorer>();
         if (BPMStorer)
         {
-            timingItems[index].Add(BPMStorer);
-            BPMStorer.ChangeNumberLabel(timingItems[index].IndexOf(BPMStorer));
+            timingItems.Add(BPMStorer);
+            BPMStorer.ChangeNumberLabel(timingItems.IndexOf(BPMStorer));
         }
 
         timingItem.transform.SetParent(timingItemStorer.transform, false);
@@ -94,6 +89,7 @@ public class UIManager : MonoBehaviour
         speedItem.transform.SetParent(speedItemStorer.transform, false);
     }
 
+    /*
     public void RefreshTimingItems(int index)
     {
         if (timingItems.Count == 0)
@@ -126,6 +122,7 @@ public class UIManager : MonoBehaviour
             timingItem.transform.SetParent(timingItemStorer.transform, false);
         }
     }
+    */
 
     public void RefreshSpeedItems(int index)
     {
@@ -160,32 +157,27 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SwitchTimingItems(int index, int selectedIndex, int targetIndex)
+    public void SwitchTimingItems(int selectedIndex, int targetIndex)
     {
-        if (index < 0 || index >= timingItems[index].Count)
+        if (selectedIndex < 0 || selectedIndex >= timingItems.Count)
         {
             return;
         }
 
-        if (selectedIndex < 0 || selectedIndex >= timingItems[index].Count)
+        if (targetIndex < 0 || targetIndex >= timingItems.Count)
         {
             return;
         }
 
-        if (targetIndex < 0 || targetIndex >= timingItems[index].Count)
-        {
-            return;
-        }
+        timingItems[selectedIndex].transform.SetSiblingIndex(targetIndex);
+        timingItems[targetIndex].transform.SetSiblingIndex(selectedIndex);
 
-        timingItems[index][selectedIndex].transform.SetSiblingIndex(targetIndex);
-        timingItems[index][targetIndex].transform.SetSiblingIndex(selectedIndex);
+        timingItems[selectedIndex].ChangeNumberLabel(targetIndex);
+        timingItems[targetIndex].ChangeNumberLabel(selectedIndex);
 
-        timingItems[index][selectedIndex].ChangeNumberLabel(targetIndex);
-        timingItems[index][targetIndex].ChangeNumberLabel(selectedIndex);
-
-        BPMStorer tempBPMStorer = timingItems[index][selectedIndex];
-        timingItems[index][selectedIndex] = timingItems[index][targetIndex];
-        timingItems[index][targetIndex] = tempBPMStorer;
+        BPMStorer tempBPMStorer = timingItems[selectedIndex];
+        timingItems[selectedIndex] = timingItems[targetIndex];
+        timingItems[targetIndex] = tempBPMStorer;
     }
 
     public void SwitchSpeedItems(int index, int selectedIndex, int targetIndex)
@@ -216,31 +208,26 @@ public class UIManager : MonoBehaviour
         speedItems[index][targetIndex] = tempSpeedStorer;
     }
 
-    public void RemoveTimingItem(int listIndex, int index)
+    public void RemoveTimingItem(int index)
     {
-        if (listIndex < 0 || listIndex >= timingItems.Count)
+        if (index < 0 || index >= timingItems.Count)
         {
             return;
         }
 
-        if (index < 0 || index >= timingItems[listIndex].Count)
-        {
-            return;
-        }
-
-        BPMStorer bpmStorer = timingItems[listIndex][index];
+        BPMStorer bpmStorer = timingItems[index];
         if (!bpmStorer)
         {
             return;
         }
-        timingItems[listIndex].RemoveAt(index);
+        timingItems.RemoveAt(index);
         Destroy(bpmStorer.gameObject);
 
-        if (timingItems[listIndex].Count != 0 && index < timingItems[listIndex].Count)
+        if (timingItems.Count != 0 && index < timingItems.Count)
         {
-            for (int i = index; i < timingItems[listIndex].Count; i++)
+            for (int i = index; i < timingItems.Count; i++)
             {
-                timingItems[index][i].ChangeNumberLabel(i);
+                timingItems[i].ChangeNumberLabel(i);
             }
         }
     }
@@ -288,12 +275,9 @@ public class UIManager : MonoBehaviour
 
     public bool IsBPMZero()
     {
-        for (int listIndex = 0; listIndex < timingItems.Count; listIndex++)
+        if (timingItems.Exists(item => item.BPM == 0))
         {
-            if (timingItems[listIndex].Exists(item => item.BPM == 0))
-            {
-                return true;
-            }
+            return true;
         }
         return false;
     }

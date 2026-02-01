@@ -74,6 +74,7 @@ public class EditorManager : MonoBehaviour
     [Space(10.0f)]
     [SerializeField] GameObject stepBeatPrefab;
     [SerializeField] GameObject mainBeatPrefab;
+    [SerializeField] GameObject beatLinesFolder;
 
     [Header("Editor Settings")]
     public bool playMode = false;
@@ -876,7 +877,7 @@ public class EditorManager : MonoBehaviour
 
     public void AddTimingItem()
     {
-        uiManager.AddTimingItem(timingGroupIndex);
+        uiManager.AddTimingItem();
     }
 
     public void AddSpeedItem()
@@ -948,7 +949,7 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        foreach (Transform beatLineT in timingGroups[timingGroupIndex].beatLinesFolder.transform)
+        foreach (Transform beatLineT in beatLinesFolder.transform)
         {
             if (beatLineT)
             {
@@ -962,31 +963,31 @@ public class EditorManager : MonoBehaviour
         }
 
         float tempTiming = 0;
-        List<List<BPMStorer>> timingItems = uiManager.timingItems;
+        List<BPMStorer> timingItems = uiManager.timingItems;
 
-        if (timingItems[timingGroupIndex].Exists(item => item.BPM == 0))
+        if (timingItems.Exists(item => item.BPM == 0))
         {
             return;
         }
 
-        for (int i = 0; i < timingItems[timingGroupIndex].Count; i++)
+        for (int i = 0; i < timingItems.Count; i++)
         {
-            tempTiming = timingItems[timingGroupIndex][i].timing;
+            tempTiming = timingItems[i].timing;
             int mainBeatCount = 0;
             int stepBeatCount = 0;
 
-            while (i + 1 != timingItems[timingGroupIndex].Count &&
-                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f < timingItems[timingGroupIndex][i + 1].timing)
+            while (i + 1 != timingItems.Count &&
+                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
             {
-                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f;
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {
-                    beat = Instantiate(stepBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
+                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
                 }
                 else
                 {
-                    beat = Instantiate(mainBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
+                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
                 }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
                 stepBeatCount++;
@@ -1000,18 +1001,18 @@ public class EditorManager : MonoBehaviour
             mainBeatCount = 0;
             stepBeatCount = 0;
 
-            while (i + 1 == timingItems[timingGroupIndex].Count &&
-                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f < audioSource.clip.length * 1000)
+            while (i + 1 == timingItems.Count &&
+                tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
             {
-                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[timingGroupIndex][i].BPM * 1000f;
+                float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {
-                    beat = Instantiate(stepBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
+                    beat = Instantiate(stepBeatPrefab, beatLinesFolder.transform, false);
                 }
                 else
                 {
-                    beat = Instantiate(mainBeatPrefab, timingGroups[timingGroupIndex].beatLinesFolder.transform, false);
+                    beat = Instantiate(mainBeatPrefab, beatLinesFolder.transform, false);
                 }
                 beat.transform.localPosition = new Vector3(0, chartSpeed * (totalTiming / 1000f), 0);
                 stepBeatCount++;
@@ -1030,10 +1031,16 @@ public class EditorManager : MonoBehaviour
     public void ApplyTimingSpeed()
     {
         timingGroupStorer.transform.position = Vector3.zero;
+        beatLinesFolder.SetActive(false);
+
         for (int index = 0; index < timingGroups.Count; index++)
         {
             timingGroups[index].gameObject.SetActive(true);
-            timingGroups[index].beatLinesFolder.SetActive(false);
+
+            if (uiManager.speedItems[index].Count <= 0)
+            {
+                return;
+            }
 
             List<SpeedStorer> speeds = uiManager.speedItems[index];
             if (speeds.Count <= 0)
@@ -1083,21 +1090,18 @@ public class EditorManager : MonoBehaviour
             if (i == timingGroupIndex)
             {
                 timingGroups[i].gameObject.SetActive(true);
-                timingGroups[i].beatLinesFolder.SetActive(true);
             }
             else
             {
                 timingGroups[i].gameObject.SetActive(false);
-                timingGroups[i].beatLinesFolder.SetActive(false);
             }
+            beatLinesFolder.SetActive(true);
 
             List<MusicNote> notes = FindAllNotesWithTiming(i, 0, audioSource.clip.length * 1000f);
             foreach (MusicNote note in notes)
             {
                 note.ResetSpeedPosition(chartSpeed);
             }
-
-            timingGroups[i].transform.position = new Vector3(0, -editorCurrentTiming * chartSpeed, 0);
         }
     }
 
@@ -1195,11 +1199,9 @@ public class EditorManager : MonoBehaviour
 
     void UpdateGroupIndicators()
     {
-        List<List<BPMStorer>> timingGroups = uiManager.timingItems;
         int count = timingGroups.Count;
         if (count == 0)
         {
-            uiManager.timingIndicator.text = ValueStorer.noTimingGroupText;
             uiManager.speedIndicator.text = ValueStorer.noSpeedGroupText;
         }
         else
@@ -1212,12 +1214,11 @@ public class EditorManager : MonoBehaviour
             {
                 timingGroupIndex = 0;
             }
-            uiManager.timingIndicator.text = ValueStorer.hasTimingGroupText + timingGroupIndex.ToString();
             uiManager.speedIndicator.text = ValueStorer.hasSpeedGroupText + timingGroupIndex.ToString();
         }
     }
 
-    public void AddTimingGroup()
+    public void AddSpeedGroup()
     {
         foreach (TimingGroup currentTG in timingGroups)
         {
@@ -1230,40 +1231,44 @@ public class EditorManager : MonoBehaviour
         TimingGroup newTimingGroup = timingGroupObj.GetComponent<TimingGroup>();
         timingGroups.Add(newTimingGroup);
 
-        List<BPMStorer> newTimingItems = new List<BPMStorer>();
         List<SpeedStorer> newSpeedItems = new List<SpeedStorer>();
-
-        uiManager.timingItems.Add(newTimingItems);
         uiManager.speedItems.Add(newSpeedItems);
 
-        timingGroupIndex = uiManager.timingItems.Count - 1;
+        timingGroupIndex = uiManager.speedItems.Count - 1;
 
         UpdateGroupIndicators();
-        uiManager.RefreshTimingItems(timingGroupIndex);
         uiManager.RefreshSpeedItems(timingGroupIndex);
     }
 
-    public void DeleteTimingGroup()
+    public void DeleteSpeedGroup()
     {
-        if (timingGroupIndex < 0 || timingGroupIndex >= uiManager.timingItems.Count)
+        if (timingGroupIndex < 0 || timingGroupIndex >= uiManager.speedItems.Count)
         {
             return;
         }
 
-        uiManager.timingItems.RemoveAt(timingGroupIndex);
         uiManager.speedItems.RemoveAt(timingGroupIndex);
-
-        Destroy(timingGroups[timingGroupIndex].gameObject);
         timingGroups.RemoveAt(timingGroupIndex);
 
-        if (timingGroupIndex >= uiManager.timingItems.Count)
+        if (timingGroupIndex >= uiManager.speedItems.Count)
         {
             timingGroupIndex -= 1;
         }
 
         UpdateGroupIndicators();
-        uiManager.RefreshTimingItems(timingGroupIndex);
         uiManager.RefreshSpeedItems(timingGroupIndex);
+
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            if (i == timingGroupIndex)
+            {
+                timingGroups[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                timingGroups[i].gameObject.SetActive(false);
+            }
+        }
     }
 
     public void MoveTimingGroupLeft()
@@ -1273,29 +1278,47 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        timingGroups[timingGroupIndex].gameObject.SetActive(false);
         timingGroupIndex -= 1;
-        timingGroups[timingGroupIndex].gameObject.SetActive(true);
 
         UpdateGroupIndicators();
-        uiManager.RefreshTimingItems(timingGroupIndex);
         uiManager.RefreshSpeedItems(timingGroupIndex);
+
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            if (i == timingGroupIndex)
+            {
+                timingGroups[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                timingGroups[i].gameObject.SetActive(false);
+            }
+        }
     }
 
     public void MoveTimingGroupRight()
     {
-        if (timingGroupIndex >= uiManager.timingItems.Count - 1)
+        if (timingGroupIndex >= uiManager.speedItems.Count - 1)
         {
             return;
         }
 
-        timingGroups[timingGroupIndex].gameObject.SetActive(false);
         timingGroupIndex += 1;
-        timingGroups[timingGroupIndex].gameObject.SetActive(true);
 
         UpdateGroupIndicators();
-        uiManager.RefreshTimingItems(timingGroupIndex);
         uiManager.RefreshSpeedItems(timingGroupIndex);
+
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            if (i == timingGroupIndex)
+            {
+                timingGroups[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                timingGroups[i].gameObject.SetActive(false);
+            }
+        }
     }
 
     /*

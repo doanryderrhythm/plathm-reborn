@@ -11,7 +11,6 @@ public class TimingGroup : MonoBehaviour
     public GameObject spikeFolder;
     public GameObject usedNotesFolder;
     public GameObject undoRedoFolder;
-    public GameObject beatLinesFolder;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
