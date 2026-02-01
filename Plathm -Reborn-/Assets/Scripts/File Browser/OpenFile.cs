@@ -54,7 +54,6 @@ public class OpenFile : MonoBehaviour
             {
                 AudioClip audioClip = DownloadHandlerAudioClip.GetContent(www);
                 audioSource.clip = audioClip;
-                audioSource.Play();
             }
         }
         else if (fileType == FileType.TYPE_JACKET)

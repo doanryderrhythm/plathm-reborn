@@ -63,8 +63,7 @@ public class EditorManager : MonoBehaviour
     //Gameplay shenanigans
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
-    private bool isAnyKeyHolding = false;
-    private bool isBlackKeyReserved = false;
+    private HashSet<KeyCode> pressedKeys = new HashSet<KeyCode>();
 
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
@@ -180,6 +179,29 @@ public class EditorManager : MonoBehaviour
 
         ConvertFromMouseToWorld();
 
+        foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+        {
+            if (!playMode)
+            {
+                break;
+            }
+
+            if (Input.GetKeyDown(key))
+            {
+                pressedKeys.Add(key);
+
+                if (TryKeyCodeToNewKey(key, out Key finalKey) && !reservedTapKeys.Contains(finalKey))
+                {
+                    ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+                }
+            }
+
+            if (Input.GetKeyUp(key))
+            {
+                pressedKeys.Remove(key);
+            }
+        }
+
         if (!playMode
             && editOption == EditOption.NOTE_ADD
             && isNoteTypeSelected
@@ -242,25 +264,28 @@ public class EditorManager : MonoBehaviour
 
         if (playMode)
         {
+            if (pressedKeys.Count > 0)
+            {
+                foreach (KeyCode keyCode in pressedKeys)
+                {
+                    if (TryKeyCodeToNewKey(keyCode, out Key finalKey) && !reservedBlackKeys.Contains(finalKey))
+                    {
+                        ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
+                        break;
+                    }
+                }
+            }
+
             ChangeSpeedThroughTiming(audioSource.time * 1000f);
         }
         else
         {
             ExecuteScrolling();
         }
-
-        if (isAnyKeyHolding && isBlackKeyReserved)
-        {
-            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
-        }
     }
 
     private void OnEnable()
     {
-        inputAnyKey.action.started     += OnAnyKeyStarted;
-        inputAnyKey.action.canceled    += OnAnyKeyCanceled;
-        inputAnyKey.action.performed   += CheckReservedTapKeys;
-
         inputLeftTeleport.action.performed  += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.LEFT_TELEPORT);
         inputRightTeleport.action.performed += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.RIGHT_TELEPORT);
         inputSlice.action.performed         += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.SLICE_NOTE);
@@ -270,13 +295,17 @@ public class EditorManager : MonoBehaviour
 
     private void OnDisable()
     {
-        inputAnyKey.action.performed -= CheckReservedTapKeys;
-
         inputLeftTeleport.action.performed  -= _ => { };
         inputRightTeleport.action.performed -= _ => { };
         inputSlice.action.performed         -= _ => { };
 
         editorInputScroll.action.Disable();
+    }
+
+    private bool TryKeyCodeToNewKey(KeyCode keyCode, out Key key)
+    {
+        key = Key.None;
+        return Enum.TryParse(keyCode.ToString(), ignoreCase: true, out key);
     }
 
     void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
@@ -314,109 +343,66 @@ public class EditorManager : MonoBehaviour
         AddReservedKeys(inputRightTeleport, ref reservedBlackKeys);
     }
 
-    void CheckReservedTapKeys(InputAction.CallbackContext context)
+    void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
     {
-        if (IsAnyKeyReserved(reservedTapKeys))
+        List<GameObject> notesInFolders = new List<GameObject>();
+
+        for (int i = 0; i < timingGroups.Count; i++)
         {
-            ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+            GameObject detectedFolder = null;
+
+            if (noteType == NoteTypeGeneral.TAP_NOTE) detectedFolder = timingGroups[i].tapFolder;
+            else if (noteType == NoteTypeGeneral.BLACK_NOTE) detectedFolder = timingGroups[i].blackFolder;
+            else if (noteType == NoteTypeGeneral.SLICE_NOTE) detectedFolder = timingGroups[i].sliceFolder;
+            else if (noteType == NoteTypeGeneral.LEFT_TELEPORT) detectedFolder = timingGroups[i].leftTeleportFolder;
+            else if (noteType == NoteTypeGeneral.RIGHT_TELEPORT) detectedFolder = timingGroups[i].rightTeleportFolder;
+            else if (noteType == NoteTypeGeneral.SPIKE) detectedFolder = timingGroups[i].spikeFolder;
+
+            foreach (Transform detectedNote in detectedFolder.transform)
+            {
+                notesInFolders.Add(detectedNote.gameObject);
+            }
         }
+
+        ExecuteInput(notesInFolders);
     }
 
-    void OnAnyKeyStarted(InputAction.CallbackContext context)
+    void ExecuteInput(List<GameObject> notes)
     {
         if (!playMode)
         {
             return;
         }
 
-        isAnyKeyHolding = true;
-
-        isBlackKeyReserved = IsAnyKeyReserved(reservedBlackKeys);
-        if (isBlackKeyReserved)
-        {
-            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
-        }
-    }
-
-    void OnAnyKeyCanceled(InputAction.CallbackContext context)
-    {
-        isAnyKeyHolding = false;
-        isBlackKeyReserved = false;
-    }
-
-    private bool IsAnyKeyReserved(HashSet<Key> keySet)
-    {
-        var keyboard = Keyboard.current;
-        if (keyboard == null)
-        {
-            return false;
-        }
-
-        foreach (var keyControl in keyboard.allKeys)
-        {
-            if (keyControl == null)
-            {
-                continue;
-            }
-
-            if (!keyControl.wasPressedThisFrame)
-            {
-                continue;
-            }
-
-            if (keySet.Contains(keyControl.keyCode))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
-    {
-        for (int i = 0; i < timingGroups.Count; i++)
-        {
-            if (noteType == NoteTypeGeneral.TAP_NOTE) ExecuteInput(timingGroups[i].tapFolder);
-            else if (noteType == NoteTypeGeneral.BLACK_NOTE) ExecuteInput(timingGroups[i].blackFolder);
-            else if (noteType == NoteTypeGeneral.SLICE_NOTE) ExecuteInput(timingGroups[i].sliceFolder);
-            else if (noteType == NoteTypeGeneral.LEFT_TELEPORT) ExecuteInput(timingGroups[i].leftTeleportFolder);
-            else if (noteType == NoteTypeGeneral.RIGHT_TELEPORT) ExecuteInput(timingGroups[i].rightTeleportFolder);
-            else if (noteType == NoteTypeGeneral.SPIKE) ExecuteInput(timingGroups[i].spikeFolder);
-        }
-    }
-
-    void ExecuteInput(GameObject folder)
-    {
-        if (!playMode)
+        if (notes.Count == 0)
         {
             return;
         }
 
         MusicNote lowestNote = null;
 
-        foreach (Transform child in folder.transform)
+        foreach (GameObject note in notes)
         {
-            if (!child)
+            if (!note)
             {
                 continue;
             }
 
-            MusicNote note = child.gameObject.GetComponent<MusicNote>();
-            if (!note)
+            MusicNote musicNote = note.GetComponent<MusicNote>();
+            if (!musicNote)
             {
                 continue;
             }
 
             if (!lowestNote)
             {
-                lowestNote = note;
+                lowestNote = musicNote;
                 continue;
             }
 
-            if (note.timing < lowestNote.timing)
+            if (musicNote.timing < lowestNote.timing)
             {
-                lowestNote = note;
+                lowestNote = musicNote;
             }
         }
 
@@ -1248,7 +1234,10 @@ public class EditorManager : MonoBehaviour
         }
 
         uiManager.speedItems.RemoveAt(timingGroupIndex);
+
+        TimingGroup targetTimingGroup = timingGroups[timingGroupIndex];
         timingGroups.RemoveAt(timingGroupIndex);
+        Destroy(targetTimingGroup.gameObject);
 
         if (timingGroupIndex >= uiManager.speedItems.Count)
         {

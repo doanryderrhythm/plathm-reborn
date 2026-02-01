@@ -432,7 +432,7 @@ GameObject:
   - component: {fileID: 17717100}
   - component: {fileID: 17717099}
   m_Layer: 5
-  m_Name: Timing Group Manager
+  m_Name: Speed Group Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
