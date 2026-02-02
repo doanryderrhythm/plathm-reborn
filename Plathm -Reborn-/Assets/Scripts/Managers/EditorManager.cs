@@ -104,6 +104,7 @@ public class EditorManager : MonoBehaviour
     public AudioSource audioSource;
 
     [Header("Gameplay")]
+    [SerializeField] TestPlayer player;
     public int timingGroupIndex = 0;
     [SerializeField] GameObject timingGroupStorer;
     [SerializeField] TimingGroup timingGroupPrefab;
@@ -327,6 +328,12 @@ public class EditorManager : MonoBehaviour
 
     void InitiateUI()
     {
+        offsetInputField.text = "0";
+        speedInputField.text = "1";
+
+        ChangeChartOffset();
+        ChangeChartSpeed();
+
         chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
         chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
     }
@@ -493,6 +500,11 @@ public class EditorManager : MonoBehaviour
         if (chartSpeed == 0f)
         {
             Debug.Log("You can only run the chart with speed being 0.");
+            return;
+        }
+
+        if (timingGroups.Count == 0)
+        {
             return;
         }
 
@@ -780,6 +792,11 @@ public class EditorManager : MonoBehaviour
 
     public void SetPlayMode(bool isPlayMode)
     {
+        if (isPlayMode && uiManager.timingItems.Count <= 0)
+        {
+            return;
+        }
+
         playMode = isPlayMode;
 
         if (playMode == false)
@@ -793,9 +810,12 @@ public class EditorManager : MonoBehaviour
             ReenableNotes();
 
             RejectTimingSpeed();
+
+            player.ChangePosition(player.originalPosition);
         }
         else
         {
+            player.originalPosition = player.lanePosition;
             ApplyTimingSpeed();
             audioSource.Play();
         }
@@ -1469,13 +1489,18 @@ public class EditorManager : MonoBehaviour
     {
         float originalOffset = chartOffset;
 
-        bool isParsed = float.TryParse(offsetInputField.text, out chartOffset);
+        bool isParsed = float.TryParse(offsetInputField.text, out float newChartOffset);
         if (!isParsed)
         {
             chartOffset = 0;
         }
+        else
+        {
+            chartOffset = newChartOffset / 1000f;
+        }
 
         ReloadChartOffsetVisuals(originalOffset);
+        ApplyTimingBPM();
 
         //CommandChangeOffset commandChangeOffset = new CommandChangeOffset(originalOffset, chartOffset);
         //OverrideCommand(commandChangeOffset);
@@ -1496,6 +1521,7 @@ public class EditorManager : MonoBehaviour
         }
 
         ReloadChartSpeedVisuals();
+        ApplyTimingBPM();
 
         //CommandChangeSpeed commandChangeSpeed = new CommandChangeSpeed(originalSpeed, chartSpeed);
         //OverrideCommand(commandChangeSpeed);

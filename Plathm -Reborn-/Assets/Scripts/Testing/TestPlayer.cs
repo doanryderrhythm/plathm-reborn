@@ -6,7 +6,9 @@ public class TestPlayer : MonoBehaviour
     //Other shenanigans
     private EditorManager editorManager;
 
-    [SerializeField] EditorManager.LanePosition lanePosition = EditorManager.LanePosition.MIDDLE_POS;
+    public EditorManager.LanePosition originalPosition;
+
+    public EditorManager.LanePosition lanePosition = EditorManager.LanePosition.MIDDLE_POS;
 
     [SerializeField] InputAction moveLeftAction;
     [SerializeField] InputAction moveRightAction;
@@ -87,10 +89,28 @@ public class TestPlayer : MonoBehaviour
         }
     }
 
-    void ChangePosition(EditorManager.LanePosition lanePosition)
+    public void ChangePosition(EditorManager.LanePosition lanePosition)
     {
         this.lanePosition = lanePosition;
         
+        if (this.lanePosition == EditorManager.LanePosition.LEFT_POS)
+        {
+            this.transform.position = ValueStorer.playerLeftPosition;
+        }
+        else if (this.lanePosition == EditorManager.LanePosition.MIDDLE_POS)
+        {
+            this.transform.position = ValueStorer.playerMiddlePosition;
+        }
+        else if (this.lanePosition == EditorManager.LanePosition.RIGHT_POS)
+        {
+            this.transform.position = ValueStorer.playerRightPosition;
+        }
+    }
+
+    public void ChangePosition(int position)
+    {
+        this.lanePosition = (EditorManager.LanePosition)position;
+
         if (this.lanePosition == EditorManager.LanePosition.LEFT_POS)
         {
             this.transform.position = ValueStorer.playerLeftPosition;
