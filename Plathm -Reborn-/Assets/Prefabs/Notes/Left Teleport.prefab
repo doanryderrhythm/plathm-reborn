@@ -78,9 +78,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 875063817
-  m_SortingLayer: 8
+  m_SortingLayer: 9
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: f0209d7fbcf82e041acda69b313fa2bb, type: 3}
+  m_Sprite: {fileID: 3846851407516334813, guid: c58ed9d21f728834bb59ee86f3e69355, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -103,4 +103,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f874d8146c713c948a049cb8a0b2b9cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MusicNote
+  timingGroup: {fileID: 0}
+  timing: 0
   noteType: 3
+  isBlackActivated: 0
