@@ -6,6 +6,7 @@ using TMPro;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.UI;
 
 public class EditorManager : MonoBehaviour
@@ -63,7 +64,7 @@ public class EditorManager : MonoBehaviour
     //Gameplay shenanigans
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
-    private HashSet<KeyCode> pressedKeys = new HashSet<KeyCode>();
+    private HashSet<Key> pressedKeys = new HashSet<Key>();
 
     //Note selection
     [SerializeField] bool isNoteTypeSelected;
@@ -180,26 +181,32 @@ public class EditorManager : MonoBehaviour
 
         ConvertFromMouseToWorld();
 
-        foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+        if (playMode)
         {
-            if (!playMode)
+            var keyboard = Keyboard.current;
+            if (keyboard != null)
             {
-                break;
-            }
-
-            if (Input.GetKeyDown(key))
-            {
-                pressedKeys.Add(key);
-
-                if (TryKeyCodeToNewKey(key, out Key finalKey) && !reservedTapKeys.Contains(finalKey))
+                foreach (var keyControl in keyboard.allKeys)
                 {
-                    ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
-                }
-            }
+                    Key finalKey;
+                    if (!TryKeyControlToNewKey(keyControl, out finalKey))
+                    {
+                        continue;
+                    }
 
-            if (Input.GetKeyUp(key))
-            {
-                pressedKeys.Remove(key);
+                    if (keyControl.wasPressedThisFrame)
+                    {
+                        pressedKeys.Add(finalKey);
+                        if (!reservedTapKeys.Contains(finalKey))
+                        {
+                            ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+                        }
+                    }
+                    else if (keyControl.wasReleasedThisFrame)
+                    {
+                        pressedKeys.Remove(finalKey);
+                    }
+                }
             }
         }
 
@@ -263,16 +270,22 @@ public class EditorManager : MonoBehaviour
             ExecuteDeleteInFolder(timingGroups[timingGroupIndex].spikeFolder.transform);
         }
 
+        Debug.Log(pressedKeys.Count);
+
         if (playMode)
         {
-            if (pressedKeys.Count > 0)
+            var keyboard = Keyboard.current;
+            if (keyboard != null)
             {
-                foreach (KeyCode keyCode in pressedKeys)
+                if (pressedKeys.Count > 0)
                 {
-                    if (TryKeyCodeToNewKey(keyCode, out Key finalKey) && !reservedBlackKeys.Contains(finalKey))
+                    foreach (Key key in pressedKeys)
                     {
-                        ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
-                        break;
+                        if (!reservedBlackKeys.Contains(key))
+                        {
+                            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
+                            break;
+                        }
                     }
                 }
             }
@@ -303,10 +316,17 @@ public class EditorManager : MonoBehaviour
         editorInputScroll.action.Disable();
     }
 
-    private bool TryKeyCodeToNewKey(KeyCode keyCode, out Key key)
+    bool TryKeyControlToNewKey(KeyControl keyControl, out Key finalKey)
     {
-        key = Key.None;
-        return Enum.TryParse(keyCode.ToString(), ignoreCase: true, out key);
+        finalKey = Key.None;
+
+        if (keyControl == null)
+        {
+            return false;
+        }
+
+        finalKey = keyControl.keyCode;
+        return finalKey != Key.None;
     }
 
     void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
