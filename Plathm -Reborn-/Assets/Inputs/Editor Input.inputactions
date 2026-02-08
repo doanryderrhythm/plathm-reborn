@@ -18,15 +18,37 @@
             ],
             "bindings": [
                 {
-                    "name": "",
-                    "id": "80fa9e8e-70b9-4cc8-8691-a65f19bca00e",
-                    "path": "<Mouse>/scroll",
+                    "name": "One Modifier",
+                    "id": "9497c704-6757-4e04-ad7c-5bce547eaffd",
+                    "path": "OneModifier",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Scroll",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "Modifier",
+                    "id": "7ec7f1a3-5cda-45b7-ab58-13ebd6ededea",
+                    "path": "<Keyboard>/leftCtrl",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Mouse",
                     "action": "Scroll",
                     "isComposite": false,
-                    "isPartOfComposite": false
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Binding",
+                    "id": "79c5073e-5509-447a-b2ff-a003599a3e20",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Scroll",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         }

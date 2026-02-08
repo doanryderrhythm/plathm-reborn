@@ -21,6 +21,7 @@ public class MusicNote : MonoBehaviour
     public TimingGroup timingGroup;
 
     public float timing;
+    public float temporaryTiming;
 
     [SerializeField] NoteType noteType;
     [SerializeField] bool isBlackActivated = false;

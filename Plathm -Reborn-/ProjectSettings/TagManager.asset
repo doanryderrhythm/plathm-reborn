@@ -91,5 +91,11 @@ TagManager:
   - name: Judgement/DAMAGE
     uniqueID: 288848651
     locked: 0
+  - name: Edit Option/Multiple Notes Signal
+    uniqueID: 3018922485
+    locked: 0
+  - name: Edit Option/Select Note Area
+    uniqueID: 4192699489
+    locked: 0
   m_RenderingLayers:
   - Default

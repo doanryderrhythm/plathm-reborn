@@ -32,14 +32,14 @@ public class ValueStorer : MonoBehaviour
     public static float goodJudgement = 0.14f;
 
     //Note's width
-    public static float tapWidth = 1.0f;
+    public static float tapWidth = 0.9f;
     public static float blackWidth = 0.8f;
     public static float teleportWidth = 2.6f;
     public static float sliceWidth = 12.0f;
     public static float spikeWidth = 3f;
 
     //Note's height
-    public static float tapHeight = 1.0f;
+    public static float tapHeight = 0.9f;
     public static float blackHeight = 0.8f;
     public static float teleportHeight = 1.0f;
     public static float sliceHeight = 0.8f;
@@ -66,5 +66,5 @@ public class ValueStorer : MonoBehaviour
     public static string noSpeedGroupText = "No Speed Groups";
     public static string hasSpeedGroupText = "Speed Group ";
 
-    public static float mouseScrollSpeed = 0.2f;
+    public static float mouseScrollSpeed = 0.5f;
 }
