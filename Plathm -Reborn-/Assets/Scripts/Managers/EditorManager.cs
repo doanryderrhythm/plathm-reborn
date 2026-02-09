@@ -363,6 +363,7 @@ public class EditorManager : MonoBehaviour
                 GameObject alignBeat = FindAlignArea(alignValue);
 
                 if (alignBeat != null) alignValue = alignBeat.transform.localPosition.y - 
+                        (openNoteTempTiming < closeNoteTempTiming ? openNoteTempTiming * chartSpeed : closeNoteTempTiming * chartSpeed);
 
                 for (int i = 0; i < foundNotesInArea.Count; i++)
                 {
