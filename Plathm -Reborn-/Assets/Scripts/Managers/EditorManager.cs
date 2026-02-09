@@ -152,6 +152,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] GameObject noteArea;
     private List<Transform> foundNotesInArea;
     private bool isNoteAreaAdded = false;
+    private Vector3 fixedAreaPosition;
     [SerializeField] Vector3 lockedAreaPosition;
     private Transform lowestNoteArea;
 
@@ -305,6 +306,8 @@ public class EditorManager : MonoBehaviour
                     }
 
                     lowestNoteArea = GetLowestNote();
+                    fixedAreaPosition = (openNoteArea.transform.position.y < closeNoteArea.transform.position.y ?
+                        openNoteArea.transform.position : closeNoteArea.transform.position);
                     lockedAreaPosition = worldPosition;
                 }
             }
@@ -355,6 +358,12 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.isPressed && foundNotesInArea.All(e => e != null))
             {
+                float alignValue = worldPosition.y - lockedAreaPosition.y;
+
+                GameObject alignBeat = FindAlignArea(alignValue);
+
+                if (alignBeat != null) alignValue = alignBeat.transform.localPosition.y - 
+
                 for (int i = 0; i < foundNotesInArea.Count; i++)
                 {
                     if (foundNotesInArea[i] == null)
@@ -370,16 +379,16 @@ public class EditorManager : MonoBehaviour
 
                     foundNotesInArea[i].localPosition = new Vector3(
                         foundNotesInArea[i].position.x,
-                        note.temporaryTiming * chartSpeed + worldPosition.y - lockedAreaPosition.y,
+                        note.temporaryTiming * chartSpeed + alignValue,
                         0);
                 }
 
                 openNoteArea.transform.localPosition = new Vector3(
-                    0, openNoteTempTiming * chartSpeed + worldPosition.y - lockedAreaPosition.y, 0);
+                    0, openNoteTempTiming * chartSpeed + alignValue, 0);
                 closeNoteArea.transform.localPosition = new Vector3(
-                    0, closeNoteTempTiming * chartSpeed + worldPosition.y - lockedAreaPosition.y, 0);
+                    0, closeNoteTempTiming * chartSpeed + alignValue, 0);
                 noteArea.transform.localPosition = new Vector3(
-                    0, areaTempTiming * chartSpeed + worldPosition.y - lockedAreaPosition.y, 0);
+                    0, areaTempTiming * chartSpeed + alignValue, 0);
             }
             else if (Mouse.current.middleButton.wasPressedThisFrame)
             {
@@ -1139,8 +1148,12 @@ public class EditorManager : MonoBehaviour
         }
         else
         {
-            closeNoteArea.transform.position = new Vector3(0, targetPosition.y, 0);
-            closeNoteTempTiming = closeNoteArea.transform.localPosition.y / chartSpeed;
+            ShrinkArea();
+
+            openNoteArea.transform.localPosition = new Vector3(0, openNoteTempTiming * chartSpeed, 0);
+            openNoteArea.SetActive(true);
+
+            closeNoteArea.transform.localPosition = new Vector3(0, closeNoteTempTiming * chartSpeed, 0);
             closeNoteArea.SetActive(true);
 
             if (openNoteArea.transform.position.y < closeNoteArea.transform.position.y)
@@ -1226,9 +1239,53 @@ public class EditorManager : MonoBehaviour
         draggedNote.timing = draggedNote.gameObject.transform.localPosition.y / chartSpeed;
     }
 
-    GameObject FindAlignArea()
+    void ShrinkArea()
     {
-        if (lowestNoteArea == null)
+        InsertNotesInArea();
+
+        if (foundNotesInArea.Count == 0)
+        {
+            ResetNoteSelectArea(ref isNoteAreaAdded);
+            return;
+        }
+
+        MusicNote foundLowestNote = null;
+        MusicNote foundHighestNote = null;
+
+        foreach (Transform noteTransform in foundNotesInArea)
+        {
+            if (noteTransform == null)
+            {
+                continue;
+            }
+
+            MusicNote musicNote = noteTransform.gameObject.GetComponent<MusicNote>();
+            if (musicNote == null)
+            {
+                continue;
+            }
+
+            if (foundLowestNote == null && foundHighestNote == null)
+            {
+                foundLowestNote = musicNote;
+                foundHighestNote = musicNote;
+            }
+            else
+            {
+                if (musicNote.timing < foundLowestNote.timing) foundLowestNote = musicNote;
+                else if (musicNote.timing > foundHighestNote.timing) foundHighestNote = musicNote;
+            }
+        }
+
+        openNoteTempTiming = foundLowestNote.timing;
+        closeNoteTempTiming = foundHighestNote.timing;
+
+        foundNotesInArea.Clear();
+    }
+
+    GameObject FindAlignArea(float totalPosition)
+    {
+        if (openNoteArea.activeSelf == false && closeNoteArea.activeSelf == false)
         {
             return null;
         }
@@ -1236,28 +1293,29 @@ public class EditorManager : MonoBehaviour
         GameObject targetLowestGrid = null;
 
         GameObject[] grids = GameObject.FindGameObjectsWithTag(ValueStorer.tagHorizontalGrid);
-
-        if (lowestNoteArea != null)
+        foreach (GameObject grid in grids)
         {
-            foreach (GameObject grid in grids)
+            if (Mathf.Abs(openNoteArea.transform.position.y - grid.transform.position.y) > ValueStorer.gridOffset)
             {
-                if (Mathf.Abs(lowestNoteArea.position.y - grid.transform.position.y) > ValueStorer.gridOffset)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                if (targetLowestGrid == null)
+            if (targetLowestGrid == null)
+            {
+                targetLowestGrid = grid;
+            }
+            else
+            {
+                if (grid.transform.position.y < targetLowestGrid.transform.position.y)
                 {
                     targetLowestGrid = grid;
                 }
-                else
-                {
-                    if (grid.transform.position.y > targetLowestGrid.transform.position.y)
-                    {
-                        targetLowestGrid = grid;
-                    }
-                }
             }
+        }
+
+        if (targetLowestGrid && Mathf.Abs(targetLowestGrid.transform.position.y - fixedAreaPosition.y - totalPosition) > ValueStorer.gridOffset)
+        {
+            return null;
         }
 
         return targetLowestGrid;
