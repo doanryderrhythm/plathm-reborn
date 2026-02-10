@@ -20,6 +20,8 @@ public class MusicNote : MonoBehaviour
 
     public TimingGroup timingGroup;
 
+    public bool isSelected = false;
+
     public float timing;
     public float temporaryTiming;
 
@@ -269,5 +271,18 @@ public class MusicNote : MonoBehaviour
     public NoteType GetNoteType()
     {
         return noteType;
+    }
+
+    public void ToggleSelected(bool toggle)
+    {
+        isSelected = toggle;
+        if (isSelected)
+        {
+            GetComponent<SpriteRenderer>().color = ValueStorer.chosenNoteColor;
+        }
+        else
+        {
+            GetComponent<SpriteRenderer>().color = Color.white;
+        }
     }
 }

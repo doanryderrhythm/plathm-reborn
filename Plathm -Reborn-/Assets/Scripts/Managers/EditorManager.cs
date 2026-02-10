@@ -94,6 +94,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] InputActionReference inputSlice;
     [Space(10.0f)]
     [SerializeField] InputActionReference editorInputScroll;
+    private bool isControlHeld = false;
 
     [Header("Note Types")]
     [SerializeField] GameObject tapNotePrefab;
@@ -156,6 +157,11 @@ public class EditorManager : MonoBehaviour
     [SerializeField] Vector3 lockedAreaPosition;
     private Transform lowestNoteArea;
 
+    [Header("Multiple Notes Selection")]
+    [SerializeField] List<MusicNote> selectedNotes;
+    [SerializeField] MusicNote lowestSelectedNote = null;
+    private Vector3 fixedSelectedNotePosition;
+
     [Header("UI")]
     [SerializeField] UIManager uiManager;
     [SerializeField] GameObject noteAmountUI;
@@ -195,6 +201,8 @@ public class EditorManager : MonoBehaviour
         noteArea.SetActive(false);
 
         foundNotesInArea = new List<Transform>();
+
+        selectedNotes = new List<MusicNote>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -247,11 +255,26 @@ public class EditorManager : MonoBehaviour
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
-                if (keyboard.deleteKey.wasPressedThisFrame && IsNoteAreaFullyLocked())
+                if (keyboard.deleteKey.wasPressedThisFrame)
                 {
-                    InsertNotesInArea();
-                    ExecuteDeleteSelectedNotes(foundNotesInArea);
+                    if (IsNoteAreaFullyLocked())
+                    {
+                        InsertNotesInArea();
+                        ExecuteDeleteSelectedNotes(foundNotesInArea);
+                    }
+                    if (selectedNotes.Count > 0 && selectedNotes.All(e => e != null))
+                    {
+                        ExecuteDeleteManualNotes();
+                    }
                 }
+
+                if (keyboard.mKey.wasPressedThisFrame)
+                {
+                    if (IsNoteAreaFullyLocked()) ExecuteMirrorAreaNotes();
+                    if (selectedNotes.Count > 0 && selectedNotes.All(e => e != null)) ExecuteMirrorManualNotes();
+                }
+
+                isControlHeld = keyboard.ctrlKey.isPressed;
             }
         }
 
@@ -276,23 +299,37 @@ public class EditorManager : MonoBehaviour
             && EventSystem.current != null
             && !EventSystem.current.IsPointerOverGameObject())
         {
-            if (Mouse.current.leftButton.wasPressedThisFrame)
+            if (Mouse.current.leftButton.wasPressedThisFrame && !isControlHeld)
             {
                 bool isFullyLocked = IsNoteAreaFullyLocked() && IsWithinOpenCloseNoteArea();
 
                 if (!isFullyLocked)
                 {
-                    ResetNoteSelectArea(ref isNoteAreaAdded);
-
-                    draggedNote = FindSmallestDistanceNote(worldPosition);
-                    if (draggedNote)
+                    if (selectedNotes.Count > 0)
                     {
-                        noteOriginalTiming = draggedNote.timing;
-                        noteOriginalPosition = draggedNote.gameObject.transform.position;
-                        if (draggedNote.GetNoteType() == MusicNote.NoteType.TAP_NOTE ||
-                            draggedNote.GetNoteType() == MusicNote.NoteType.BLACK_NOTE)
+                        MusicNote note = FindSmallestDistanceNote(worldPosition);
+                        if (note == null || !selectedNotes.Contains(note))
                         {
-                            verticalGridValue = noteOriginalPosition.x;
+                            ResetNoteSelections();
+                        }
+                        FindLowestSelectedNote();
+                        if (lowestSelectedNote)
+                            fixedSelectedNotePosition = lowestSelectedNote.transform.position;
+                    }
+                    else
+                    {
+                        ResetNoteSelectArea(ref isNoteAreaAdded);
+
+                        draggedNote = FindSmallestDistanceNote(worldPosition);
+                        if (draggedNote)
+                        {
+                            noteOriginalTiming = draggedNote.timing;
+                            noteOriginalPosition = draggedNote.gameObject.transform.position;
+                            if (draggedNote.GetNoteType() == MusicNote.NoteType.TAP_NOTE ||
+                                draggedNote.GetNoteType() == MusicNote.NoteType.BLACK_NOTE)
+                            {
+                                verticalGridValue = noteOriginalPosition.x;
+                            }
                         }
                     }
                 }
@@ -308,10 +345,11 @@ public class EditorManager : MonoBehaviour
                     lowestNoteArea = GetLowestNote();
                     fixedAreaPosition = (openNoteArea.transform.position.y < closeNoteArea.transform.position.y ?
                         openNoteArea.transform.position : closeNoteArea.transform.position);
-                    lockedAreaPosition = worldPosition;
                 }
+
+                lockedAreaPosition = worldPosition;
             }
-            else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote)
+            else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote && !isControlHeld)
             {
                 /*
                 CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(
@@ -327,7 +365,28 @@ public class EditorManager : MonoBehaviour
                 draggedNote = null;
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame &&
-                foundNotesInArea.All(e => e != null))
+                selectedNotes.Count != 0 && selectedNotes.All(e => e != null) && !isControlHeld)
+            {
+                for (int i = 0; i < selectedNotes.Count; i++)
+                {
+                    if (selectedNotes[i] == null)
+                    {
+                        continue;
+                    }
+
+                    MusicNote note = selectedNotes[i];
+                    if (note == null)
+                    {
+                        continue;
+                    }
+
+                    note.timing = selectedNotes[i].transform.localPosition.y / chartSpeed;
+                    note.temporaryTiming = note.timing;
+                }
+                lowestSelectedNote = null;
+            }
+            else if (Mouse.current.leftButton.wasReleasedThisFrame &&
+                foundNotesInArea.Count != 0 && foundNotesInArea.All(e => e != null) && !isControlHeld)
             {
                 for (int i = 0; i < foundNotesInArea.Count; i++)
                 {
@@ -352,17 +411,42 @@ public class EditorManager : MonoBehaviour
 
                 lowestNoteArea = null;
             }
-            else if (Mouse.current.leftButton.isPressed && draggedNote)
+            else if (Mouse.current.leftButton.isPressed && draggedNote && !isControlHeld)
             {
                 MoveNote();
             }
-            else if (Mouse.current.leftButton.isPressed && foundNotesInArea.All(e => e != null))
+            else if (Mouse.current.leftButton.isPressed && selectedNotes.Count != 0 && selectedNotes.All(e => e != null) && !isControlHeld)
             {
                 float alignValue = worldPosition.y - lockedAreaPosition.y;
 
-                GameObject alignBeat = FindAlignArea(alignValue);
+                GameObject alignBeat = FindAlignArea(alignValue, 1);
 
-                if (alignBeat != null) alignValue = alignBeat.transform.localPosition.y - 
+                if (alignBeat != null && lowestSelectedNote != null)
+                {
+                    alignValue = alignBeat.transform.localPosition.y - lowestSelectedNote.temporaryTiming * chartSpeed;
+                    Debug.Log(alignValue);
+                }
+
+                for (int i = 0; i < selectedNotes.Count; i++)
+                {
+                    if (selectedNotes[i] == null)
+                    {
+                        continue;
+                    }
+
+                    selectedNotes[i].transform.localPosition = new Vector3(
+                        selectedNotes[i].transform.position.x,
+                        selectedNotes[i].temporaryTiming * chartSpeed + alignValue,
+                        0);
+                }
+            }
+            else if (Mouse.current.leftButton.isPressed && foundNotesInArea.Count != 0 && foundNotesInArea.All(e => e != null) && !isControlHeld)
+            {
+                float alignValue = worldPosition.y - lockedAreaPosition.y;
+
+                GameObject alignBeat = FindAlignArea(alignValue, 0);
+
+                if (alignBeat != null) alignValue = alignBeat.transform.localPosition.y -
                         (openNoteTempTiming < closeNoteTempTiming ? openNoteTempTiming * chartSpeed : closeNoteTempTiming * chartSpeed);
 
                 for (int i = 0; i < foundNotesInArea.Count; i++)
@@ -391,8 +475,27 @@ public class EditorManager : MonoBehaviour
                 noteArea.transform.localPosition = new Vector3(
                     0, areaTempTiming * chartSpeed + alignValue, 0);
             }
+            else if (Mouse.current.leftButton.wasPressedThisFrame && isControlHeld)
+            {
+                ResetNoteSelectArea(ref isNoteAreaAdded);
+
+                MusicNote foundNote = FindSmallestDistanceNote(worldPosition);
+
+                if (foundNote != null)
+                {
+                    if (!foundNote.isSelected) selectedNotes.Add(foundNote);
+                    else selectedNotes.Remove(foundNote);
+
+                    foundNote.ToggleSelected(!foundNote.isSelected);
+                }
+                else
+                {
+                    ResetNoteSelections();
+                }
+            }
             else if (Mouse.current.middleButton.wasPressedThisFrame)
             {
+                ResetNoteSelections();
                 ExecuteNoteAreaSignal(worldPosition, ref isNoteAreaAdded);
             }
         }
@@ -722,6 +825,137 @@ public class EditorManager : MonoBehaviour
         }
     }
 
+    void ExecuteDeleteManualNotes()
+    {
+        foreach (MusicNote note in selectedNotes)
+        {
+            if (!note)
+            {
+                continue;
+            }
+
+            TimingGroup timingGroup = note.timingGroup;
+
+            if (!timingGroup)
+            {
+                return;
+            }
+
+            note.transform.SetParent(timingGroup.undoRedoFolder.transform, false);
+            note.gameObject.SetActive(false);
+        }
+        selectedNotes.Clear();
+    }
+
+    void ExecuteMirrorAreaNotes()
+    {
+        InsertNotesInArea();
+        List<Transform> archives = new List<Transform>();
+
+        foreach (Transform foundNote in foundNotesInArea)
+        {
+            MusicNote note = foundNote.gameObject.GetComponent<MusicNote>();
+
+            if (!note)
+            {
+                continue;
+            }
+            if (note.GetNoteType() == MusicNote.NoteType.LEFT_TELEPORT ||
+                note.GetNoteType() == MusicNote.NoteType.RIGHT_TELEPORT)
+            {
+                archives.Add(foundNote);
+                continue;
+            }
+
+            foundNote.position = new Vector3(-foundNote.position.x, foundNote.position.y, 0);
+        }
+
+        foreach (Transform archivedNote in archives)
+        {
+            Transform folder = archivedNote.parent;
+            Vector3 newPos = new Vector3(-archivedNote.position.x, archivedNote.position.y, 0);
+
+            MusicNote.NoteType oldNoteType;
+            MusicNote note = archivedNote.gameObject.GetComponent<MusicNote>();
+            oldNoteType = note.GetNoteType();
+
+            Destroy(archivedNote.gameObject);
+
+            GameObject newNote = null;
+            if (oldNoteType == MusicNote.NoteType.LEFT_TELEPORT)
+            {
+                newNote = Instantiate(rightTeleportPrefab, folder) as GameObject;
+            }
+            else if (oldNoteType == MusicNote.NoteType.RIGHT_TELEPORT)
+            {
+                newNote = Instantiate(leftTeleportPrefab, folder) as GameObject;
+            }
+            newNote.transform.position = newPos;
+
+            MusicNote musicNote = newNote.GetComponent<MusicNote>();
+            musicNote.timing = newNote.transform.localPosition.y / chartSpeed;
+            musicNote.timingGroup = timingGroups[timingGroupIndex];
+            musicNote.temporaryTiming = musicNote.timing;
+        }
+    }
+
+    void ExecuteMirrorManualNotes()
+    {
+        if (selectedNotes.Count <= 0)
+        {
+            return;
+        }
+
+        List<MusicNote> archives = new List<MusicNote>();
+
+        foreach (MusicNote note in selectedNotes)
+        {
+            if (!note)
+            {
+                continue;
+            }
+            if (note.GetNoteType() == MusicNote.NoteType.LEFT_TELEPORT ||
+                note.GetNoteType() == MusicNote.NoteType.RIGHT_TELEPORT)
+            {
+                archives.Add(note);
+                continue;
+            }
+
+            note.transform.position = new Vector3(-note.transform.position.x, note.transform.position.y, 0);
+        }
+
+        foreach (MusicNote note in archives)
+        {
+            Transform folder = note.transform.parent;
+            Vector3 newPos = new Vector3(-note.transform.position.x, note.transform.position.y, 0);
+
+            MusicNote.NoteType oldNoteType;
+            oldNoteType = note.GetNoteType();
+
+            selectedNotes.Remove(note);
+            Destroy(note.gameObject);
+
+            GameObject newNote = null;
+            if (oldNoteType == MusicNote.NoteType.LEFT_TELEPORT)
+            {
+                newNote = Instantiate(rightTeleportPrefab, folder) as GameObject;
+            }
+            else if (oldNoteType == MusicNote.NoteType.RIGHT_TELEPORT)
+            {
+                newNote = Instantiate(leftTeleportPrefab, folder) as GameObject;
+            }
+            newNote.transform.position = newPos;
+
+            MusicNote musicNote = newNote.GetComponent<MusicNote>();
+            musicNote.timing = newNote.transform.localPosition.y / chartSpeed;
+            musicNote.timingGroup = timingGroups[timingGroupIndex];
+            musicNote.temporaryTiming = musicNote.timing;
+
+            musicNote.ToggleSelected(true);
+            selectedNotes.Add(musicNote);
+        }
+    }
+
     void ConvertFromMouseToWorld()
     {
         Vector3 mousePos = Mouse.current.position.ReadValue();
@@ -773,8 +1007,8 @@ public class EditorManager : MonoBehaviour
                 }
 
                 confirmedNote = Instantiate(tapNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, finalYPosition, 0), Quaternion.identity) as GameObject;
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].tapFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             case NoteTypeGeneral.BLACK_NOTE:
@@ -786,8 +1020,8 @@ public class EditorManager : MonoBehaviour
                 }
 
                 confirmedNote = Instantiate(blackNotePrefab, new Vector3(hoveredVerticalGrid.transform.position.x, finalYPosition, 0), Quaternion.identity) as GameObject;
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].blackFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             case NoteTypeGeneral.LEFT_TELEPORT:
@@ -802,8 +1036,8 @@ public class EditorManager : MonoBehaviour
                     confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, finalYPosition, 0);
 
                 confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].leftTeleportFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             case NoteTypeGeneral.RIGHT_TELEPORT:
@@ -818,15 +1052,15 @@ public class EditorManager : MonoBehaviour
                     confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, finalYPosition, 0);
 
                 confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].rightTeleportFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             case NoteTypeGeneral.SLICE_NOTE:
             {
                 confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, finalYPosition, 0), Quaternion.identity) as GameObject;
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].sliceFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             case NoteTypeGeneral.SPIKE:
@@ -840,8 +1074,8 @@ public class EditorManager : MonoBehaviour
                 {
                     confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, finalYPosition, 0), Quaternion.identity) as GameObject;
                 }
-                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].spikeFolder.transform, true);
+                confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                 break;
             }
             default: break;
@@ -898,15 +1132,15 @@ public class EditorManager : MonoBehaviour
                 case NoteTypeGeneral.TAP_NOTE:
                     {
                         confirmedNote = Instantiate(tapNotePrefab, newPosition, Quaternion.identity) as GameObject;
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].tapFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 case NoteTypeGeneral.BLACK_NOTE:
                     {
                         confirmedNote = Instantiate(blackNotePrefab, newPosition, Quaternion.identity) as GameObject;
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].blackFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 case NoteTypeGeneral.LEFT_TELEPORT:
@@ -921,8 +1155,8 @@ public class EditorManager : MonoBehaviour
                             confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, newPosition.y, 0);
 
                         confirmedNote = Instantiate(leftTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].leftTeleportFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 case NoteTypeGeneral.RIGHT_TELEPORT:
@@ -937,15 +1171,15 @@ public class EditorManager : MonoBehaviour
                             confirmedPosition = new Vector3(ValueStorer.rightLanePosition.x, newPosition.y, 0);
 
                         confirmedNote = Instantiate(rightTeleportPrefab, confirmedPosition, Quaternion.identity) as GameObject;
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].rightTeleportFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 case NoteTypeGeneral.SLICE_NOTE:
                     {
                         confirmedNote = Instantiate(sliceNotePrefab, new Vector3(0, newPosition.y, 0), Quaternion.identity) as GameObject;
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].sliceFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 case NoteTypeGeneral.SPIKE:
@@ -959,8 +1193,8 @@ public class EditorManager : MonoBehaviour
                         {
                             confirmedNote = Instantiate(sideSpikePrefab, new Vector3(0, newPosition.y, 0), Quaternion.identity) as GameObject;
                         }
-                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         confirmedNote.transform.SetParent(timingGroups[timingGroupIndex].spikeFolder.transform, true);
+                        confirmedNote.GetComponent<MusicNote>().timing = confirmedNote.transform.localPosition.y / chartSpeed;
                         break;
                     }
                 default: break;
@@ -1032,6 +1266,14 @@ public class EditorManager : MonoBehaviour
         foundNotesInArea.Clear();
     }
 
+    void ResetNoteSelections()
+    {
+        foreach (MusicNote note in selectedNotes)
+        {
+            note.ToggleSelected(false);
+        }
+        selectedNotes.Clear();
+    }
 
     bool IsWithinOpenCloseNoteArea()
     {
@@ -1078,35 +1320,6 @@ public class EditorManager : MonoBehaviour
             }
         }
         return lowestNote;
-    }
-
-    Transform GetHighestNote()
-    {
-        Transform highestNote = null;
-        float highestTiming = 0f;
-        foreach (Transform note in foundNotesInArea)
-        {
-            MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
-            if (musicNote == null)
-            {
-                continue;
-            }
-
-            if (highestNote == null)
-            {
-                highestNote = note;
-                highestTiming = musicNote.timing;
-            }
-            else
-            {
-                if (musicNote.timing > highestTiming)
-                {
-                    highestNote = note;
-                    highestTiming = musicNote.timing;
-                }
-            }
-        }
-        return highestNote;
     }
 
     void ExecuteNoteAreaSignal(Vector3 targetPosition, ref bool isPreselected)
@@ -1173,6 +1386,26 @@ public class EditorManager : MonoBehaviour
             noteArea.SetActive(true);
 
             isPreselected = false;
+        }
+    }
+
+    void FindLowestSelectedNote()
+    {
+        lowestSelectedNote = null;
+        foreach (MusicNote note in selectedNotes)
+        {
+            if (lowestSelectedNote == null)
+            {
+                lowestSelectedNote = note;
+                continue;
+            }
+            else
+            {
+                if (note.timing < lowestSelectedNote.timing)
+                {
+                    lowestSelectedNote = note;
+                }
+            }
         }
     }
 
@@ -1284,11 +1517,21 @@ public class EditorManager : MonoBehaviour
         foundNotesInArea.Clear();
     }
 
-    GameObject FindAlignArea(float totalPosition)
+    GameObject FindAlignArea(float totalPosition, int editMode)
     {
-        if (openNoteArea.activeSelf == false && closeNoteArea.activeSelf == false)
+        if (editMode == 0)
         {
-            return null;
+            if (openNoteArea.activeSelf == false && closeNoteArea.activeSelf == false)
+            {
+                return null;
+            }
+        }
+        else if (editMode == 1)
+        {
+            if (lowestSelectedNote == null)
+            {
+                return null;
+            }
         }
 
         GameObject targetLowestGrid = null;
@@ -1296,9 +1539,19 @@ public class EditorManager : MonoBehaviour
         GameObject[] grids = GameObject.FindGameObjectsWithTag(ValueStorer.tagHorizontalGrid);
         foreach (GameObject grid in grids)
         {
-            if (Mathf.Abs(openNoteArea.transform.position.y - grid.transform.position.y) > ValueStorer.gridOffset)
+            if (editMode == 0)
             {
-                continue;
+                if (Mathf.Abs(openNoteArea.transform.position.y - grid.transform.position.y) > ValueStorer.gridOffset)
+                {
+                    continue;
+                }
+            }
+            else if (editMode == 1)
+            {
+                if (Mathf.Abs(lowestSelectedNote.transform.position.y - grid.transform.position.y) > ValueStorer.gridOffset)
+                {
+                    continue;
+                }
             }
 
             if (targetLowestGrid == null)
@@ -1314,9 +1567,19 @@ public class EditorManager : MonoBehaviour
             }
         }
 
-        if (targetLowestGrid && Mathf.Abs(targetLowestGrid.transform.position.y - fixedAreaPosition.y - totalPosition) > ValueStorer.gridOffset)
+        if (editMode == 0)
         {
-            return null;
+            if (targetLowestGrid && Mathf.Abs(targetLowestGrid.transform.position.y - fixedAreaPosition.y - totalPosition) > ValueStorer.gridOffset)
+            {
+                return null;
+            }
+        }
+        else if (editMode == 1)
+        {
+            if (targetLowestGrid && Mathf.Abs(targetLowestGrid.transform.position.y - fixedSelectedNotePosition.y - totalPosition) > ValueStorer.gridOffset)
+            {
+                return null;
+            }
         }
 
         return targetLowestGrid;

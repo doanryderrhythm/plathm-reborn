@@ -1516,6 +1516,8 @@ MonoBehaviour:
   inputRightTeleport: {fileID: 4592387818636657607, guid: 5c4ad56a954cd3f4994cae33131c1f5b, type: 3}
   inputSlice: {fileID: -3229072644075744577, guid: 5c4ad56a954cd3f4994cae33131c1f5b, type: 3}
   editorInputScroll: {fileID: 3226618795141339125, guid: 3f09a8b355775f5499df93d1412b0a7c, type: 3}
+  editorInputNoteDrag: {fileID: 6867767837548699484, guid: 3f09a8b355775f5499df93d1412b0a7c, type: 3}
+  editorInputNoteSelect: {fileID: 9092362222690810177, guid: 3f09a8b355775f5499df93d1412b0a7c, type: 3}
   tapNotePrefab: {fileID: 5612693408106770313, guid: 0b08636324fcb724eb078b5785b8efd2, type: 3}
   blackNotePrefab: {fileID: 6711193640571922703, guid: 9af839e4b36edbd4eba5ad7965fb12d7, type: 3}
   leftTeleportPrefab: {fileID: 7016142191851378759, guid: 2036ca4d690ade14e988b47b07e64285, type: 3}
@@ -1547,6 +1549,7 @@ MonoBehaviour:
   openNoteArea: {fileID: 1329468324}
   closeNoteArea: {fileID: 117656986}
   noteArea: {fileID: 394308951}
+  lockedAreaPosition: {x: 0, y: 0, z: 0}
   uiManager: {fileID: 961892503}
   noteAmountUI: {fileID: 437106764}
   noteSelectDropDown: {fileID: 247270155}

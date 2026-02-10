@@ -49,6 +49,8 @@ public class ValueStorer : MonoBehaviour
     public static Color32 gridSelectedColor = new Color32(255, 255, 75, 255);
     public static float gridOffset = 0.2f;
 
+    public static Color32 chosenNoteColor = new Color32(0, 255, 52, 255);
+
     public static string tagVerticalGrid = "Vertical Grid";
     public static string tagHorizontalGrid = "Horizontal Grid";
     public static string tagGrid = "Grid";
