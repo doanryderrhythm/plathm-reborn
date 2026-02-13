@@ -107,6 +107,28 @@ public class UIManager : MonoBehaviour
         speedItem.transform.SetParent(speedItemStorer.transform, false);
     }
 
+    public void AddSpeedItem(int index, float timing, float speedMulti)
+    {
+        if (index < 0 || index >= speedItems.Count)
+        {
+            return;
+        }
+
+        GameObject speedItem = Instantiate(speedItemPrefab) as GameObject;
+
+        SpeedStorer speedStorer = speedItem.GetComponent<SpeedStorer>();
+        if (speedStorer)
+        {
+            speedItems[index].Add(speedStorer);
+            speedStorer.timing = timing;
+            speedStorer.speedMulti = speedMulti;
+            speedStorer.ChangeNumberLabel(speedItems[index].IndexOf(speedStorer));
+            speedStorer.ConvertFromValueToText();
+        }
+
+        speedItem.transform.SetParent(speedItemStorer.transform, false);
+    }
+
     public void RefreshSpeedItems(int index)
     {
         if (speedItems.Count == 0)
@@ -252,6 +274,21 @@ public class UIManager : MonoBehaviour
         }
 
         timingItems.Clear();
+    }
+
+    public void RemoveAllSpeedsAndTimingGroups()
+    {
+        for (int i = 0; i < speedItems.Count; i++)
+        {
+            for (int j = 0; j < speedItems[i].Count; j++)
+            {
+                Destroy(speedItems[i][j].gameObject);
+            }
+
+            Destroy(editorManager.timingGroups[i].gameObject);
+        }
+
+        speedItems.Clear();
     }
 
     public void ChangeBeatDensity()

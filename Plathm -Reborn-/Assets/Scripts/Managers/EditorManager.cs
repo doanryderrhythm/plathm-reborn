@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEditor.Experimental.GraphView;
@@ -86,6 +87,7 @@ public class EditorManager : MonoBehaviour
     public float speedMulti = 1f;
     public int beatDensity = 1;
     private float editorCurrentTiming = 0f;
+    public int difficulty = 0;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
@@ -113,7 +115,7 @@ public class EditorManager : MonoBehaviour
     public int timingGroupIndex = 0;
     [SerializeField] GameObject timingGroupStorer;
     [SerializeField] TimingGroup timingGroupPrefab;
-    [SerializeField] List<TimingGroup> timingGroups;
+    public List<TimingGroup> timingGroups;
 
     [Header("Judgement VFX")]
     public GameObject tapCPerfectPrefab;
@@ -169,11 +171,13 @@ public class EditorManager : MonoBehaviour
     //Texts
     [Space(10.0f)]
     [SerializeField] TMP_Text currentTimingText;
+    [SerializeField] TMP_Text currentDifficultyText;
     //Input Fields
     [Space(10.0f)]
     [SerializeField] TMP_InputField offsetInputField;
     [SerializeField] TMP_InputField speedInputField;
     [SerializeField] TMP_InputField noteAmountInputField;
+    [SerializeField] TMP_InputField difficultyInputField;
 
     //[Header("Undo & Redo")]
 
@@ -349,16 +353,6 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote && !isControlHeld)
             {
-                /*
-                CommandMoveOneNote commandMoveOneNote = new CommandMoveOneNote(
-                    draggedNote.gameObject, 
-                    noteOriginalTiming, 
-                    draggedNote.timing, 
-                    noteOriginalPosition.x, 
-                    draggedNote.gameObject.transform.position.x);
-                OverrideCommand(commandMoveOneNote);
-                */
-
                 draggedNote.temporaryTiming = draggedNote.timing;
                 draggedNote = null;
             }
@@ -781,9 +775,6 @@ public class EditorManager : MonoBehaviour
 
             if (isWithinArea)
             {
-                //CommandDeleteOneNote commandDeleteOneNote = new CommandDeleteOneNote(note.gameObject, note.timing, noteTransform.position.x);
-                //OverrideCommand(commandDeleteOneNote);
-
                 TimingGroup timingGroup = note.timingGroup;
 
                 if (!timingGroup)
@@ -2268,125 +2259,25 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    /*
-    #region Undo & Redo Stack
-
-    public void UndoCommand()
+    public void BackToFirstGroup()
     {
-        if (undoCommandStack.Count == 0)
+        timingGroupIndex = 0;
+        UpdateGroupIndicators();
+        uiManager.RefreshSpeedItems(timingGroupIndex);
+
+        for (int i = 0; i < timingGroups.Count; i++)
         {
-            return;
+            if (i == timingGroupIndex)
+            {
+                timingGroups[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                timingGroups[i].gameObject.SetActive(false);
+            }
         }
-
-        EditorCommand poppedCommand = undoCommandStack.Pop();
-        poppedCommand.UndoCommand();
-        redoCommandStack.Push(poppedCommand);
     }
 
-    public void RedoCommand()
-    {
-        if (redoCommandStack.Count == 0)
-        {
-            return;
-        }
-
-        EditorCommand poppedCommand = redoCommandStack.Pop();
-        poppedCommand.RedoCommand();
-        undoCommandStack.Push(poppedCommand);
-    }
-
-    void OverrideCommand(EditorCommand command)
-    {
-        undoCommandStack.Push(command);
-        foreach (var cmd in redoCommandStack)
-        {
-            cmd.FreeCommand();
-        }
-        redoCommandStack.Clear();
-    }
-
-    #endregion
-
-    #region Undo
-
-    public void UndoAddOneNote(GameObject noteObject)
-    {
-        noteObject.SetActive(false);
-        noteObject.transform.SetParent(timingundoRedoFolder.transform, true);
-    }
-
-    public void UndoMoveOneNote(GameObject noteObject, float originalTiming, float noteOriginalPosition)
-    {
-        noteObject.transform.position = new Vector3(noteOriginalPosition, originalTiming * chartSpeed, 0);
-    }
-
-    public void UndoDeleteOneNote(GameObject noteObject, float timing, float notePosition)
-    {
-        ReenableOneNote(noteObject);
-        noteObject.transform.position = new Vector3(notePosition, timing * chartSpeed, 0);
-    }
-
-    public void UndoChangeOffset(float offset)
-    {
-        float originalOffset = chartOffset;
-        chartOffset = offset;
-
-        offsetInputField.text = chartOffset.ToString();
-
-        ReloadChartOffsetVisuals(originalOffset);
-    }
-
-    public void UndoChangeSpeed(float speed)
-    {
-        chartSpeed = speed;
-
-        speedInputField.text = chartSpeed.ToString();
-
-        ReloadChartSpeedVisuals();
-    }
-
-    #endregion
-
-    #region Redo
-
-    public void RedoAddOneNote(GameObject noteObject, float timing, float notePosition)
-    {
-        ReenableOneNote(noteObject);
-        noteObject.transform.position = new Vector3(notePosition, timing * chartSpeed, 0);
-    }
-
-    public void RedoMoveOneNote(GameObject noteObject, float newTiming, float noteNewPosition)
-    {
-        noteObject.transform.position = new Vector3(noteNewPosition, newTiming * chartSpeed, 0);
-    }
-
-    public void RedoDeleteOneNote(GameObject noteObject)
-    {
-        noteObject.SetActive(false);
-        noteObject.transform.SetParent(undoRedoFolder.transform, true);
-    }
-
-    public void RedoChangeOffset(float offset)
-    {
-        float originalOffset = chartOffset;
-        chartOffset = offset;
-
-        offsetInputField.text = chartOffset.ToString();
-
-        ReloadChartOffsetVisuals(originalOffset);
-    }
-
-    public void RedoChangeSpeed(float speed)
-    {
-        chartSpeed = speed;
-
-        speedInputField.text = chartSpeed.ToString();
-
-        ReloadChartSpeedVisuals();
-    }
-
-    #endregion
-    */
     #region Chart Properties
 
     void ReloadChartOffsetVisuals(float originalOffset)
@@ -2446,9 +2337,6 @@ public class EditorManager : MonoBehaviour
 
         ReloadChartOffsetVisuals(originalOffset);
         ApplyTimingBPM();
-
-        //CommandChangeOffset commandChangeOffset = new CommandChangeOffset(originalOffset, chartOffset);
-        //OverrideCommand(commandChangeOffset);
     }
 
     public void ChangeChartSpeed()
@@ -2470,9 +2358,70 @@ public class EditorManager : MonoBehaviour
         closeNoteArea.transform.localPosition = new Vector3(0, closeNoteTempTiming * chartSpeed, 0);
         noteArea.transform.localPosition = new Vector3(0, areaTempTiming * chartSpeed, 0);
         noteArea.transform.localScale = new Vector3(1, Mathf.Abs(openNoteTempTiming - closeNoteTempTiming) * chartSpeed, 1);
+    }
 
-        //CommandChangeSpeed commandChangeSpeed = new CommandChangeSpeed(originalSpeed, chartSpeed);
-        //OverrideCommand(commandChangeSpeed);
+    #endregion
+
+    #region Difficulty Management
+
+    public void ChangeDifficulty(int difficultyIndex, string chartFile)
+    {
+        this.difficulty = difficultyIndex;
+
+        switch (this.difficulty)
+        {
+            case 0: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.pointText; break;
+            case 1: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.lineText; break;
+            case 2: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.triangleText; break;
+            case 3: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.squareText; break;
+            default: break;
+        }
+
+        uiManager.RemoveAllSpeedsAndTimingGroups();
+
+        if (chartFile == null)
+        {
+            return;
+        }
+
+        using (StreamReader reader = new StreamReader(chartFile))
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line == string.Empty)
+                {
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.difficultyString))
+                {
+                    string diff = line.Substring(ValueStorer.difficultyString.Length);
+                    difficultyInputField.text = diff;
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.speedString))
+                {
+                    string content = line.Replace(ValueStorer.speedString, "").Replace(")", "");
+                    string[] values = content.Split(',');
+
+                    if (int.TryParse(values[0], out int group) &&
+                        (float.TryParse(values[1], out float timing) &&
+                        (float.TryParse(values[2], out float speed))))
+                    {
+                        if (group > timingGroups.Count - 1)
+                        {
+                            AddSpeedGroup();
+                        }
+                        uiManager.AddSpeedItem(group, timing, speed);
+                        BackToFirstGroup();
+                    }
+
+                    continue;
+                }
+            }
+        }
     }
 
     #endregion

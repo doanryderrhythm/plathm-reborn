@@ -70,8 +70,15 @@ public class ValueStorer : MonoBehaviour
 
     public static float mouseScrollSpeed = 0.5f;
 
+    //Difficulty Strings
+    public static string difficultyText = "Current Difficulty: ";
+    public static string pointText = "POINT";
+    public static string lineText = "LINE";
+    public static string triangleText = "TRIANGLE";
+    public static string squareText = "SQUARE";
+
     //Save & Load Strings
-    #region Chart Information
+    #region Project Information
     public static string songNameString = "song_name: ";
     public static string songArtistString = "song_artist: ";
     public static string charterNameString = "charter: ";
@@ -81,5 +88,10 @@ public class ValueStorer : MonoBehaviour
 
     #region Chart Timings
     public static string timingString = "timing(";
+    #endregion
+
+    #region Chart File
+    public static string difficultyString = "difficulty: ";
+    public static string speedString = "speed(";
     #endregion
 }

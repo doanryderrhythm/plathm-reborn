@@ -10,6 +10,7 @@ using UnityEngine.UI;
 public class OpenFile : MonoBehaviour
 {
     [SerializeField] UIManager uiManager;
+    [SerializeField] EditorManager editorManager;
 
     [Header("Song Information")]
     [SerializeField] TMP_Text directoryText;
@@ -106,6 +107,8 @@ public class OpenFile : MonoBehaviour
             directoryText.text = url;
             uiManager.RemoveAllTimings();
 
+            bool isAlreadyImportedDifficulty = false;
+
             string[] files = Directory.GetFiles(url);
             foreach (string file in files)
             {
@@ -122,7 +125,22 @@ public class OpenFile : MonoBehaviour
                 }
                 else if (extension == ".ptmf")
                 {
-                    Debug.Log("The chart file is suitable.");
+                    if (isAlreadyImportedDifficulty)
+                    {
+                        continue;
+                    }
+
+                    string fileName = Path.GetFileName(file);
+                    string diff = fileName.Replace(extension, "");
+                    if (int.TryParse(diff, out int diffValue))
+                    {
+                        editorManager.ChangeDifficulty(diffValue, file);
+                        isAlreadyImportedDifficulty = true;
+                    }
+                    else
+                    {
+                        Debug.Log("The chart file can't be imported.");
+                    }
                 }
                 else if (extension == ".ptminf")
                 {
@@ -161,6 +179,7 @@ public class OpenFile : MonoBehaviour
                             {
                                 string chartOffset = line.Substring(ValueStorer.chartOffsetString.Length);
                                 chartOffsetInputField.text = chartOffset;
+                                editorManager.ChangeChartOffset();
                                 continue;
                             }
 
@@ -168,6 +187,7 @@ public class OpenFile : MonoBehaviour
                             {
                                 string chartSpeed = line.Substring(ValueStorer.chartSpeedString.Length);
                                 chartSpeedInputField.text = chartSpeed;
+                                editorManager.ChangeChartSpeed();
                                 continue;
                             }
 

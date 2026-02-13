@@ -1089,6 +1089,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OpenFile
   uiManager: {fileID: 961892503}
+  editorManager: {fileID: 217819812}
   directoryText: {fileID: 2096830327}
   songNameInputField: {fileID: 1015510316}
   songArtistInputField: {fileID: 2064086553}
@@ -1518,6 +1519,7 @@ MonoBehaviour:
   chartSpeed: 0
   speedMulti: 1
   beatDensity: 1
+  difficulty: 0
   inputAnyKey: {fileID: 7523957437666599508, guid: 5c4ad56a954cd3f4994cae33131c1f5b, type: 3}
   inputLeftTeleport: {fileID: -3584611672421337454, guid: 5c4ad56a954cd3f4994cae33131c1f5b, type: 3}
   inputRightTeleport: {fileID: 4592387818636657607, guid: 5c4ad56a954cd3f4994cae33131c1f5b, type: 3}
@@ -1561,9 +1563,11 @@ MonoBehaviour:
   noteAmountUI: {fileID: 437106764}
   noteSelectDropDown: {fileID: 247270155}
   currentTimingText: {fileID: 1581494590}
+  currentDifficultyText: {fileID: 1146215315}
   offsetInputField: {fileID: 1835906998}
   speedInputField: {fileID: 1816879178}
   noteAmountInputField: {fileID: 817460649}
+  difficultyInputField: {fileID: 1496733557}
 --- !u!4 &217819813
 Transform:
   m_ObjectHideFlags: 0
