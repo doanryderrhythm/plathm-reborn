@@ -69,4 +69,17 @@ public class ValueStorer : MonoBehaviour
     public static string hasSpeedGroupText = "Speed Group ";
 
     public static float mouseScrollSpeed = 0.5f;
+
+    //Save & Load Strings
+    #region Chart Information
+    public static string songNameString = "song_name: ";
+    public static string songArtistString = "song_artist: ";
+    public static string charterNameString = "charter: ";
+    public static string chartOffsetString = "offset: ";
+    public static string chartSpeedString = "speed: ";
+    #endregion
+
+    #region Chart Timings
+    public static string timingString = "timing(";
+    #endregion
 }

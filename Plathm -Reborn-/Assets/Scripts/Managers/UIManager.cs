@@ -70,6 +70,24 @@ public class UIManager : MonoBehaviour
         timingItem.transform.SetParent(timingItemStorer.transform, false);
     }
 
+    public void AddTimingItem(float timing, float BPM)
+    {
+        GameObject timingItem = Instantiate(timingItemPrefab) as GameObject;
+
+        BPMStorer BPMStorer = timingItem.GetComponent<BPMStorer>();
+        BPMStorer.timing = timing;
+        BPMStorer.BPM = BPM;
+
+        if (BPMStorer)
+        {
+            timingItems.Add(BPMStorer);
+            BPMStorer.ChangeNumberLabel(timingItems.IndexOf(BPMStorer));
+            BPMStorer.ConvertFromValueToText();
+        }
+
+        timingItem.transform.SetParent(timingItemStorer.transform, false);
+    }
+
     public void AddSpeedItem(int index)
     {
         if (index < 0 || index >= speedItems.Count)
@@ -88,41 +106,6 @@ public class UIManager : MonoBehaviour
 
         speedItem.transform.SetParent(speedItemStorer.transform, false);
     }
-
-    /*
-    public void RefreshTimingItems(int index)
-    {
-        if (timingItems.Count == 0)
-        {
-            return;
-        }
-
-        foreach (Transform item in timingItemStorer.transform)
-        {
-            Destroy(item.gameObject);
-        }
-
-        for (int i = 0; i < timingItems[index].Count; i++)
-        {
-            GameObject timingItem = Instantiate(timingItemPrefab) as GameObject;
-
-            BPMStorer BPMStorer = timingItem.GetComponent<BPMStorer>();
-            if (BPMStorer)
-            {
-                BPMStorer.index = timingItems[index][i].index;
-                BPMStorer.timing = timingItems[index][i].timing;
-                BPMStorer.BPM = timingItems[index][i].BPM;
-
-                timingItems[index][i] = BPMStorer;
-
-                BPMStorer.ChangeNumberLabel(BPMStorer.index);
-                BPMStorer.ConvertFromValueToText();
-            }
-
-            timingItem.transform.SetParent(timingItemStorer.transform, false);
-        }
-    }
-    */
 
     public void RefreshSpeedItems(int index)
     {
@@ -259,6 +242,16 @@ public class UIManager : MonoBehaviour
                 speedItems[listIndex][i].ChangeNumberLabel(i);
             }
         }
+    }
+
+    public void RemoveAllTimings()
+    {
+        for (int i = 0; i < timingItems.Count; i++)
+        {
+            Destroy(timingItems[i].gameObject);
+        }
+
+        timingItems.Clear();
     }
 
     public void ChangeBeatDensity()

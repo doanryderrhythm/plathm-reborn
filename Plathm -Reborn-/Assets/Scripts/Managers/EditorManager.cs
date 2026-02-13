@@ -169,8 +169,6 @@ public class EditorManager : MonoBehaviour
     //Texts
     [Space(10.0f)]
     [SerializeField] TMP_Text currentTimingText;
-    [SerializeField] TMP_Text chartOffsetText;
-    [SerializeField] TMP_Text chartSpeedText;
     //Input Fields
     [Space(10.0f)]
     [SerializeField] TMP_InputField offsetInputField;
@@ -647,9 +645,6 @@ public class EditorManager : MonoBehaviour
         ChangeChartOffset();
         ChangeChartSpeed();
         ChangeNoteAmount();
-
-        chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
-        chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
     }
 
     void RebuildReservedKeys()
@@ -2396,8 +2391,6 @@ public class EditorManager : MonoBehaviour
 
     void ReloadChartOffsetVisuals(float originalOffset)
     {
-        chartOffsetText.text = ValueStorer.chartOffsetText + chartOffset.ToString();
-
         for (int i = 0; i < timingGroups.Count; i++)
         {
             ChangePositionsThroughOffset(timingGroups[i].tapFolder.transform, originalOffset);
@@ -2413,7 +2406,6 @@ public class EditorManager : MonoBehaviour
 
     void ReloadChartSpeedVisuals()
     {
-        chartSpeedText.text = ValueStorer.chartSpeedText + chartSpeed.ToString();
         speedInputField.text = chartSpeed.ToString();
 
         for (int i = 0; i < timingGroups.Count; i++)
