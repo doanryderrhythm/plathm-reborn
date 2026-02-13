@@ -1197,6 +1197,36 @@ public class EditorManager : MonoBehaviour
         }
     }
 
+    void InsertNote(int group, string noteTypeString, float timing, float xPos = 0f)
+    {
+        GameObject confirmedNote = null;
+        Vector3 confirmedPosition = new Vector3(xPos, timing * chartSpeed / 1000f, 0f);
+
+        switch (noteTypeString)
+        {
+            case ValueStorer.tapString: confirmedNote = Instantiate(tapNotePrefab, timingGroups[group].tapFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.blackString: confirmedNote = Instantiate(blackNotePrefab, timingGroups[group].blackFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.leftTeleportString: confirmedNote = Instantiate(leftTeleportPrefab, timingGroups[group].leftTeleportFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.rightTeleportString: confirmedNote = Instantiate(rightTeleportPrefab, timingGroups[group].rightTeleportFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.sliceString: confirmedNote = Instantiate(sliceNotePrefab, timingGroups[group].sliceFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.middleSpikeString: confirmedNote = Instantiate(middleSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.sideSpikeString: confirmedNote = Instantiate(sideSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
+            default: break;
+        }
+
+        if (confirmedNote == null)
+        {
+            return;
+        }
+
+        confirmedNote.transform.localPosition = confirmedPosition;
+
+        MusicNote musicNote = confirmedNote.GetComponent<MusicNote>();
+        musicNote.timingGroup = timingGroups[group];
+        musicNote.timing = timing / 1000f;
+        musicNote.temporaryTiming = timing / 1000f;
+    }
+
     void InsertMultipleNotesSignal(Vector3 targetPosition, ref bool isPreSelected)
     {
         if (!isPreSelected)
@@ -2420,8 +2450,82 @@ public class EditorManager : MonoBehaviour
 
                     continue;
                 }
+
+                if (line.StartsWith(ValueStorer.tapString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.tapString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing) &&
+                        float.TryParse(values[2], out float xPos))
+                        InsertNote(group, ValueStorer.tapString, timing, xPos);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.blackString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.blackString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing) &&
+                        float.TryParse(values[2], out float xPos))
+                        InsertNote(group, ValueStorer.blackString, timing, xPos);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.leftTeleportString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.leftTeleportString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing) &&
+                        float.TryParse(values[2], out float xPos))
+                        InsertNote(group, ValueStorer.leftTeleportString, timing, xPos);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.rightTeleportString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.rightTeleportString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing) &&
+                        float.TryParse(values[2], out float xPos))
+                        InsertNote(group, ValueStorer.rightTeleportString, timing, xPos);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.sliceString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.sliceString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing))
+                        InsertNote(group, ValueStorer.sliceString, timing);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.middleSpikeString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.middleSpikeString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing))
+                        InsertNote(group, ValueStorer.middleSpikeString, timing);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.sideSpikeString))
+                {
+                    string[] values = GetConvertedNoteProperties(ValueStorer.sideSpikeString, line);
+                    if (int.TryParse(values[0], out int group) &&
+                        float.TryParse(values[1], out float timing))
+                        InsertNote(group, ValueStorer.sideSpikeString, timing);
+                    continue;
+                }
             }
         }
+    }
+
+    string[] GetConvertedNoteProperties(string subLine, string line)
+    {
+        string content = line.Replace(subLine, "").Replace(")", "");
+        string[] values = content.Split(',');
+        return values;
     }
 
     #endregion
