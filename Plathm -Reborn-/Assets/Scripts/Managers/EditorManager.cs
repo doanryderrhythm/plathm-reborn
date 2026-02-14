@@ -1202,6 +1202,11 @@ public class EditorManager : MonoBehaviour
         GameObject confirmedNote = null;
         Vector3 confirmedPosition = new Vector3(xPos, timing * chartSpeed / 1000f, 0f);
 
+        if (group > timingGroups.Count - 1)
+        {
+            AddSpeedGroup(false);
+        }
+
         switch (noteTypeString)
         {
             case ValueStorer.tapString: confirmedNote = Instantiate(tapNotePrefab, timingGroups[group].tapFolder.gameObject.transform, false) as GameObject; break;
@@ -2183,7 +2188,7 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    public void AddSpeedGroup()
+    public void AddSpeedGroup(bool isStay = true)
     {
         foreach (TimingGroup currentTG in timingGroups)
         {
@@ -2199,7 +2204,8 @@ public class EditorManager : MonoBehaviour
         List<SpeedStorer> newSpeedItems = new List<SpeedStorer>();
         uiManager.speedItems.Add(newSpeedItems);
 
-        timingGroupIndex = uiManager.speedItems.Count - 1;
+        if (isStay) timingGroupIndex = uiManager.speedItems.Count - 1;
+        else timingGroupIndex = 0;
 
         UpdateGroupIndicators();
         uiManager.RefreshSpeedItems(timingGroupIndex);
@@ -2294,6 +2300,8 @@ public class EditorManager : MonoBehaviour
         timingGroupIndex = 0;
         UpdateGroupIndicators();
         uiManager.RefreshSpeedItems(timingGroupIndex);
+
+        Debug.Log(timingGroups.Count);
 
         for (int i = 0; i < timingGroups.Count; i++)
         {
@@ -2445,7 +2453,6 @@ public class EditorManager : MonoBehaviour
                             AddSpeedGroup();
                         }
                         uiManager.AddSpeedItem(group, timing, speed);
-                        BackToFirstGroup();
                     }
 
                     continue;
@@ -2519,6 +2526,8 @@ public class EditorManager : MonoBehaviour
                 }
             }
         }
+
+        BackToFirstGroup();
     }
 
     string[] GetConvertedNoteProperties(string subLine, string line)

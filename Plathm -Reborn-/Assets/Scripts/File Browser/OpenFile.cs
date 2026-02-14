@@ -12,6 +12,8 @@ public class OpenFile : MonoBehaviour
     [SerializeField] UIManager uiManager;
     [SerializeField] EditorManager editorManager;
 
+    [SerializeField] string loadedDirectory = string.Empty;
+
     [Header("Song Information")]
     [SerializeField] TMP_Text directoryText;
     [SerializeField] TMP_InputField songNameInputField;
@@ -105,6 +107,7 @@ public class OpenFile : MonoBehaviour
             }
 
             directoryText.text = url;
+            loadedDirectory = url;
             uiManager.RemoveAllTimings();
 
             bool isAlreadyImportedDifficulty = false;
@@ -210,6 +213,23 @@ public class OpenFile : MonoBehaviour
                     Debug.Log("The file is not supported");
                 }
             }
+        }
+    }
+
+    public void ChangeDifficulty(int difficulty)
+    {
+        if (string.IsNullOrEmpty(loadedDirectory) || editorManager.difficulty == difficulty)
+        {
+            return;
+        }
+
+        switch (difficulty)
+        {
+            case 0: editorManager.ChangeDifficulty(difficulty, loadedDirectory + ValueStorer.difficultyPoint); break;
+            case 1: editorManager.ChangeDifficulty(difficulty, loadedDirectory + ValueStorer.difficultyLine); break;
+            case 2: editorManager.ChangeDifficulty(difficulty, loadedDirectory + ValueStorer.difficultyTriangle); break;
+            case 3: editorManager.ChangeDifficulty(difficulty, loadedDirectory + ValueStorer.difficultySquare); break;
+            default: return;
         }
     }
 }

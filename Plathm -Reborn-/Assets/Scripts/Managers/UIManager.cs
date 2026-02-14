@@ -280,15 +280,24 @@ public class UIManager : MonoBehaviour
     {
         for (int i = 0; i < speedItems.Count; i++)
         {
-            for (int j = 0; j < speedItems[i].Count; j++)
+            if (speedItems[i] == null)
             {
-                Destroy(speedItems[i][j].gameObject);
+                continue;
             }
 
-            Destroy(editorManager.timingGroups[i].gameObject);
+            for (int j = 0; j < speedItems[i].Count; j++)
+            {
+                if (speedItems[i][j]) Destroy(speedItems[i][j].gameObject);
+            }
+
+            if (i < editorManager.timingGroups.Count && editorManager.timingGroups[i] != null)
+            {
+                Destroy(editorManager.timingGroups[i].gameObject);
+            }
         }
 
         speedItems.Clear();
+        editorManager.timingGroups.Clear();
     }
 
     public void ChangeBeatDensity()

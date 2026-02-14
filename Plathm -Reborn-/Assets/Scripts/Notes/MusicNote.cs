@@ -61,7 +61,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (noteType == NoteType.MIDDLE_SPIKE)
+        if (noteType == NoteType.MIDDLE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
         {
             if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
             {
@@ -76,7 +76,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (noteType == NoteType.SIDE_SPIKE)
+        if (noteType == NoteType.SIDE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
         {
             if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
             {
