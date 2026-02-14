@@ -1069,6 +1069,7 @@ GameObject:
   m_Component:
   - component: {fileID: 156740183}
   - component: {fileID: 156740182}
+  - component: {fileID: 156740184}
   m_Layer: 0
   m_Name: File Browser
   m_TagString: Untagged
@@ -1113,6 +1114,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &156740184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 156740181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9966eac31b98e3b46b6db4be5ca3a14a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaveFile
+  editorManager: {fileID: 217819812}
+  uiManager: {fileID: 961892503}
+  difficultyInputField: {fileID: 1496733557}
+  songNameInputField: {fileID: 1015510316}
+  songArtistInputField: {fileID: 2064086553}
+  charterInputField: {fileID: 1119674011}
+  chartOffsetInputField: {fileID: 1835906998}
+  chartSpeedInputField: {fileID: 1816879178}
+  directoryText: {fileID: 2096830327}
 --- !u!1 &158477522
 GameObject:
   m_ObjectHideFlags: 0
@@ -9832,7 +9854,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 996751860}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 156740184}
+        m_TargetAssemblyTypeName: SaveFile, Assembly-CSharp
+        m_MethodName: SaveChart
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &996751860
 MonoBehaviour:
   m_ObjectHideFlags: 0

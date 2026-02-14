@@ -79,20 +79,28 @@ public class ValueStorer : MonoBehaviour
 
     //Save & Load Strings
     #region Project Information
-    public static string songNameString = "song_name: ";
-    public static string songArtistString = "song_artist: ";
-    public static string charterNameString = "charter: ";
-    public static string chartOffsetString = "offset: ";
-    public static string chartSpeedString = "speed: ";
+    public const string songNameString = "song_name: ";
+    public const string songArtistString = "song_artist: ";
+    public const string charterNameString = "charter: ";
+    public const string chartOffsetString = "offset: ";
+    public const string chartSpeedString = "speed: ";
     #endregion
 
     #region Chart Timings
-    public static string timingString = "timing(";
+    public const string timingString = "timing(";
     #endregion
 
     #region Chart File
-    public static string difficultyString = "difficulty: ";
-    public static string speedString = "speed(";
+    public const string informationString = "\\information.ptminf";
+    public const string difficultyString = "difficulty: ";
+    public const string speedString = "speed(";
+    #endregion
+
+    #region Chart Difficulties
+    public const string difficultyPoint = "\\0.ptmf";
+    public const string difficultyLine = "\\1.ptmf";
+    public const string difficultyTriangle = "\\2.ptmf";
+    public const string difficultySquare = "\\3.ptmf";
     #endregion
 
     #region Note Types

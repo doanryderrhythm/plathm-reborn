@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class TimingGroup : MonoBehaviour
@@ -12,15 +13,23 @@ public class TimingGroup : MonoBehaviour
     public GameObject usedNotesFolder;
     public GameObject undoRedoFolder;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public List<Transform> GetNotesForSaving()
     {
-        
-    }
+        List<Transform> notes = new List<Transform>();
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+        foreach (Transform noteTransform in tapFolder.transform)
+            notes.Add(noteTransform);
+        foreach (Transform noteTransform in blackFolder.transform)
+            notes.Add(noteTransform);
+        foreach (Transform noteTransform in sliceFolder.transform)
+            notes.Add(noteTransform);
+        foreach (Transform noteTransform in leftTeleportFolder.transform)
+            notes.Add(noteTransform);
+        foreach (Transform noteTransform in rightTeleportFolder.transform)
+            notes.Add(noteTransform);
+        foreach (Transform noteTransform in spikeFolder.transform)
+            notes.Add(noteTransform);
+
+        return notes;
+    }    
 }
