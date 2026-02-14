@@ -96,6 +96,8 @@ public class EditorManager : MonoBehaviour
     [SerializeField] InputActionReference inputSlice;
     [Space(10.0f)]
     [SerializeField] InputActionReference editorInputScroll;
+    [SerializeField] InputActionReference editorInputCopy;
+    [SerializeField] InputActionReference editorInputCancel;
     private bool isControlHeld = false;
 
     [Header("Note Types")]
@@ -164,6 +166,13 @@ public class EditorManager : MonoBehaviour
     [SerializeField] MusicNote lowestSelectedNote = null;
     private Vector3 fixedSelectedNotePosition;
 
+    [Header("Copy & Paste")]
+    private float pasteTempTiming;
+    [SerializeField] GameObject pasteBar;
+    private bool isCopied = false;
+    [SerializeField] List<Transform> copiedNotes;
+    private Transform lowestCopiedNote;
+
     [Header("UI")]
     [SerializeField] UIManager uiManager;
     [SerializeField] GameObject noteAmountUI;
@@ -203,8 +212,9 @@ public class EditorManager : MonoBehaviour
         noteArea.SetActive(false);
 
         foundNotesInArea = new List<Transform>();
-
         selectedNotes = new List<MusicNote>();
+
+        copiedNotes = new List<Transform>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -252,6 +262,95 @@ public class EditorManager : MonoBehaviour
             }
         }
 
+        if (!playMode && editorInputCopy.action.WasPressedThisFrame())
+        {
+            if (IsNoteAreaFullyLocked())
+            {
+                copiedNotes.Clear();
+                InsertNotesInArea();
+                copiedNotes = foundNotesInArea;
+                lowestCopiedNote = GetLowestNote();
+                ResetNoteSelectArea(ref isNoteAreaAdded, true);
+                pasteBar.SetActive(true);
+                isCopied = true;
+            }
+            else if (selectedNotes.Count > 0)
+            {
+                copiedNotes.Clear();
+                foreach (MusicNote note in selectedNotes)
+                {
+                    copiedNotes.Add(note.transform);
+                }
+                FindLowestSelectedNote();
+                lowestCopiedNote = lowestSelectedNote.transform;
+                ResetNoteSelections(true);
+                pasteBar.SetActive(true);
+                isCopied = true;
+            }
+        }
+
+        if (!playMode && isCopied)
+        {
+            float finalYPosition;
+
+            GameObject hoveredGrid = GetHoveredHorizontalGrid();
+            if (hoveredGrid != null)
+            {
+                finalYPosition = hoveredGrid.transform.localPosition.y;
+                pasteBar.transform.localPosition = new Vector3(0, finalYPosition, 0);
+            }
+            else
+            {
+                finalYPosition = worldPosition.y;
+                pasteBar.transform.position = new Vector3(0, finalYPosition, 0);
+            }
+
+            if (Mouse.current != null 
+                && Mouse.current.leftButton.wasPressedThisFrame
+                && EventSystem.current != null
+                && !EventSystem.current.IsPointerOverGameObject())
+            {
+                foreach (Transform noteTransform in copiedNotes)
+                {
+                    MusicNote note = noteTransform.gameObject.GetComponent<MusicNote>();
+                    string noteType = string.Empty;
+                    switch (note.GetNoteType())
+                    {
+                        case MusicNote.NoteType.TAP_NOTE: noteType = ValueStorer.tapString; break;
+                        case MusicNote.NoteType.BLACK_NOTE: noteType = ValueStorer.blackString; break;
+                        case MusicNote.NoteType.LEFT_TELEPORT: noteType = ValueStorer.leftTeleportString; break;
+                        case MusicNote.NoteType.RIGHT_TELEPORT: noteType = ValueStorer.rightTeleportString; break;
+                        case MusicNote.NoteType.SLICE_NOTE: noteType = ValueStorer.sliceString; break;
+                        case MusicNote.NoteType.MIDDLE_SPIKE: noteType = ValueStorer.middleSpikeString; break;
+                        case MusicNote.NoteType.SIDE_SPIKE: noteType = ValueStorer.sideSpikeString; break;
+                        default: break;
+                    }
+
+                    if (!string.IsNullOrEmpty(noteType))
+                    {
+                        MusicNote lowestMusicNote = lowestCopiedNote.gameObject.GetComponent<MusicNote>();
+                        InsertNote(timingGroupIndex,
+                            noteType,
+                            (note.timing - lowestMusicNote.timing + pasteBar.transform.localPosition.y / chartSpeed) * 1000f,
+                            noteTransform.localPosition.x);
+                    }
+                }
+            }
+        }
+
+        if (!playMode && editorInputCancel.action.WasPressedThisFrame())
+        {
+            if (isCopied)
+            {
+                isCopied = false;
+                pasteBar.SetActive(false);
+                copiedNotes.Clear();
+
+                ResetNoteSelectArea(ref isNoteAreaAdded);
+                ResetNoteSelections();
+            }
+        }
+
         if (!playMode && Keyboard.current != null)
         {
             var keyboard = Keyboard.current;
@@ -286,7 +385,8 @@ public class EditorManager : MonoBehaviour
             && Mouse.current != null
             && Mouse.current.leftButton.wasPressedThisFrame
             && EventSystem.current != null 
-            && !EventSystem.current.IsPointerOverGameObject())
+            && !EventSystem.current.IsPointerOverGameObject()
+            && !isCopied)
         {
             if (worldPosition.y >= 0f)
             {
@@ -301,7 +401,7 @@ public class EditorManager : MonoBehaviour
             && EventSystem.current != null
             && !EventSystem.current.IsPointerOverGameObject())
         {
-            if (Mouse.current.leftButton.wasPressedThisFrame && !isControlHeld)
+            if (Mouse.current.leftButton.wasPressedThisFrame && !isControlHeld && !isCopied)
             {
                 bool isFullyLocked = IsNoteAreaFullyLocked() && IsWithinOpenCloseNoteArea();
 
@@ -403,11 +503,11 @@ public class EditorManager : MonoBehaviour
 
                 lowestNoteArea = null;
             }
-            else if (Mouse.current.leftButton.isPressed && draggedNote && !isControlHeld)
+            else if (Mouse.current.leftButton.isPressed && draggedNote && !isControlHeld && !isCopied)
             {
                 MoveNote();
             }
-            else if (Mouse.current.leftButton.isPressed && selectedNotes.Count != 0 && selectedNotes.All(e => e != null) && !isControlHeld)
+            else if (Mouse.current.leftButton.isPressed && selectedNotes.Count != 0 && selectedNotes.All(e => e != null) && !isControlHeld && !isCopied)
             {
                 float alignValue = worldPosition.y - lockedAreaPosition.y;
 
@@ -432,7 +532,7 @@ public class EditorManager : MonoBehaviour
                         0);
                 }
             }
-            else if (Mouse.current.leftButton.isPressed && foundNotesInArea.Count != 0 && foundNotesInArea.All(e => e != null) && !isControlHeld)
+            else if (Mouse.current.leftButton.isPressed && foundNotesInArea.Count != 0 && foundNotesInArea.All(e => e != null) && !isControlHeld && !isCopied)
             {
                 float alignValue = worldPosition.y - lockedAreaPosition.y;
 
@@ -467,7 +567,7 @@ public class EditorManager : MonoBehaviour
                 noteArea.transform.localPosition = new Vector3(
                     0, areaTempTiming * chartSpeed + alignValue, 0);
             }
-            else if (Mouse.current.leftButton.wasPressedThisFrame && isControlHeld)
+            else if (Mouse.current.leftButton.wasPressedThisFrame && isControlHeld && !isCopied)
             {
                 ResetNoteSelectArea(ref isNoteAreaAdded);
 
@@ -485,7 +585,7 @@ public class EditorManager : MonoBehaviour
                     ResetNoteSelections();
                 }
             }
-            else if (Mouse.current.middleButton.wasPressedThisFrame)
+            else if (Mouse.current.middleButton.wasPressedThisFrame && !isCopied)
             {
                 ResetNoteSelections();
                 ExecuteNoteAreaSignal(worldPosition, ref isNoteAreaAdded);
@@ -496,7 +596,8 @@ public class EditorManager : MonoBehaviour
             && editOption == EditOption.NOTE_ADD_BETWEEN
             && Mouse.current != null
             && EventSystem.current != null
-            && !EventSystem.current.IsPointerOverGameObject())
+            && !EventSystem.current.IsPointerOverGameObject()
+            && !isCopied)
         {
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
@@ -587,6 +688,8 @@ public class EditorManager : MonoBehaviour
         inputSlice.action.performed         += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.SLICE_NOTE);
 
         editorInputScroll.action.Enable();
+        editorInputCopy.action.Enable();
+        editorInputCancel.action.Enable();
     }
 
     private void OnDisable()
@@ -596,6 +699,8 @@ public class EditorManager : MonoBehaviour
         inputSlice.action.performed         -= _ => { };
 
         editorInputScroll.action.Disable();
+        editorInputCopy.action.Disable();
+        editorInputCancel.action.Disable();
     }
 
     bool TryKeyControlToNewKey(KeyControl keyControl, out Key finalKey)
@@ -1277,23 +1382,23 @@ public class EditorManager : MonoBehaviour
                     !isNoteAreaAdded;
     }
 
-    void ResetNoteSelectArea(ref bool isPreselected)
+    void ResetNoteSelectArea(ref bool isPreselected, bool isOnlyVisual = false)
     {
         openNoteArea.SetActive(false);
         closeNoteArea.SetActive(false);
         noteArea.SetActive(false);
         isPreselected = false;
 
-        foundNotesInArea.Clear();
+        if (!isOnlyVisual) foundNotesInArea.Clear();
     }
 
-    void ResetNoteSelections()
+    void ResetNoteSelections(bool isOnlyVisual = false)
     {
         foreach (MusicNote note in selectedNotes)
         {
             note.ToggleSelected(false);
         }
-        selectedNotes.Clear();
+        if (!isOnlyVisual) selectedNotes.Clear();
     }
 
     bool IsWithinOpenCloseNoteArea()
@@ -1735,6 +1840,10 @@ public class EditorManager : MonoBehaviour
         editOption = (EditOption)index;
 
         ResetNoteSelectArea(ref isNoteAreaAdded);
+        ResetNoteSelections();
+
+        isCopied = false;
+        pasteBar.SetActive(false);
 
         if (editOption == EditOption.NOTE_ADD)
         {
