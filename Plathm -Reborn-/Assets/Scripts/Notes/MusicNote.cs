@@ -4,6 +4,7 @@ public class MusicNote : MonoBehaviour
 {
     //Other shenanigans
     EditorManager editorManager;
+    AudioManager audioManager;
     TestPlayer player;
 
     //Note details
@@ -27,11 +28,13 @@ public class MusicNote : MonoBehaviour
 
     [SerializeField] NoteType noteType;
     [SerializeField] bool isBlackActivated = false;
+    public bool isAutoActivated = false;
 
     private void Awake()
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
         player = GameObject.FindFirstObjectByType<TestPlayer>();
+        audioManager = GameObject.FindFirstObjectByType<AudioManager>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -49,26 +52,56 @@ public class MusicNote : MonoBehaviour
             {
                 isBlackActivated = false;
             }
+            isAutoActivated = false;
             return;
         }
 
-        if (noteType == NoteType.BLACK_NOTE && isBlackActivated && editorManager.audioSource.time > timing)
+        if (isAutoActivated)
+        {
+            return;
+        }
+
+        if (editorManager.autoplayToggle.isOn)
+        {
+            if (editorManager.audioSource.time < timing)
+            {
+                return;
+            }
+
+            if (isAutoActivated && editorManager.audioSource.time >= timing)
+            {
+                return;
+            }
+
+            isAutoActivated = true;
+
+            if (noteType == NoteType.TAP_NOTE) audioManager.AddSound(audioManager.tapSound);
+            else if (noteType == NoteType.BLACK_NOTE) audioManager.AddSound(audioManager.blackSound);
+            else if (noteType == NoteType.SLICE_NOTE) audioManager.AddSound(audioManager.sliceSound);
+            else if (noteType == NoteType.LEFT_TELEPORT || noteType == NoteType.RIGHT_TELEPORT) audioManager.AddSound(audioManager.teleportSound);
+            else if (noteType == NoteType.SIDE_SPIKE || noteType == NoteType.MIDDLE_SPIKE) audioManager.AddSound(audioManager.spikeSound);
+
+            SwitchToUsedFolder();
+
+            return;
+        }
+
+        if (noteType == NoteType.BLACK_NOTE && isBlackActivated && editorManager.audioSource.time >= timing)
         {
             Instantiate(editorManager.blackCPerfectPrefab,
                 new Vector3(this.transform.position.x, 0, 0),
                 Quaternion.identity);
+            audioManager.AddSound(audioManager.blackSound);
             SwitchToUsedFolder();
             return;
         }
 
         if (noteType == NoteType.MIDDLE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
         {
-            if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
+            if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
             {
                 Instantiate(editorManager.spikesPrefab, ValueStorer.middleLanePosition, Quaternion.identity);
-            }
-            else
-            {
+                audioManager.AddSound(audioManager.spikeSound);
                 Debug.Log("Avoided MIDDLE SPIKE");
             }
 
@@ -78,13 +111,11 @@ public class MusicNote : MonoBehaviour
 
         if (noteType == NoteType.SIDE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
         {
-            if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
+            if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
             {
                 Instantiate(editorManager.spikesPrefab, ValueStorer.leftLanePosition, Quaternion.identity);
                 Instantiate(editorManager.spikesPrefab, ValueStorer.rightLanePosition, Quaternion.identity);
-            }
-            else
-            {
+                audioManager.AddSound(audioManager.spikeSound);
                 Debug.Log("Avoided SIDE SPIKE");
             }
 
@@ -119,13 +150,20 @@ public class MusicNote : MonoBehaviour
         }
         else
         {
+            if (this.noteType == NoteType.TAP_NOTE)
+                audioManager.AddSound(audioManager.tapSound);
+            else if (this.noteType == NoteType.SLICE_NOTE)
+                audioManager.AddSound(audioManager.sliceSound);
+            else if (this.noteType == NoteType.LEFT_TELEPORT || this.noteType == NoteType.RIGHT_TELEPORT)
+                audioManager.AddSound(audioManager.teleportSound);
+
             InstantiateJudgementEffects();
         }
 
         SwitchToUsedFolder();
     }
 
-    void SwitchToUsedFolder()
+    public void SwitchToUsedFolder()
     {
         if (!timingGroup)
         {

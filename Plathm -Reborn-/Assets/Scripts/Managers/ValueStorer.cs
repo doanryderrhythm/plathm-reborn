@@ -112,4 +112,7 @@ public class ValueStorer : MonoBehaviour
     public const string middleSpikeString = "middle_spike(";
     public const string sideSpikeString = "side_spike(";
     #endregion
+
+    //Audio Mixer
+    public const string sfxExposedName = "SFXVolume";
 }

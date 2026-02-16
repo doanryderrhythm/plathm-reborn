@@ -1,14 +1,20 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
     private EditorManager editorManager;
 
     [Header("Chart Information")]
+    [SerializeField] GameObject infoCanvas;
     [SerializeField] Animator infoStorer;
     [SerializeField] bool isInfoStorerToggled = true;
+
+    [Header("UI Elements")]
+    [SerializeField] GameObject[] elementsForToggle;
+    public Slider sfxVolumeSlider;
 
     [Header("Timing Field")]
     public TMP_Text timingIndicator;
@@ -40,6 +46,23 @@ public class UIManager : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void ToggleUIElements(bool isToggle)
+    {
+        foreach (GameObject element in elementsForToggle)
+        {
+            element.SetActive(isToggle);
+        }
+
+        //For other elements
+        CanvasGroup infoCanvasCG = infoCanvas.GetComponent<CanvasGroup>();
+        if (!isToggle)
+            infoCanvasCG.alpha = 0;
+        else
+            infoCanvasCG.alpha = 1;
+        infoCanvasCG.interactable = isToggle;
+        infoCanvasCG.blocksRaycasts = isToggle;
     }
 
     public void ToggleInformation()

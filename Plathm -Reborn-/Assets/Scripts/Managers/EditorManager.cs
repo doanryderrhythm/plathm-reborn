@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -86,7 +87,7 @@ public class EditorManager : MonoBehaviour
     public float chartSpeed = 1f;
     public float speedMulti = 1f;
     public int beatDensity = 1;
-    private float editorCurrentTiming = 0f;
+    public float editorCurrentTiming = 0f;
     public int difficulty = 0;
 
     [Header("Input Actions")]
@@ -177,6 +178,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] UIManager uiManager;
     [SerializeField] GameObject noteAmountUI;
     [SerializeField] TMP_Dropdown noteSelectDropDown;
+    public Toggle autoplayToggle;
     //Texts
     [Space(10.0f)]
     [SerializeField] TMP_Text currentTimingText;
@@ -233,7 +235,7 @@ public class EditorManager : MonoBehaviour
 
         ConvertFromMouseToWorld();
 
-        if (playMode)
+        if (playMode && !autoplayToggle.isOn)
         {
             var keyboard = Keyboard.current;
             if (keyboard != null)
@@ -657,17 +659,20 @@ public class EditorManager : MonoBehaviour
 
         if (playMode)
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
+            if (!autoplayToggle.isOn)
             {
-                if (pressedKeys.Count > 0)
+                var keyboard = Keyboard.current;
+                if (keyboard != null)
                 {
-                    foreach (Key key in pressedKeys)
+                    if (pressedKeys.Count > 0)
                     {
-                        if (!reservedBlackKeys.Contains(key))
+                        foreach (Key key in pressedKeys)
                         {
-                            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
-                            break;
+                            if (!reservedBlackKeys.Contains(key))
+                            {
+                                ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
+                                break;
+                            }
                         }
                     }
                 }
@@ -760,6 +765,11 @@ public class EditorManager : MonoBehaviour
 
     void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
     {
+        if (autoplayToggle.isOn)
+        {
+            return;
+        }
+
         List<GameObject> notesInFolders = new List<GameObject>();
 
         for (int i = 0; i < timingGroups.Count; i++)
@@ -844,6 +854,27 @@ public class EditorManager : MonoBehaviour
     void ChangeAllTimingGroupsScrolling()
     {
         timingGroupStorer.transform.position = new Vector3(0, -editorCurrentTiming * chartSpeed, 0);
+    }
+
+    void TurnOffAutoActivation()
+    {
+        foreach (TimingGroup timingGroup in timingGroups)
+        {
+            if (timingGroup == null)
+            {
+                continue;
+            }
+
+            foreach (Transform noteTransform in timingGroup.usedNotesFolder.transform)
+            {
+                MusicNote note = noteTransform.gameObject.GetComponent<MusicNote>();
+                if (note == null)
+                {
+                    continue;
+                }
+                note.isAutoActivated = false;
+            }
+        }
     }
 
     public void SelectNoteType(int index)
@@ -1870,6 +1901,7 @@ public class EditorManager : MonoBehaviour
         }
 
         playMode = isPlayMode;
+        uiManager.ToggleUIElements(!isPlayMode);
 
         if (playMode == false)
         {
@@ -1879,8 +1911,8 @@ public class EditorManager : MonoBehaviour
             {
                 group.gameObject.transform.position = Vector3.zero;
             }
+            TurnOffAutoActivation();
             ReenableNotes();
-
             RejectTimingSpeed();
 
             player.ChangePosition(player.originalPosition);
@@ -1891,6 +1923,52 @@ public class EditorManager : MonoBehaviour
             ApplyTimingSpeed();
             audioSource.Play();
         }
+    }
+
+    public void SetTestMode()
+    {
+        if (uiManager.timingItems.Count <= 0)
+        {
+            return;
+        }
+
+        List<Transform> allTransforms = new List<Transform>();
+        allTransforms.Clear();
+
+        foreach (TimingGroup group in timingGroups)
+        {
+            foreach (Transform noteTransform in group.tapFolder.transform)
+                allTransforms.Add(noteTransform);
+            foreach (Transform noteTransform in group.blackFolder.transform)
+                allTransforms.Add(noteTransform);
+            foreach (Transform noteTransform in group.sliceFolder.transform)
+                allTransforms.Add(noteTransform);
+            foreach (Transform noteTransform in group.leftTeleportFolder.transform)
+                allTransforms.Add(noteTransform);
+            foreach (Transform noteTransform in group.rightTeleportFolder.transform)
+                allTransforms.Add(noteTransform);
+            foreach (Transform noteTransform in group.spikeFolder.transform)
+                allTransforms.Add(noteTransform);
+        }
+
+        foreach (Transform noteTransform in allTransforms)
+        {
+            MusicNote note = noteTransform.GetComponent<MusicNote>();
+            if (note.timing < editorCurrentTiming)
+            {
+                if (autoplayToggle.isOn) note.isAutoActivated = true;
+                //note.isTestActivated = true;
+                note.SwitchToUsedFolder();
+            }
+        }
+
+        playMode = true;
+        uiManager.ToggleUIElements(false);
+
+        player.originalPosition = player.lanePosition;
+        ApplyTimingSpeed();
+        audioSource.time = editorCurrentTiming;
+        audioSource.Play();
     }
 
     void ReenableNotes()
