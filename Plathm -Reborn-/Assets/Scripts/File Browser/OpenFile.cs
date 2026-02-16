@@ -32,6 +32,7 @@ public class OpenFile : MonoBehaviour
     public AudioSource audioSource;
     public Image jacketArt;
 
+    /*
     public void OnClickOpenMusic()
     {
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Music", "", "ogg", false);
@@ -55,6 +56,7 @@ public class OpenFile : MonoBehaviour
             StartCoroutine(OutputRoutineOpen(new System.Uri(paths[0]).AbsoluteUri, FileType.TYPE_JACKET));
         }
     }
+    */
 
     public void OnClickOpenProject()
     {
