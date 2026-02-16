@@ -92,6 +92,10 @@ public class ValueStorer : MonoBehaviour
 
     #region Chart File
     public const string informationString = "\\information.ptminf";
+    public const string playerPositionString = "position: ";
+    public const string playerLeftString = "left";
+    public const string playerMiddleString = "middle";
+    public const string playerRightString = "right";
     public const string difficultyString = "difficulty: ";
     public const string speedString = "speed(";
     #endregion

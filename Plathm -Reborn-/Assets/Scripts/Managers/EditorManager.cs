@@ -114,7 +114,7 @@ public class EditorManager : MonoBehaviour
     public AudioSource audioSource;
 
     [Header("Gameplay")]
-    [SerializeField] TestPlayer player;
+    public TestPlayer player;
     public int timingGroupIndex = 0;
     [SerializeField] GameObject timingGroupStorer;
     [SerializeField] TimingGroup timingGroupPrefab;
@@ -2591,6 +2591,7 @@ public class EditorManager : MonoBehaviour
 
     public void ChangeDifficulty(int difficultyIndex, string chartFile)
     {
+        player.ChangePosition(LanePosition.MIDDLE_POS);
         this.difficulty = difficultyIndex;
 
         switch (this.difficulty)
@@ -2624,6 +2625,14 @@ public class EditorManager : MonoBehaviour
                     string diff = line.Substring(ValueStorer.difficultyString.Length);
                     difficultyInputField.text = diff;
                     continue;
+                }
+
+                if (line.StartsWith(ValueStorer.playerPositionString))
+                {
+                    string pos = line.Substring(ValueStorer.playerPositionString.Length);
+                    if (pos == ValueStorer.playerLeftString) player.ChangePosition(LanePosition.LEFT_POS);
+                    else if (pos == ValueStorer.playerMiddleString) player.ChangePosition(LanePosition.MIDDLE_POS);
+                    else if (pos == ValueStorer.playerRightString) player.ChangePosition(LanePosition.RIGHT_POS);
                 }
 
                 if (line.StartsWith(ValueStorer.speedString))

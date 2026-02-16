@@ -65,6 +65,16 @@ public class SaveFile : MonoBehaviour
 
         string content = ValueStorer.difficultyString + difficultyInputField.text + "\n\n";
 
+        string playerPos = string.Empty;
+        if (editorManager.player.GetLanePosition() == EditorManager.LanePosition.LEFT_POS)
+            playerPos = ValueStorer.playerPositionString + ValueStorer.playerLeftString + "\n\n";
+        else if (editorManager.player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
+            playerPos = ValueStorer.playerPositionString + ValueStorer.playerMiddleString + "\n\n";
+        else if (editorManager.player.GetLanePosition() == EditorManager.LanePosition.RIGHT_POS)
+            playerPos = ValueStorer.playerPositionString + ValueStorer.playerRightString + "\n\n";
+
+        content = content + playerPos;
+
         List<List<SpeedStorer>> speedItems = uiManager.speedItems;
         for (int group = 0; group < speedItems.Count; group++)
         {
