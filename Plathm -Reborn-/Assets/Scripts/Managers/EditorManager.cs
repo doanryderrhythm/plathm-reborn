@@ -4,14 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.UI;
-using UnityEngine.WSA;
 
 public class EditorManager : MonoBehaviour
 {
@@ -789,10 +786,10 @@ public class EditorManager : MonoBehaviour
             }
         }
 
-        ExecuteInput(notesInFolders);
+        ExecuteInput(notesInFolders, noteType == NoteTypeGeneral.BLACK_NOTE);
     }
 
-    void ExecuteInput(List<GameObject> notes)
+    void ExecuteInput(List<GameObject> notes, bool isBlackNote)
     {
         if (!playMode)
         {
@@ -833,6 +830,28 @@ public class EditorManager : MonoBehaviour
 
         if (!lowestNote)
         {
+            return;
+        }
+
+        if (isBlackNote)
+        {
+            List<MusicNote> lowestBlackNotes = new List<MusicNote>();
+            foreach (GameObject note in notes)
+            {
+                MusicNote musicNote = note.GetComponent<MusicNote>();
+                if (!musicNote)
+                {
+                    continue;
+                }
+                if (musicNote.timing <= lowestNote.timing)
+                {
+                    lowestBlackNotes.Add(musicNote);
+                }
+            }
+            foreach (MusicNote note in lowestBlackNotes)
+            {
+                note.ExecuteNote();
+            }
             return;
         }
 
@@ -2137,6 +2156,7 @@ public class EditorManager : MonoBehaviour
                 tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < timingItems[i + 1].timing)
             {
                 float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                totalTiming += chartOffset * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {
@@ -2162,6 +2182,7 @@ public class EditorManager : MonoBehaviour
                 tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f < audioSource.clip.length * 1000)
             {
                 float totalTiming = tempTiming + ((float)mainBeatCount + (float)stepBeatCount / (float)beatDensity) * 60f / timingItems[i].BPM * 1000f;
+                totalTiming += chartOffset * 1000f;
                 GameObject beat = null;
                 if (stepBeatCount != 0)
                 {

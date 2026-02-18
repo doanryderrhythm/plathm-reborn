@@ -4,10 +4,13 @@ using UnityEngine;
 public class ObjectDestroyer : MonoBehaviour
 {
     [SerializeField] float timeSpan;
+    [SerializeField] AudioSource audioSource;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        audioSource = gameObject.GetComponent<AudioSource>();
+        if (audioSource) timeSpan = audioSource.clip.length;
         StartCoroutine(DestroyObject());    
     }
 

@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class HorizontalGrid : MonoBehaviour
@@ -5,6 +6,9 @@ public class HorizontalGrid : MonoBehaviour
     public bool isHovered;
     private EditorManager editorManager;
     private SpriteRenderer spriteRenderer;
+
+    [SerializeField] float timing;
+    [SerializeField] TextMeshPro timingText;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -12,6 +16,10 @@ public class HorizontalGrid : MonoBehaviour
 
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
         spriteRenderer = this.gameObject.GetComponent<SpriteRenderer>();
+
+        timing = (int)(transform.localPosition.y / editorManager.chartSpeed * 1000f);
+        timingText.text = timing.ToString();
+        timingText.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -22,11 +30,13 @@ public class HorizontalGrid : MonoBehaviour
         {
             isHovered = true;
             spriteRenderer.color = ValueStorer.gridSelectedColor;
+            timingText.gameObject.SetActive(true);
         }
         else
         {
             isHovered = false;
             spriteRenderer.color = ValueStorer.gridDefaultColor;
+            timingText.gameObject.SetActive(false);
         }
 
         if (isHovered && editorManager.draggedNote)

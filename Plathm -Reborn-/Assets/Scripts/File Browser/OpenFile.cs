@@ -1,5 +1,6 @@
 using SFB;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
@@ -114,7 +115,72 @@ public class OpenFile : MonoBehaviour
 
             bool isAlreadyImportedDifficulty = false;
 
-            string[] files = Directory.GetFiles(url);
+            List<string> files = Directory.GetFiles(url).ToList();
+            string infoFile = loadedDirectory + ValueStorer.informationString;
+            if (files.Exists(e => e == infoFile) && !string.IsNullOrEmpty(infoFile))
+            {
+                using (StreamReader reader = new StreamReader(infoFile))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line == string.Empty)
+                        {
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.songNameString))
+                        {
+                            string songName = line.Substring(ValueStorer.songNameString.Length);
+                            songNameInputField.text = songName;
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.songArtistString))
+                        {
+                            string songArtist = line.Substring(ValueStorer.songArtistString.Length);
+                            songArtistInputField.text = songArtist;
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.charterNameString))
+                        {
+                            string charterName = line.Substring(ValueStorer.charterNameString.Length);
+                            charterNameInputField.text = charterName;
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.chartOffsetString))
+                        {
+                            string chartOffset = line.Substring(ValueStorer.chartOffsetString.Length);
+                            chartOffsetInputField.text = chartOffset;
+                            editorManager.ChangeChartOffset();
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.chartSpeedString))
+                        {
+                            string chartSpeed = line.Substring(ValueStorer.chartSpeedString.Length);
+                            chartSpeedInputField.text = chartSpeed;
+                            editorManager.ChangeChartSpeed();
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.timingString))
+                        {
+                            string content = line.Replace(ValueStorer.timingString, "").Replace(")", "");
+                            string[] values = content.Split(',');
+
+                            if (float.TryParse(values[0], out float timing) &&
+                                (float.TryParse(values[1], out float BPM)))
+                            {
+                                uiManager.AddTimingItem(timing, BPM);
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (string file in files)
             {
                 string extension = Path.GetExtension(file).ToLower();
@@ -145,69 +211,6 @@ public class OpenFile : MonoBehaviour
                     else
                     {
                         Debug.Log("The chart file can't be imported.");
-                    }
-                }
-                else if (extension == ".ptminf")
-                {
-                    using (StreamReader reader = new StreamReader(file))
-                    {
-                        string line;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            if (line == string.Empty)
-                            {
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.songNameString))
-                            {
-                                string songName = line.Substring(ValueStorer.songNameString.Length);
-                                songNameInputField.text = songName;
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.songArtistString))
-                            {
-                                string songArtist = line.Substring(ValueStorer.songArtistString.Length);
-                                songArtistInputField.text = songArtist;
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.charterNameString))
-                            {
-                                string charterName = line.Substring(ValueStorer.charterNameString.Length);
-                                charterNameInputField.text = charterName;
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.chartOffsetString))
-                            {
-                                string chartOffset = line.Substring(ValueStorer.chartOffsetString.Length);
-                                chartOffsetInputField.text = chartOffset;
-                                editorManager.ChangeChartOffset();
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.chartSpeedString))
-                            {
-                                string chartSpeed = line.Substring(ValueStorer.chartSpeedString.Length);
-                                chartSpeedInputField.text = chartSpeed;
-                                editorManager.ChangeChartSpeed();
-                                continue;
-                            }
-
-                            if (line.StartsWith(ValueStorer.timingString))
-                            {
-                                string content = line.Replace(ValueStorer.timingString, "").Replace(")", "");
-                                string[] values = content.Split(',');
-
-                                if (float.TryParse(values[0], out float timing) &&
-                                    (float.TryParse(values[1], out float BPM)))
-                                {
-                                    uiManager.AddTimingItem(timing, BPM);
-                                }
-                            }
-                        }
                     }
                 }
                 else
