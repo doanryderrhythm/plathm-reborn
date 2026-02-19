@@ -232,34 +232,55 @@ public class EditorManager : MonoBehaviour
 
         ConvertFromMouseToWorld();
 
-        if (playMode && !autoplayToggle.isOn)
+        if (playMode)
         {
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
+            if (!autoplayToggle.isOn)
             {
-                foreach (var keyControl in keyboard.allKeys)
+                var keyboard = Keyboard.current;
+                if (keyboard != null)
                 {
-                    Key finalKey;
-                    if (!TryKeyControlToNewKey(keyControl, out finalKey))
+                    foreach (var keyControl in keyboard.allKeys)
                     {
-                        continue;
-                    }
-
-                    if (keyControl.wasPressedThisFrame)
-                    {
-                        pressedKeys.Add(finalKey);
-                        if (!reservedTapKeys.Contains(finalKey))
+                        Key finalKey;
+                        if (!TryKeyControlToNewKey(keyControl, out finalKey))
                         {
-                            ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+                            continue;
+                        }
+
+                        if (keyControl.wasPressedThisFrame)
+                        {
+                            pressedKeys.Add(finalKey);
+                            if (!reservedTapKeys.Contains(finalKey))
+                            {
+                                ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+                            }
+                        }
+                        else if (keyControl.wasReleasedThisFrame)
+                        {
+                            pressedKeys.Remove(finalKey);
                         }
                     }
-                    else if (keyControl.wasReleasedThisFrame)
+
+                    if (pressedKeys.Count > 0)
                     {
-                        pressedKeys.Remove(finalKey);
+                        foreach (Key key in pressedKeys)
+                        {
+                            if (!reservedBlackKeys.Contains(key))
+                            {
+                                ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
+                                break;
+                            }
+                        }
                     }
                 }
             }
+
+            ChangeSpeedThroughTiming(audioSource.time * 1000f);
+
+            return;
         }
+
+        ExecuteScrolling();
 
         if (!playMode && editorInputCopy.action.WasPressedThisFrame())
         {
@@ -652,34 +673,6 @@ public class EditorManager : MonoBehaviour
             ExecuteDeleteInFolder(timingGroups[timingGroupIndex].leftTeleportFolder.transform);
             ExecuteDeleteInFolder(timingGroups[timingGroupIndex].rightTeleportFolder.transform);
             ExecuteDeleteInFolder(timingGroups[timingGroupIndex].spikeFolder.transform);
-        }
-
-        if (playMode)
-        {
-            if (!autoplayToggle.isOn)
-            {
-                var keyboard = Keyboard.current;
-                if (keyboard != null)
-                {
-                    if (pressedKeys.Count > 0)
-                    {
-                        foreach (Key key in pressedKeys)
-                        {
-                            if (!reservedBlackKeys.Contains(key))
-                            {
-                                ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            ChangeSpeedThroughTiming(audioSource.time * 1000f);
-        }
-        else
-        {
-            ExecuteScrolling();
         }
     }
 
