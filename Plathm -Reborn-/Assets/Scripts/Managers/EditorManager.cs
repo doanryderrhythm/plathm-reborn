@@ -86,6 +86,7 @@ public class EditorManager : MonoBehaviour
     public int beatDensity = 1;
     public float editorCurrentTiming = 0f;
     public int difficulty = 0;
+    private double startDsp = 0;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
@@ -275,7 +276,7 @@ public class EditorManager : MonoBehaviour
                 }
             }
 
-            ChangeSpeedThroughTiming(audioSource.time * 1000f);
+            ChangeSpeedThroughTiming((AudioSettings.dspTime - startDsp) * 1000f);
 
             return;
         }
@@ -1931,6 +1932,7 @@ public class EditorManager : MonoBehaviour
         }
         else
         {
+            startDsp = AudioSettings.dspTime;
             player.originalPosition = player.lanePosition;
             ApplyTimingSpeed();
             audioSource.Play();
@@ -1943,6 +1945,8 @@ public class EditorManager : MonoBehaviour
         {
             return;
         }
+
+        startDsp = AudioSettings.dspTime;
 
         List<Transform> allTransforms = new List<Transform>();
         allTransforms.Clear();
@@ -1979,6 +1983,7 @@ public class EditorManager : MonoBehaviour
 
         player.originalPosition = player.lanePosition;
         ApplyTimingSpeed();
+        startDsp = AudioSettings.dspTime - editorCurrentTiming;
         audioSource.time = editorCurrentTiming;
         audioSource.Play();
     }
@@ -2276,20 +2281,20 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    public void ChangeSpeedThroughTiming(float timing)
+    public void ChangeSpeedThroughTiming(double timing)
     {
         for (int index = 0; index < timingGroups.Count; index++)
         {
             List<SpeedStorer> speeds = uiManager.speedItems[index];
 
-            float tempSpeedMulti = 1f;
-            float totalLength = 0f;
+            double tempSpeedMulti = 1f;
+            double totalLength = 0f;
 
             if (speeds.Count <= 0)
             {
                 tempSpeedMulti = 1f;
                 totalLength += (timing * tempSpeedMulti / 1000f);
-                timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                timingGroups[index].gameObject.transform.position = new Vector3(0, (float)-totalLength * chartSpeed, 0);
                 continue;
             }
 
@@ -2308,7 +2313,7 @@ public class EditorManager : MonoBehaviour
                         tempSpeedMulti = speeds[i - 1].speedMulti;
                         totalLength += (timing - speeds[i - 1].timing) / 1000f * tempSpeedMulti;
                     }
-                    timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                    timingGroups[index].gameObject.transform.position = new Vector3(0, (float)-totalLength * chartSpeed, 0);
                     isChecked = true;
                     break;
                 }
@@ -2329,7 +2334,7 @@ public class EditorManager : MonoBehaviour
             {
                 tempSpeedMulti = speeds[speeds.Count - 1].speedMulti;
                 totalLength += (timing - speeds[speeds.Count - 1].timing) / 1000f * tempSpeedMulti;
-                timingGroups[index].gameObject.transform.position = new Vector3(0, -totalLength * chartSpeed, 0);
+                timingGroups[index].gameObject.transform.position = new Vector3(0, (float)-totalLength * chartSpeed, 0);
             }
         }
     }
