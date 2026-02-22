@@ -1393,6 +1393,8 @@ public class EditorManager : MonoBehaviour
         }
         else
         {
+            firstAddingPosition = addedSignal.transform.position;
+
             if (IsCorrectLane(targetPosition))
             {
                 lastAddingPosition = targetPosition;
