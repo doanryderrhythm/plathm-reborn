@@ -2631,6 +2631,11 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
+        if (!File.Exists(chartFile))
+        {
+            return;
+        }
+
         using (StreamReader reader = new StreamReader(chartFile))
         {
             string line;
