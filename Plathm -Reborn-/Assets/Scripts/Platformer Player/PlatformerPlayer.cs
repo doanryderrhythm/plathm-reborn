@@ -24,7 +24,6 @@ public class PlatformerPlayer : MonoBehaviour
     [SerializeField] BoxCollider2D bc;
     private int jumpCount = 2;
     private bool wasGrounded = false;
-    [SerializeField] TMP_Text jumpCountText;
 
     //Landing Detection
     [SerializeField] private float maxDistance = 0.1f;
@@ -85,8 +84,6 @@ public class PlatformerPlayer : MonoBehaviour
         {
             rb.AddForceY(-ValueStorer.lightPush, ForceMode2D.Impulse);
         }
-
-        jumpCountText.text = "Jump Count: " + jumpCount;
     }
 
     void ManageLand()
@@ -152,5 +149,11 @@ public class PlatformerPlayer : MonoBehaviour
     {
         ManageLeave();
         ManageLand();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        GameManager.Instance.StartCoroutine(GameManager.Instance.RespawnPlayer());
+        Destroy(gameObject);
     }
 }

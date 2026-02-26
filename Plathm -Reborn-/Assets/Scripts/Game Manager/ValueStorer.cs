@@ -5,7 +5,7 @@ public class ValueStorer : MonoBehaviour
     #region PLAYER
     public static float moveSpeed = 10f;
     public static float jumpHeight = 27f;
-    public static float lightPush = 4f;
+    public static float lightPush = 6f;
 
     public static int maxJumpCount = 2;
 
@@ -14,6 +14,8 @@ public class ValueStorer : MonoBehaviour
 
     public static Vector2 colliderSizeStill = new Vector2(1f, 1f);
     public static Vector2 colliderSizeMoving = new Vector2(0.5f, 0.5f);
+
+    public static float playerRespawnTime = 0.75f;
     #endregion
 
     #region LAYER MASKS
