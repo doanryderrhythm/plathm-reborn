@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(RespawnPlayer());
+
     }
 
     // Update is called once per frame

@@ -121,6 +121,8 @@ public class PlatformerPlayer : MonoBehaviour
         }
     }
 
+    private bool isDead = false;
+
     void Awake()
     {
         jumpCount = ValueStorer.maxJumpCount;
@@ -153,6 +155,12 @@ public class PlatformerPlayer : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         GameManager.Instance.StartCoroutine(GameManager.Instance.RespawnPlayer());
         Destroy(gameObject);
     }

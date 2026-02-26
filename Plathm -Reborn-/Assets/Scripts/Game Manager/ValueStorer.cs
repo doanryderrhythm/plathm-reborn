@@ -5,7 +5,7 @@ public class ValueStorer : MonoBehaviour
     #region PLAYER
     public static float moveSpeed = 10f;
     public static float jumpHeight = 27f;
-    public static float lightPush = 6f;
+    public static float lightPush = 7.5f;
 
     public static int maxJumpCount = 2;
 
