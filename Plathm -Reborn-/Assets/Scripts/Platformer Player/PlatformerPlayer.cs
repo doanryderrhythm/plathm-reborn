@@ -36,7 +36,7 @@ public class PlatformerPlayer : MonoBehaviour
     private float jumpBufferTime;
     private float coyoteTime;
 
-    [SerializeField] GameObject bufferJumpPrefab;
+    [SerializeField] GameObject jumpLighting;
 
     void ManageMove()
     {
@@ -64,7 +64,6 @@ public class PlatformerPlayer : MonoBehaviour
         if (playerJumpInput.action.WasPressedThisFrame())
         {
             jumpBufferTime = ValueStorer.bufferTime;
-            Instantiate(bufferJumpPrefab, transform.position, Quaternion.identity);
         }
         else
         {
@@ -73,6 +72,8 @@ public class PlatformerPlayer : MonoBehaviour
 
         if (jumpBufferTime >= 0 && jumpCount > 0)
         {
+            Instantiate(jumpLighting, transform.position, Quaternion.identity);
+
             rb.linearVelocityY = 0;
             rb.AddForceY(ValueStorer.jumpHeight, ForceMode2D.Impulse);
             jumpCount -= 1;
@@ -122,6 +123,7 @@ public class PlatformerPlayer : MonoBehaviour
     }
 
     private bool isDead = false;
+    [SerializeField] GameObject deathLighting;
 
     void Awake()
     {
@@ -161,6 +163,7 @@ public class PlatformerPlayer : MonoBehaviour
         }
 
         isDead = true;
+        Instantiate(deathLighting, transform.position, Quaternion.identity);
         GameManager.Instance.StartCoroutine(GameManager.Instance.RespawnPlayer());
         Destroy(gameObject);
     }
