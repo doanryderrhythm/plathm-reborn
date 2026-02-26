@@ -5,7 +5,7 @@ public class ValueStorer : MonoBehaviour
     #region PLAYER
     public static float moveSpeed = 10f;
     public static float jumpHeight = 27f;
-    public static float lightPush = 10f;
+    public static float lightPush = 4f;
 
     public static int maxJumpCount = 2;
 
@@ -17,7 +17,7 @@ public class ValueStorer : MonoBehaviour
     #endregion
 
     #region LAYER MASKS
-    public const string groundLM = "Ground";
+    public const string groundLM = "Default";
     #endregion
 
     #region VALUES
