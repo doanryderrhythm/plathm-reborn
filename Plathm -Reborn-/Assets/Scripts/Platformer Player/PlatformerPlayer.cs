@@ -145,7 +145,7 @@ public class PlatformerPlayer : MonoBehaviour
 
         if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            DestroyPlayer();
         }
     }
 
@@ -155,6 +155,14 @@ public class PlatformerPlayer : MonoBehaviour
         ManageLand();
     }
 
+    void DestroyPlayer()
+    {
+        isDead = true;
+        Instantiate(deathLighting, transform.position, Quaternion.identity);
+        GameManager.Instance.StartCoroutine(GameManager.Instance.RespawnPlayer());
+        Destroy(gameObject);
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (isDead)
@@ -162,9 +170,6 @@ public class PlatformerPlayer : MonoBehaviour
             return;
         }
 
-        isDead = true;
-        Instantiate(deathLighting, transform.position, Quaternion.identity);
-        GameManager.Instance.StartCoroutine(GameManager.Instance.RespawnPlayer());
-        Destroy(gameObject);
+        DestroyPlayer();
     }
 }
