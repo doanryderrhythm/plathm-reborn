@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] GameObject player;
     [SerializeField] Transform spawnPoint;
+    [SerializeField] Vector2 safePosition;
 
     private void Awake()
     {
@@ -22,7 +23,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-
+        safePosition = new Vector2(spawnPoint.position.x, spawnPoint.position.y);
+        StartCoroutine(RespawnPlayer());
     }
 
     // Update is called once per frame
@@ -34,10 +36,15 @@ public class GameManager : MonoBehaviour
     public IEnumerator RespawnPlayer()
     {
         yield return new WaitForSeconds(ValueStorer.playerRespawnTime);
-        GameObject newPlayer = Instantiate(player, spawnPoint.position, Quaternion.identity);
+        GameObject newPlayer = Instantiate(player, safePosition, Quaternion.identity);
 
         CameraController cam = GameObject.FindFirstObjectByType<CameraController>();
         cam.player = newPlayer.GetComponent<PlatformerPlayer>();
         cam.ResetCameraOffset();
+    }
+
+    public void UpdateSafePosition(Vector2 pos)
+    {
+        safePosition = pos;
     }
 }

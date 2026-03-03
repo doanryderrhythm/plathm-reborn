@@ -20,6 +20,8 @@ public class ValueStorer : MonoBehaviour
 
     #region LAYER MASKS
     public const string groundLM = "Default";
+    public const string checkpointLM = "Checkpoint";
+    public const string harmfulLM = "Harmful";
     #endregion
 
     #region VALUES
@@ -29,5 +31,10 @@ public class ValueStorer : MonoBehaviour
     public static float cameraXAbsolute = 3f;
     public static float cameraOffsetMove = 2.5f;
     public static float cameraDirectionMove = 2f;
+    #endregion
+
+    #region COLORS
+    public static Color32 checkpointUntoggled = Color.yellow;
+    public static Color32 checkpointToggled = Color.green;
     #endregion
 }

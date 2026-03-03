@@ -171,11 +171,21 @@ public class PlatformerPlayer : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (isDead)
+        if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.harmfulLM)
         {
-            return;
-        }
+            if (isDead)
+            {
+                return;
+            }
 
-        DestroyPlayer();
+            DestroyPlayer();
+        }
+        else if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.checkpointLM)
+        {
+            Debug.Log("Checkpoint reached!");
+            Checkpoint checkpoint = collision.gameObject.GetComponent<Checkpoint>();
+            checkpoint.ToggleCheckpoint(true);
+            GameManager.Instance.UpdateSafePosition(new Vector2(transform.position.x, transform.position.y));
+        }
     }
 }

@@ -13,7 +13,7 @@ TagManager:
   - UI
   - Ground
   - Harmful
-  - 
+  - Checkpoint
   - 
   - 
   - 
@@ -40,6 +40,18 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Checkpoint
+    uniqueID: 1246574731
+    locked: 0
+  - name: Harmful
+    uniqueID: 3048835749
+    locked: 0
+  - name: Player
+    uniqueID: 3886282851
+    locked: 0
+  - name: Floor
+    uniqueID: 2808241387
     locked: 0
   m_RenderingLayers:
   - Default
