@@ -38,5 +38,6 @@ public class GameManager : MonoBehaviour
 
         CameraController cam = GameObject.FindFirstObjectByType<CameraController>();
         cam.player = newPlayer.GetComponent<PlatformerPlayer>();
+        cam.ResetCameraOffset();
     }
 }

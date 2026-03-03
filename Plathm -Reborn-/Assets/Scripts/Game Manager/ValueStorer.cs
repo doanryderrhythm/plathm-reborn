@@ -25,5 +25,9 @@ public class ValueStorer : MonoBehaviour
     #region VALUES
     public static float coyoteTime = 0.06f;
     public static float bufferTime = 0.12f;
+
+    public static float cameraXAbsolute = 3f;
+    public static float cameraOffsetMove = 2.5f;
+    public static float cameraDirectionMove = 2f;
     #endregion
 }

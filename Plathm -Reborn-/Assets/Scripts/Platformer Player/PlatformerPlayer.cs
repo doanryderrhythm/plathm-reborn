@@ -20,6 +20,8 @@ public class PlatformerPlayer : MonoBehaviour
         playerJumpInput.action.Disable();
     }
 
+    private CameraController cam;
+
     [SerializeField] Rigidbody2D rb;
     [SerializeField] BoxCollider2D bc;
     private int jumpCount = 2;
@@ -42,6 +44,8 @@ public class PlatformerPlayer : MonoBehaviour
     {
         float moveRate = playerRunInput.action.ReadValue<float>();
         rb.linearVelocityX = moveRate * ValueStorer.moveSpeed;
+
+        cam.MoveCameraOffset(moveRate);
 
         ChangeColliderShape(moveRate);
     }
@@ -131,6 +135,8 @@ public class PlatformerPlayer : MonoBehaviour
 
         jumpBufferTime = 0;
         coyoteTime = ValueStorer.coyoteTime;
+
+        cam = GameObject.FindFirstObjectByType<CameraController>();
     }
 
     void Start()
