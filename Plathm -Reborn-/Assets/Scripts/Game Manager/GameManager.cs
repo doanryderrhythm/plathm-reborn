@@ -35,5 +35,8 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(ValueStorer.playerRespawnTime);
         GameObject newPlayer = Instantiate(player, spawnPoint.position, Quaternion.identity);
+
+        CameraController cam = GameObject.FindFirstObjectByType<CameraController>();
+        cam.player = newPlayer.GetComponent<PlatformerPlayer>();
     }
 }
