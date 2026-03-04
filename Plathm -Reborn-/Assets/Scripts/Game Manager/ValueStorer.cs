@@ -36,5 +36,8 @@ public class ValueStorer : MonoBehaviour
     #region COLORS
     public static Color32 checkpointUntoggled = Color.yellow;
     public static Color32 checkpointToggled = Color.green;
+
+    public static Color32 toggledMinParticles = new Color32(0, 78, 0, 255);
+    public static Color32 toggledMaxParticles = new Color32(0, 255, 0, 255);
     #endregion
 }
