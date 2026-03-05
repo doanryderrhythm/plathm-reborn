@@ -153,6 +153,8 @@ public class PlatformerPlayer : MonoBehaviour
         {
             DestroyPlayer();
         }
+
+        GameManager.Instance.jumpCountText.text = jumpCount.ToString();
     }
 
     void FixedUpdate()

@@ -31,7 +31,7 @@ public class CameraController : MonoBehaviour
     {
         if (player == null) return;
 
-        Vector3 targetPosition = player.transform.position + offset + new Vector3(xOffset, 3, 0);
+        Vector3 targetPosition = player.transform.position + offset + new Vector3(xOffset, 0, 0);
 
         Vector3 confirmedPosition = Vector3.SmoothDamp(
             transform.position,

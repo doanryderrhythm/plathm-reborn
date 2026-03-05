@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject player;
     [SerializeField] Transform spawnPoint;
     [SerializeField] Vector2 safePosition;
+
+    public TMP_Text jumpCountText;
 
     private void Awake()
     {

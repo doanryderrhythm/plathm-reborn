@@ -76,8 +76,8 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.5, y: 0.5}
-  m_EdgeRadius: 0.2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &2750686363400477554
 GameObject:
   m_ObjectHideFlags: 0
@@ -217,7 +217,7 @@ MonoBehaviour:
   playerJumpInput: {fileID: -2383085203796232422, guid: a31762ec2f5017e4298915cd3568ef82, type: 3}
   rb: {fileID: 103843285776734608}
   bc: {fileID: 5428772649392999306}
-  maxDistance: 0.1
+  maxDistance: 0.2
   boxCol: {fileID: 5305315382873885015}
   jumpLighting: {fileID: 2596717282297905982, guid: 13b2060a6650e5348bf946bb17451258, type: 3}
   deathLighting: {fileID: 6162187959370369471, guid: aeeb2f5c254fdac4fa55b947e1523119, type: 3}
@@ -341,7 +341,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2129572722783664763}
   - component: {fileID: 5305315382873885015}
-  m_Layer: 3
+  m_Layer: 1
   m_Name: Box Cast
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -393,7 +393,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -407,5 +407,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 0.1}
+  m_Size: {x: 2, y: 0.5}
   m_EdgeRadius: 0
