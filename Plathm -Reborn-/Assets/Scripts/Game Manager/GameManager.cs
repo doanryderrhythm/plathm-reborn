@@ -10,8 +10,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] Transform spawnPoint;
     [SerializeField] Vector2 safePosition;
 
-    public TMP_Text jumpCountText;
-
     private void Awake()
     {
         if (Instance != null && Instance != this)

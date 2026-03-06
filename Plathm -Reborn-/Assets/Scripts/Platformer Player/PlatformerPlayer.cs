@@ -27,6 +27,8 @@ public class PlatformerPlayer : MonoBehaviour
     private int jumpCount = 2;
     private bool wasGrounded = false;
 
+    private float moveRate = 0f;
+
     //Landing Detection
     [SerializeField] private float maxDistance = 0.1f;
     [SerializeField] Collider2D boxCol;
@@ -40,10 +42,16 @@ public class PlatformerPlayer : MonoBehaviour
 
     [SerializeField] GameObject jumpLighting;
 
+    [SerializeField] MovingPlatform movingPlatform;
+
     void ManageMove()
     {
-        float moveRate = playerRunInput.action.ReadValue<float>();
-        rb.linearVelocityX = moveRate * ValueStorer.moveSpeed;
+        float confirmedXVelocity = moveRate * ValueStorer.moveSpeed;
+        if (movingPlatform)
+        {
+            confirmedXVelocity += movingPlatform.affectXSpeed;
+        }
+        rb.linearVelocityX = confirmedXVelocity;
 
         cam.MoveCameraOffset(moveRate);
 
@@ -54,6 +62,8 @@ public class PlatformerPlayer : MonoBehaviour
     {
         if (!hitDetected && !leaveDetected)
         {
+            transform.SetParent(null);
+            rb.gravityScale = ValueStorer.gravityGround;
             coyoteTime -= Time.deltaTime;
             if (coyoteTime <= 0)
             {
@@ -76,6 +86,9 @@ public class PlatformerPlayer : MonoBehaviour
 
         if (jumpBufferTime >= 0 && jumpCount > 0)
         {
+            rb.gravityScale = ValueStorer.gravityGround;
+            transform.SetParent(null);
+
             Instantiate(jumpLighting, transform.position, Quaternion.identity);
 
             rb.linearVelocityY = 0;
@@ -146,19 +159,18 @@ public class PlatformerPlayer : MonoBehaviour
 
     void Update()
     {
-        ManageMove();
+        moveRate = playerRunInput.action.ReadValue<float>();
         ManageJump();
 
         if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
         {
             DestroyPlayer();
         }
-
-        GameManager.Instance.jumpCountText.text = jumpCount.ToString();
     }
 
     void FixedUpdate()
     {
+        ManageMove();
         ManageLeave();
         ManageLand();
     }
@@ -184,10 +196,27 @@ public class PlatformerPlayer : MonoBehaviour
         }
         else if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.checkpointLM)
         {
-            Debug.Log("Checkpoint reached!");
             Checkpoint checkpoint = collision.gameObject.GetComponent<Checkpoint>();
             checkpoint.ToggleCheckpoint(true);
             GameManager.Instance.UpdateSafePosition(new Vector2(transform.position.x, transform.position.y));
+        }
+        else if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.movingPlatformLM)
+        {
+            Debug.Log("Jumped on the moving platform");
+            rb.gravityScale = ValueStorer.gravityMove;
+            GameObject platform = collision.transform.parent.parent.gameObject;
+            movingPlatform = platform.GetComponent<MovingPlatform>();
+            transform.SetParent(platform.transform);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.movingPlatformLM)
+        {
+            rb.gravityScale = ValueStorer.gravityGround;
+            movingPlatform = null;
+            transform.SetParent(null);
         }
     }
 }

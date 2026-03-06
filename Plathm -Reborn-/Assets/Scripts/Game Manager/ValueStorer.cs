@@ -6,6 +6,8 @@ public class ValueStorer : MonoBehaviour
     public static float moveSpeed = 10f;
     public static float jumpHeight = 27f;
     public static float lightPush = 9.5f;
+    public static float gravityGround = 10f;
+    public static float gravityMove = 50f;
 
     public static int maxJumpCount = 2;
 
@@ -22,6 +24,7 @@ public class ValueStorer : MonoBehaviour
     public const string groundLM = "Default";
     public const string checkpointLM = "Checkpoint";
     public const string harmfulLM = "Harmful";
+    public const string movingPlatformLM = "Moving Platform";
     #endregion
 
     #region VALUES
@@ -31,6 +34,8 @@ public class ValueStorer : MonoBehaviour
     public static float cameraXAbsolute = 3f;
     public static float cameraOffsetMove = 2.5f;
     public static float cameraDirectionMove = 2f;
+
+    public static float bombWarningAlpha = 100f / 255f;
     #endregion
 
     #region COLORS

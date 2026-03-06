@@ -14,7 +14,7 @@ TagManager:
   - Ground
   - Harmful
   - Checkpoint
-  - 
+  - Moving Platform
   - 
   - 
   - 
@@ -44,8 +44,14 @@ TagManager:
   - name: Checkpoint
     uniqueID: 1246574731
     locked: 0
-  - name: Harmful
+  - name: Harmful Layer
+    uniqueID: 1142613599
+    locked: 0
+  - name: Harmful/Spike
     uniqueID: 3048835749
+    locked: 0
+  - name: Harmful/Bomb
+    uniqueID: 1055907147
     locked: 0
   - name: Player
     uniqueID: 3886282851
