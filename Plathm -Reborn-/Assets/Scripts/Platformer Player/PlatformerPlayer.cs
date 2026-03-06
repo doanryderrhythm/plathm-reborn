@@ -212,6 +212,9 @@ public class PlatformerPlayer : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
+        if (this == null)
+            return;
+
         if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.movingPlatformLM)
         {
             rb.gravityScale = ValueStorer.gravityGround;
