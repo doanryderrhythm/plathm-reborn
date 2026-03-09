@@ -53,11 +53,14 @@ TagManager:
   - name: Harmful/Bomb
     uniqueID: 1055907147
     locked: 0
-  - name: Player
-    uniqueID: 3886282851
-    locked: 0
   - name: Floor
     uniqueID: 2808241387
+    locked: 0
+  - name: Moving Floor
+    uniqueID: 3080046317
+    locked: 0
+  - name: Player
+    uniqueID: 3886282851
     locked: 0
   m_RenderingLayers:
   - Default

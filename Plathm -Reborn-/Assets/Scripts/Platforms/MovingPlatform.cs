@@ -11,6 +11,8 @@ public class MovingPlatform : MonoBehaviour
     private int targetIndex;
     private Vector3 lastPosition;
 
+    public Transform topPosition;
+
     public float affectXSpeed;
 
     private void Start()

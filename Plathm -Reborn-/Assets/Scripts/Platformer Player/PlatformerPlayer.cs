@@ -200,12 +200,26 @@ public class PlatformerPlayer : MonoBehaviour
             checkpoint.ToggleCheckpoint(true);
             GameManager.Instance.UpdateSafePosition(new Vector2(transform.position.x, transform.position.y));
         }
-        else if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.movingPlatformLM)
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.movingPlatformLM)
         {
-            Debug.Log("Jumped on the moving platform");
-            rb.gravityScale = ValueStorer.gravityMove;
             GameObject platform = collision.transform.parent.parent.gameObject;
-            movingPlatform = platform.GetComponent<MovingPlatform>();
+            MovingPlatform testPlatform = platform.GetComponent<MovingPlatform>();
+
+            if (bc.transform.position.y > testPlatform.topPosition.position.y)
+                return;
+
+            if (rb.linearVelocityY > 0)
+                return;
+
+            if (movingPlatform)
+                return;
+
+            movingPlatform = testPlatform;
+            rb.gravityScale = ValueStorer.gravityMove;
             transform.SetParent(platform.transform);
         }
     }
