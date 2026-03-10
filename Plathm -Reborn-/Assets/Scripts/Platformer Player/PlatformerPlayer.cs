@@ -209,14 +209,7 @@ public class PlatformerPlayer : MonoBehaviour
             GameObject platform = collision.transform.parent.parent.gameObject;
             MovingPlatform testPlatform = platform.GetComponent<MovingPlatform>();
 
-            if (bc.transform.position.y < testPlatform.topPosition.position.y)
-                return;
-
-            if (rb.linearVelocityY > 0)
-                return;
-
-            if (movingPlatform)
-                return;
+            testPlatform.isControl = true;
 
             movingPlatform = testPlatform;
             rb.gravityScale = ValueStorer.gravityMove;

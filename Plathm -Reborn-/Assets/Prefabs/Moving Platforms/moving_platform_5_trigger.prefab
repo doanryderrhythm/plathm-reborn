@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 7075022715261746250}
   - component: {fileID: 3167011679888642023}
   m_Layer: 0
-  m_Name: moving_platform_5
+  m_Name: moving_platform_5_trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,7 +84,7 @@ MonoBehaviour:
   - {fileID: 1361770676014970506}
   topPosition: {fileID: 4241051662253883048}
   affectXSpeed: 0
-  isTrigger: 0
+  isTrigger: 1
   isControl: 0
 --- !u!1 &5537806121512584490
 GameObject:
@@ -235,7 +235,7 @@ SpriteRenderer:
   m_SortingLayer: 6
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 3246213980123491529, guid: b4782356d52137946a55ead0645ed9ee, type: 3}
+  m_Sprite: {fileID: -3374666719580122314, guid: 20ad982ec7865e4478ff0376f67affc8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

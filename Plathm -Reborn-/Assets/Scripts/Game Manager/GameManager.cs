@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -37,6 +38,15 @@ public class GameManager : MonoBehaviour
     public IEnumerator RespawnPlayer()
     {
         yield return new WaitForSeconds(ValueStorer.playerRespawnTime);
+        MovingPlatform[] movingPlatforms = GameObject.FindObjectsByType<MovingPlatform>(FindObjectsSortMode.None);
+        foreach (MovingPlatform platform in movingPlatforms)
+        {
+            if (platform.isTrigger)
+            {
+                platform.ResetPosition();
+            }
+        }
+
         GameObject newPlayer = Instantiate(player, safePosition, Quaternion.identity);
 
         CameraController cam = GameObject.FindFirstObjectByType<CameraController>();
