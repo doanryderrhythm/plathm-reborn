@@ -53,6 +53,12 @@ TagManager:
   - name: Harmful/Bomb
     uniqueID: 1055907147
     locked: 0
+  - name: Harmful/Tank
+    uniqueID: 1736910153
+    locked: 0
+  - name: Harmful/Bullet
+    uniqueID: 3440750061
+    locked: 0
   - name: Floor
     uniqueID: 2808241387
     locked: 0
