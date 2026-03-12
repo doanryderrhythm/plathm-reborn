@@ -36,6 +36,8 @@ public class ValueStorer : MonoBehaviour
     public static float cameraDirectionMove = 2f;
 
     public static float bombWarningAlpha = 100f / 255f;
+
+    public static float tankWarningAlpha = 80f / 255f;
     #endregion
 
     #region COLORS

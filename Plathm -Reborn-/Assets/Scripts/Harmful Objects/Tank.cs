@@ -3,9 +3,14 @@ using UnityEngine;
 public class Tank : MonoBehaviour
 {
     [SerializeField] float waitTime;
+    [SerializeField] float warningTime;
     [SerializeField] float shootSpeed;
 
-    public enum TankType
+    [SerializeField] SpriteRenderer sr;
+
+    private TankTimeType timeType;
+
+    private enum TankType
     {
         TYPE_ONE,
         TYPE_FOUR,
@@ -15,19 +20,54 @@ public class Tank : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        currentTime = waitTime;
+        timeType = TankTimeType.WAIT_TIME;
     }
 
     private float timePassed = 0f;
+    private float currentTime;
+
+    public enum TankTimeType
+    {
+        WAIT_TIME,
+        WARNING_TIME,
+    }
+
+    void SwitchTimeType()
+    {
+        timePassed -= currentTime;
+        if (timeType == TankTimeType.WAIT_TIME)
+        {
+            currentTime = warningTime;
+            timeType = TankTimeType.WARNING_TIME;
+        }
+        else if (timeType == TankTimeType.WARNING_TIME)
+        {
+            currentTime = waitTime;
+            timeType = TankTimeType.WAIT_TIME;
+        }
+    }
 
     // Update is called once per frame
     void Update()
     {
         timePassed += Time.deltaTime;
-        if (timePassed >= waitTime)
+
+        if (timeType == TankTimeType.WARNING_TIME)
         {
-            timePassed -= waitTime;
-            ShootBullets();
+            sr.color = new Color(1, 1, 1, timePassed / warningTime * ValueStorer.tankWarningAlpha);
+        }
+        else
+        {
+            sr.color = new Color(1, 1, 1, 0);
+        }
+
+        if (timePassed >= currentTime)
+        {
+            if (timeType == TankTimeType.WARNING_TIME)
+                ShootBullets();
+
+            SwitchTimeType();
         }
     }
 
