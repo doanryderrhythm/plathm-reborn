@@ -111,7 +111,6 @@ public class PlatformerPlayer : MonoBehaviour
         Vector2 direction = Vector2.down;
 
         hit = Physics2D.BoxCast(origin, halfExtents, 0f, Vector2.down, maxDistance, LayerMask.GetMask(ValueStorer.groundLM));
-
         hitDetected = hit.collider != null;
 
         if (hitDetected && !wasGrounded)

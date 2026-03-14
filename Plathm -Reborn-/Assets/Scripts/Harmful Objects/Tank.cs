@@ -93,8 +93,8 @@ public class Tank : MonoBehaviour
     void InsertBullet(float shootAngle)
     {
         GameObject bullet = Instantiate(bulletPrefab, new Vector3(
-            transform.position.x + 0.5f * Mathf.Cos(shootAngle * Mathf.Deg2Rad),
-            transform.position.y + 0.5f * Mathf.Sin(shootAngle * Mathf.Deg2Rad), 0), Quaternion.identity);
+            transform.position.x + 0.65f * Mathf.Cos(shootAngle * Mathf.Deg2Rad),
+            transform.position.y + 0.65f * Mathf.Sin(shootAngle * Mathf.Deg2Rad), 0), Quaternion.identity);
         Bullet bulletCom = bullet.GetComponent<Bullet>();
         bulletCom.speed = shootSpeed;
         bulletCom.shootAngle = shootAngle;

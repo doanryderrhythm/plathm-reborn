@@ -25,6 +25,7 @@ public class ValueStorer : MonoBehaviour
     public const string checkpointLM = "Checkpoint";
     public const string harmfulLM = "Harmful";
     public const string movingPlatformLM = "Moving Platform";
+    public const string transparentLM = "TransparentFX";
     #endregion
 
     #region VALUES

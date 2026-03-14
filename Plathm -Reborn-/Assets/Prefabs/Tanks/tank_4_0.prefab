@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 1844824882506143006}
   - component: {fileID: 4062688285569606342}
   - component: {fileID: 3946673763949422915}
-  m_Layer: 1
+  m_Layer: 0
   m_Name: tank_4_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -243,8 +243,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 811b140fa534d5c44a5571272ca1700e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tank
-  waitTime: 2
-  shootSpeed: 5
+  waitTime: 1
+  warningTime: 1
+  shootSpeed: 1
   sr: {fileID: 6906551587438150056}
   tankType: 1
   bulletPrefab: {fileID: 5163049856343001832, guid: df5bde15a759b0947a5e3e2f11606327, type: 3}
