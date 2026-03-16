@@ -15,7 +15,7 @@ TagManager:
   - Harmful
   - Checkpoint
   - Moving Platform
-  - 
+  - Song Checkpoint
   - 
   - 
   - 
@@ -43,6 +43,9 @@ TagManager:
     locked: 0
   - name: Checkpoint
     uniqueID: 1246574731
+    locked: 0
+  - name: Song Checkpoint
+    uniqueID: 1797784153
     locked: 0
   - name: Harmful Layer
     uniqueID: 1142613599

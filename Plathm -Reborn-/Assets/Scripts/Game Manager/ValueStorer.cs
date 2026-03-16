@@ -26,6 +26,7 @@ public class ValueStorer : MonoBehaviour
     public const string harmfulLM = "Harmful";
     public const string movingPlatformLM = "Moving Platform";
     public const string transparentLM = "TransparentFX";
+    public const string playerLM = "Player";
     #endregion
 
     #region VALUES

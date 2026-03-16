@@ -27,7 +27,7 @@
             ],
             "bindings": [
                 {
-                    "name": "1D Axis",
+                    "name": "Keyboard Axis",
                     "id": "13292aa5-3296-4822-8446-950d86641ee2",
                     "path": "1DAxis",
                     "interactions": "",
@@ -60,9 +60,53 @@
                     "isPartOfComposite": true
                 },
                 {
+                    "name": "Controller Axis",
+                    "id": "72b5db92-7bea-4792-bf8e-726e858039a3",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Run",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "b869cad7-5b9c-4894-8f25-8774a50ce963",
+                    "path": "<Joystick>/stick/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Run",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "7bc37506-6c9e-4838-aa15-1e85d9a0ab0b",
+                    "path": "<Joystick>/stick/right",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Run",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
                     "name": "",
                     "id": "9e757fc7-4f0b-483a-8a1f-36686bf5c928",
                     "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b972a5ea-06b7-4e90-8b10-ae5bf89e444d",
+                    "path": "<Joystick>/trigger",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -73,5 +117,17 @@
             ]
         }
     ],
-    "controlSchemes": []
+    "controlSchemes": [
+        {
+            "name": "New Control Scheme",
+            "bindingGroup": "New Control Scheme",
+            "devices": [
+                {
+                    "devicePath": "<Joystick>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
 }
