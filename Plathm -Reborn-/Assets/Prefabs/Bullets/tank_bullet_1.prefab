@@ -82,7 +82,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -854217235
-  m_SortingLayer: 6
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7361956980511262498, guid: 67eb6b7a760d9c347b09eda7b84355c6, type: 3}
@@ -172,6 +172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   speed: 0
   shootAngle: 0
+  particles: {fileID: 4445195531157967437, guid: 62706ae8ab3289c47b2e0a2b6fc818e3, type: 3}
 --- !u!96 &6677531724660159269
 TrailRenderer:
   serializedVersion: 4

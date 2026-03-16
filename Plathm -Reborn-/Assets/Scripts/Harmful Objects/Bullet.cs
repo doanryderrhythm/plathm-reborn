@@ -6,6 +6,8 @@ public class Bullet : MonoBehaviour
     public float speed;
     public float shootAngle;
 
+    [SerializeField] ParticleSystem particles;
+
     private Rigidbody2D rb;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -26,6 +28,7 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        Instantiate(particles.gameObject, transform.position, Quaternion.identity);
         Destroy(gameObject);
     }
 }
