@@ -50,16 +50,19 @@ public class SongCheckpoint : MonoBehaviour
         {
             checkpointTile.color = new Color32(0, 172, 255, 255);
             startColor.color = new Color32(114, 209, 255, 255);
+            wall.SetActive(true);
         }
         else if (currentState == State.REACHED)
         {
             checkpointTile.color = new Color32(0, 255, 169, 255);
             startColor.color = new Color32(112, 255, 207, 255);
+            wall.SetActive(false);
         }
         else if (currentState == State.PLAYED)
         {
             checkpointTile.color = new Color32(255, 141, 0, 255);
             startColor.color = new Color32(255, 192, 112, 255);
+            wall.SetActive(false);
         }
         particleMain.startColor = startColor;
     }

@@ -9,7 +9,7 @@ public class MovingPlatform : MonoBehaviour
     [SerializeField] Transform[] wayPoints;
 
     private int targetIndex;
-    private Vector3 lastPosition;
+    private Vector2 newPosition;
 
     public Transform topPosition;
 
@@ -23,21 +23,26 @@ public class MovingPlatform : MonoBehaviour
         targetIndex = 1;
 
         platformRB = platform.GetComponent<Rigidbody2D>();
-        lastPosition = platformRB.position;
+        newPosition = transform.position;
     }
 
     private void FixedUpdate()
     {
         if ((isTrigger && isControl) || (!isTrigger))
         {
-            platformRB.MovePosition(Vector2.MoveTowards(
+            newPosition = Vector2.MoveTowards(
                 platformRB.position,
                 wayPoints[targetIndex].position,
-                speed * Time.fixedDeltaTime));
+                speed * Time.fixedDeltaTime
+            );
         }
 
-        affectXSpeed = (platformRB.position.x - lastPosition.x) / Time.fixedDeltaTime;
-        lastPosition = platformRB.position;
+        Vector2 velocity = (newPosition - platformRB.position) / Time.fixedDeltaTime;
+
+        platformRB.MovePosition(newPosition);
+
+        affectXSpeed = velocity.x;
+        platformRB.linearVelocity = velocity;
 
         if (Vector2.Distance(platformRB.position, wayPoints[targetIndex].position) < 0.05f)
         {

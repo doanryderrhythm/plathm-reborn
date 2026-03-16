@@ -49,7 +49,7 @@ public class PlatformerPlayer : MonoBehaviour
         float confirmedXVelocity = moveRate * ValueStorer.moveSpeed;
         if (movingPlatform)
         {
-            confirmedXVelocity += movingPlatform.affectXSpeed;
+            confirmedXVelocity += movingPlatform.platformRB.linearVelocity.x;
         }
         rb.linearVelocityX = confirmedXVelocity;
 
@@ -212,7 +212,7 @@ public class PlatformerPlayer : MonoBehaviour
 
             movingPlatform = testPlatform;
             rb.gravityScale = ValueStorer.gravityMove;
-            transform.SetParent(platform.transform);
+            //transform.SetParent(platform.transform);
 
             jumpCount = ValueStorer.maxJumpCount;
             leaveDetected = false;
@@ -228,7 +228,7 @@ public class PlatformerPlayer : MonoBehaviour
         {
             rb.gravityScale = ValueStorer.gravityGround;
             movingPlatform = null;
-            transform.SetParent(null);
+            //transform.SetParent(null);
         }
     }
 }
