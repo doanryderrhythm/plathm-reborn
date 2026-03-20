@@ -161,7 +161,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -408684445
-  m_SortingLayer: 3
+  m_SortingLayer: 10
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
@@ -220,6 +220,7 @@ MonoBehaviour:
   maxDistance: 0.2
   boxCol: {fileID: 5305315382873885015}
   jumpLighting: {fileID: 2596717282297905982, guid: 13b2060a6650e5348bf946bb17451258, type: 3}
+  movingPlatform: {fileID: 0}
   deathLighting: {fileID: 6162187959370369471, guid: aeeb2f5c254fdac4fa55b947e1523119, type: 3}
 --- !u!96 &4611514374926679175
 TrailRenderer:
@@ -357,7 +358,7 @@ Transform:
   m_GameObject: {fileID: 8124281463527508377}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalPosition: {x: 0, y: -0.25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
