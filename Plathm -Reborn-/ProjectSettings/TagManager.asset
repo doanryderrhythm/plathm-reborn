@@ -71,5 +71,32 @@ TagManager:
   - name: Player
     uniqueID: 3886282851
     locked: 0
+  - name: 
+    uniqueID: 2473434981
+    locked: 0
+  - name: Placeholder
+    uniqueID: 1094367497
+    locked: 0
+  - name: Song Information
+    uniqueID: 2679345125
+    locked: 0
+  - name: Bottom Layer
+    uniqueID: 3470021459
+    locked: 0
+  - name: Lane
+    uniqueID: 1605824061
+    locked: 0
+  - name: Judgement Line
+    uniqueID: 3192999079
+    locked: 0
+  - name: Song Progress
+    uniqueID: 356147785
+    locked: 0
+  - name: Wall
+    uniqueID: 270443125
+    locked: 0
+  - name: Rhythm Player
+    uniqueID: 2748537115
+    locked: 0
   m_RenderingLayers:
   - Default
