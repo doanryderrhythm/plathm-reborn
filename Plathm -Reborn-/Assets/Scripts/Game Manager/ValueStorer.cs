@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ValueStorer : MonoBehaviour
 {
-    #region PLAYER
+    #region PLATFORMER PLAYER
     public static float moveSpeed = 10f;
     public static float jumpHeight = 27f;
     public static float lightPush = 9.5f;
@@ -48,5 +48,19 @@ public class ValueStorer : MonoBehaviour
 
     public static Color32 toggledMinParticles = new Color32(0, 78, 0, 255);
     public static Color32 toggledMaxParticles = new Color32(0, 255, 0, 255);
+    #endregion
+
+    #region LANE PROPERTIES
+    public static float laneWidth = 3f;
+    public static float gapWidth = 0.75f;
+
+    public static float playerXMoveAbs = 3.75f;
+    public static float playerYPosition = -0.375f;
+    #endregion
+
+    #region RHYTHM GAME PLAYER
+    public static Vector3 playerLeftPosition = new Vector3(-playerXMoveAbs, playerYPosition, 0);
+    public static Vector3 playerMiddlePosition = new Vector3(0, playerYPosition, 0);
+    public static Vector3 playerRightPosition = new Vector3(playerXMoveAbs, playerYPosition, 0);
     #endregion
 }
