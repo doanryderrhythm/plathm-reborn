@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -38,6 +39,7 @@ public class RhythmGameManager : MonoBehaviour
     public TextAsset chartFile;
     public int difficulty;
 
+    bool isStarted = false;
     public double chartSpeed;
 
     [Header("Note Groups")]
@@ -50,13 +52,16 @@ public class RhythmGameManager : MonoBehaviour
     private void Start()
     {
         speedItems = new List<List<SpeedStorer>>();
-        InsertChart(0);
+        StartCoroutine(GetReady());
     }
 
     private void Update()
     {
-        currentTiming += (Time.deltaTime * 1000f);
-        ChangeSpeedThroughTiming(currentTiming);
+        if (isStarted)
+        {
+            currentTiming += (Time.deltaTime * 1000f);
+            ChangeSpeedThroughTiming(currentTiming);
+        }
     }
 
     public void ChangeSpeedThroughTiming(double timing)
@@ -284,5 +289,13 @@ public class RhythmGameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    IEnumerator GetReady()
+    {
+        yield return new WaitForSeconds(1.0f);
+        InsertChart(0);
+        yield return new WaitForSeconds(3.0f);
+        isStarted = true;
     }
 }
