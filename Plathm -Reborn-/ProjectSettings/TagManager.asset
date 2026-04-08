@@ -98,5 +98,11 @@ TagManager:
   - name: Rhythm Player
     uniqueID: 2748537115
     locked: 0
+  - name: 
+    uniqueID: 2683353163
+    locked: 0
+  - name: Note
+    uniqueID: 3325014443
+    locked: 0
   m_RenderingLayers:
   - Default

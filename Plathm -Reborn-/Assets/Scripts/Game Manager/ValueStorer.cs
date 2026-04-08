@@ -73,4 +73,14 @@ public class ValueStorer : MonoBehaviour
     public const string difficultyString = "difficulty: ";
     public const string speedString = "speed(";
     #endregion
+
+    #region NOTE TYPES
+    public const string tapString = "tap(";
+    public const string blackString = "black(";
+    public const string leftTeleportString = "left_tele(";
+    public const string rightTeleportString = "right_tele(";
+    public const string sliceString = "slice(";
+    public const string middleSpikeString = "middle_spike(";
+    public const string sideSpikeString = "side_spike(";
+    #endregion
 }

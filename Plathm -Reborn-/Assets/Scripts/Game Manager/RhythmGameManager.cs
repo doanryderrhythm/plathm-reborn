@@ -147,6 +147,56 @@ public class RhythmGameManager : MonoBehaviour
         speedItems[index].Add(speedItem);
     }
 
+    [Header("Notes")]
+    [SerializeField] GameObject tapNotePrefab;
+    [SerializeField] GameObject blackNotePrefab;
+    [SerializeField] GameObject leftTeleportPrefab;
+    [SerializeField] GameObject rightTeleportPrefab;
+    [SerializeField] GameObject sliceNotePrefab;
+    [SerializeField] GameObject middleSpikePrefab;
+    [SerializeField] GameObject sideSpikePrefab;
+
+    string[] GetConvertedNoteProperties(string subLine, string line)
+    {
+        string content = line.Replace(subLine, "").Replace(")", "");
+        string[] values = content.Split(',');
+        return values;
+    }
+
+    void InsertNote(int group, string noteTypeString, double timing, float xPos = 0f)
+    {
+        GameObject confirmedNote = null;
+        Vector3 confirmedPosition = new Vector3(xPos, (float)(timing * chartSpeed) / 1000f, 0f);
+
+        if (group > timingGroups.Count - 1)
+        {
+            AddSpeedGroup();
+        }
+
+        switch (noteTypeString)
+        {
+            case ValueStorer.tapString: confirmedNote = Instantiate(tapNotePrefab, timingGroups[group].tapFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.blackString: confirmedNote = Instantiate(blackNotePrefab, timingGroups[group].blackFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.leftTeleportString: confirmedNote = Instantiate(leftTeleportPrefab, timingGroups[group].leftTeleportFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.rightTeleportString: confirmedNote = Instantiate(rightTeleportPrefab, timingGroups[group].rightTeleportFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.sliceString: confirmedNote = Instantiate(sliceNotePrefab, timingGroups[group].sliceFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.middleSpikeString: confirmedNote = Instantiate(middleSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.sideSpikeString: confirmedNote = Instantiate(sideSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
+            default: break;
+        }
+
+        if (confirmedNote == null)
+        {
+            return;
+        }
+
+        confirmedNote.transform.localPosition = confirmedPosition;
+
+        MusicNote musicNote = confirmedNote.GetComponent<MusicNote>();
+        musicNote.timingGroup = timingGroups[group];
+        musicNote.timing = timing / 1000f;
+    }
+
     public void InsertChart(int difficultyIndex)
     {
         player.ChangePosition(LanePosition.MIDDLE_POS);
@@ -218,7 +268,6 @@ public class RhythmGameManager : MonoBehaviour
                         continue;
                     }
 
-                    /*
                     if (line.StartsWith(ValueStorer.tapString))
                     {
                         string[] values = GetConvertedNoteProperties(ValueStorer.tapString, line);
@@ -285,7 +334,6 @@ public class RhythmGameManager : MonoBehaviour
                             InsertNote(group, ValueStorer.sideSpikeString, timing);
                         continue;
                     }
-                    */
                 }
             }
         }
