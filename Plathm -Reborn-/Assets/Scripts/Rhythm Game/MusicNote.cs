@@ -19,4 +19,11 @@ public class MusicNote : MonoBehaviour
     public double timing;
 
     //[SerializeField] bool isBlackActivated = false;
+
+    public void ChangeSpeedPosition(double totalLength, double chartSpeed, double beginTiming, double speedMulti)
+    {
+        this.transform.position = new Vector3(
+            this.transform.position.x,
+            (float)(((this.timing * 1000f - beginTiming) / 1000f * speedMulti + totalLength) * chartSpeed), 0);
+    }
 }

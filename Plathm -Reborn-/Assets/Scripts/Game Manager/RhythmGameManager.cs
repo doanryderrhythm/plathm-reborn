@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class RhythmGameManager : MonoBehaviour
 {
@@ -37,6 +38,7 @@ public class RhythmGameManager : MonoBehaviour
     [Header("Chart Information")]
     public TextAsset songInfo;
     public TextAsset chartFile;
+    public AudioSource audioSource;
     public int difficulty;
 
     bool isStarted = false;
@@ -197,6 +199,90 @@ public class RhythmGameManager : MonoBehaviour
         musicNote.timing = timing / 1000f;
     }
 
+    public void ApplyTimingSpeed()
+    {
+        for (int index = 0; index < timingGroups.Count; index++)
+        {
+            if (speedItems[index].Count <= 0)
+            {
+                return;
+            }
+
+            List<SpeedStorer> speeds = speedItems[index];
+            if (speeds.Count <= 0)
+            {
+                continue;
+            }
+
+            List<MusicNote> notes = null;
+
+            float tempSpeedMulti = 1f;
+            float totalLength = 0f;
+
+            for (int i = 0; i < speeds.Count; i++)
+            {
+                if (i == 0)
+                {
+                    tempSpeedMulti = 1f;
+                    totalLength += (speeds[i].timing * tempSpeedMulti / 1000f);
+                }
+                else
+                {
+                    tempSpeedMulti = speeds[i - 1].speedMulti;
+                    notes = FindAllNotesWithTiming(index, speeds[i - 1].timing, speeds[i].timing);
+                    foreach (MusicNote note in notes)
+                    {
+                        note.ChangeSpeedPosition(totalLength, chartSpeed, speeds[i - 1].timing, tempSpeedMulti);
+                    }
+
+                    totalLength += (speeds[i].timing - speeds[i - 1].timing) / 1000f * tempSpeedMulti;
+                }
+            }
+            tempSpeedMulti = speeds[speeds.Count - 1].speedMulti;
+            notes = FindAllNotesWithTiming(index, speeds[speeds.Count - 1].timing, audioSource.clip.length * 1000f);
+            foreach (MusicNote note in notes)
+            {
+                note.ChangeSpeedPosition(totalLength, chartSpeed, speeds[speeds.Count - 1].timing, tempSpeedMulti);
+            }
+
+            totalLength += (audioSource.clip.length - speeds[speeds.Count - 1].timing / 1000f) * tempSpeedMulti;
+        }
+    }
+
+    List<MusicNote> FindAllNotesWithTiming(int index, float beginTiming, float endTiming)
+    {
+        List<MusicNote> foundTaps = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].tapFolder.transform);
+        List<MusicNote> foundBlacks = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].blackFolder.transform);
+        List<MusicNote> foundSlice = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].sliceFolder.transform);
+        List<MusicNote> foundSpikes = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].spikeFolder.transform);
+        List<MusicNote> foundLeftTeleports = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].leftTeleportFolder.transform);
+        List<MusicNote> foundRightTeleport = FindAllNotesWithTimingFromFolder(beginTiming, endTiming, timingGroups[index].rightTeleportFolder.transform);
+
+        List<MusicNote> foundAllNotes = new List<MusicNote>();
+        foundAllNotes.AddRange(foundTaps);
+        foundAllNotes.AddRange(foundBlacks);
+        foundAllNotes.AddRange(foundSlice);
+        foundAllNotes.AddRange(foundSpikes);
+        foundAllNotes.AddRange(foundLeftTeleports);
+        foundAllNotes.AddRange(foundRightTeleport);
+
+        return foundAllNotes;
+    }
+
+    List<MusicNote> FindAllNotesWithTimingFromFolder(float beginTiming, float endTiming, Transform folder)
+    {
+        List<MusicNote> foundNotes = new List<MusicNote>();
+        foreach (Transform note in folder)
+        {
+            MusicNote musicNote = note.GetComponent<MusicNote>();
+            if (musicNote != null && musicNote.timing * 1000f >= beginTiming && musicNote.timing * 1000f < endTiming)
+            {
+                foundNotes.Add(musicNote);
+            }
+        }
+        return foundNotes;
+    }
+
     public void InsertChart(int difficultyIndex)
     {
         player.ChangePosition(LanePosition.MIDDLE_POS);
@@ -337,13 +423,16 @@ public class RhythmGameManager : MonoBehaviour
                 }
             }
         }
+
+        ApplyTimingSpeed();
     }
 
     IEnumerator GetReady()
     {
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(2.0f);
         InsertChart(0);
         yield return new WaitForSeconds(3.0f);
+        audioSource.Play();
         isStarted = true;
     }
 }

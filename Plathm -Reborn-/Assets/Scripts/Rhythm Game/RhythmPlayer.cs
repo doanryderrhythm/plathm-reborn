@@ -74,15 +74,15 @@ public class RhythmPlayer : MonoBehaviour
 
         if (this.lanePosition == RhythmGameManager.LanePosition.LEFT_POS)
         {
-            this.transform.position = ValueStorer.playerLeftPosition;
+            this.transform.localPosition = ValueStorer.playerLeftPosition;
         }
         else if (this.lanePosition == RhythmGameManager.LanePosition.MIDDLE_POS)
         {
-            this.transform.position = ValueStorer.playerMiddlePosition;
+            this.transform.localPosition = ValueStorer.playerMiddlePosition;
         }
         else if (this.lanePosition == RhythmGameManager.LanePosition.RIGHT_POS)
         {
-            this.transform.position = ValueStorer.playerRightPosition;
+            this.transform.localPosition = ValueStorer.playerRightPosition;
         }
     }
 }

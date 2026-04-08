@@ -101,8 +101,20 @@ TagManager:
   - name: 
     uniqueID: 2683353163
     locked: 0
-  - name: Note
+  - name: Notes/Spikes
     uniqueID: 3325014443
+    locked: 0
+  - name: Notes/Teleports
+    uniqueID: 627935083
+    locked: 0
+  - name: Notes/Slices
+    uniqueID: 514652835
+    locked: 0
+  - name: Notes/Blacks
+    uniqueID: 4040181613
+    locked: 0
+  - name: Notes/Taps
+    uniqueID: 3133287561
     locked: 0
   m_RenderingLayers:
   - Default
