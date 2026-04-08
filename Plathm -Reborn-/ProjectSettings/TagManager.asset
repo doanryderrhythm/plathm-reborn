@@ -116,5 +116,20 @@ TagManager:
   - name: Notes/Taps
     uniqueID: 3133287561
     locked: 0
+  - name: 
+    uniqueID: 620541167
+    locked: 0
+  - name: Judgement/C-PERFECT
+    uniqueID: 2151877085
+    locked: 0
+  - name: Judgement/PERFECT
+    uniqueID: 2203489281
+    locked: 0
+  - name: Judgement/GOOD
+    uniqueID: 1576358463
+    locked: 0
+  - name: Judgement/DAMAGE
+    uniqueID: 1738395385
+    locked: 0
   m_RenderingLayers:
   - Default

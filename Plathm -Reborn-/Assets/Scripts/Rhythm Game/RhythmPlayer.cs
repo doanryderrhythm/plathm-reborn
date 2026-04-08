@@ -32,7 +32,7 @@ public class RhythmPlayer : MonoBehaviour
         moveRightAction.action.Disable();
     }
 
-    private RhythmGameManager.LanePosition lanePosition = RhythmGameManager.LanePosition.MIDDLE_POS;
+    public RhythmGameManager.LanePosition lanePosition = RhythmGameManager.LanePosition.MIDDLE_POS;
 
     void MoveLeft(InputAction.CallbackContext context)
     {

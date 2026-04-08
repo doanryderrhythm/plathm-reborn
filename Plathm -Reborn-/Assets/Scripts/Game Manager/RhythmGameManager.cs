@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class RhythmGameManager : MonoBehaviour
 {
@@ -33,7 +35,7 @@ public class RhythmGameManager : MonoBehaviour
         SPIKE,
     }
 
-    double currentTiming = 0f;
+    public double currentTiming = 0f;
 
     [Header("Chart Information")]
     public TextAsset songInfo;
@@ -41,7 +43,7 @@ public class RhythmGameManager : MonoBehaviour
     public AudioSource audioSource;
     public int difficulty;
 
-    bool isStarted = false;
+    public bool isStarted = false;
     public double chartSpeed;
 
     [Header("Note Groups")]
@@ -51,10 +53,95 @@ public class RhythmGameManager : MonoBehaviour
 
     public List<List<SpeedStorer>> speedItems;
 
+    [Header("Input Actions")]
+    [SerializeField] InputActionReference inputLeftTeleport;
+    [SerializeField] InputActionReference inputRightTeleport;
+    [SerializeField] InputActionReference inputSlice;
+
+    [Header("Judgement VFX")]
+    public GameObject tapCPerfectPrefab;
+    public GameObject tapPerfectPrefab;
+    public GameObject tapGoodPrefab;
+    [Space(10.0f)]
+    public GameObject blackCPerfectPrefab;
+    [Space(10.0f)]
+    public GameObject sliceCPerfectPrefab;
+    public GameObject slicePerfectPrefab;
+    public GameObject sliceGoodPrefab;
+    [Space(10.0f)]
+    public GameObject leftTeleportCPerfectPrefab;
+    public GameObject leftTeleportPerfectPrefab;
+    public GameObject leftTeleportGoodPrefab;
+    [Space(10.0f)]
+    public GameObject rightTeleportCPerfectPrefab;
+    public GameObject rightTeleportPerfectPrefab;
+    public GameObject rightTeleportGoodPrefab;
+    [Space(10.0f)]
+    public GameObject spikesPrefab;
+
+    private HashSet<Key> reservedTapKeys;
+    private HashSet<Key> reservedBlackKeys;
+    private HashSet<Key> pressedKeys = new HashSet<Key>();
+
+    private void OnEnable()
+    {
+        inputLeftTeleport.action.Enable();
+        inputRightTeleport.action.Enable();
+        inputSlice.action.Enable();
+
+        inputLeftTeleport.action.performed  += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.LEFT_TELEPORT);
+        inputRightTeleport.action.performed += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.RIGHT_TELEPORT);
+        inputSlice.action.performed         += _ => ExecuteInputAllTimingGroups(NoteTypeGeneral.SLICE_NOTE);
+    }
+
+    private void OnDisable()
+    {
+        inputLeftTeleport.action.performed  -= _ => { };
+        inputRightTeleport.action.performed -= _ => { };
+        inputSlice.action.performed         -= _ => { };
+    }
+
+    private void Awake()
+    {
+        reservedTapKeys = new HashSet<Key>();
+        reservedBlackKeys = new HashSet<Key>();
+    }
+
     private void Start()
     {
+        RebuildReservedKeys();
+
         speedItems = new List<List<SpeedStorer>>();
         StartCoroutine(GetReady());
+    }
+
+    void RebuildReservedKeys()
+    {
+        reservedTapKeys.Clear();
+        AddReservedKeys(inputLeftTeleport, ref reservedTapKeys);
+        AddReservedKeys(inputRightTeleport, ref reservedTapKeys);
+        AddReservedKeys(inputSlice, ref reservedTapKeys);
+
+        reservedBlackKeys.Clear();
+        AddReservedKeys(inputLeftTeleport, ref reservedBlackKeys);
+        AddReservedKeys(inputRightTeleport, ref reservedBlackKeys);
+    }
+
+    void AddReservedKeys(InputAction inputAction, ref HashSet<Key> reservedKeys)
+    {
+        foreach (var binding in inputAction.bindings)
+        {
+            if (!binding.effectivePath.StartsWith("<Keyboard>/"))
+            {
+                continue;
+            }
+
+            string keyName = binding.effectivePath.Replace("<Keyboard>/", "");
+            if (System.Enum.TryParse(keyName, true, out Key key))
+            {
+                reservedKeys.Add(key);
+            }
+        }
     }
 
     private void Update()
@@ -63,7 +150,134 @@ public class RhythmGameManager : MonoBehaviour
         {
             currentTiming += (Time.deltaTime * 1000f);
             ChangeSpeedThroughTiming(currentTiming);
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null)
+            {
+                foreach (var keyControl in keyboard.allKeys)
+                {
+                    Key finalKey;
+                    if (!TryKeyControlToNewKey(keyControl, out finalKey))
+                        continue;
+
+                    if (keyControl.wasPressedThisFrame)
+                    {
+                        pressedKeys.Add(finalKey);
+                        if (!reservedTapKeys.Contains(finalKey))
+                        {
+                            ExecuteInputAllTimingGroups(NoteTypeGeneral.TAP_NOTE);
+                        }
+                    }
+                    else if (keyControl.wasReleasedThisFrame)
+                    {
+                        pressedKeys.Remove(finalKey);
+                    }
+                }
+
+                if (pressedKeys.Count > 0)
+                {
+                    foreach (Key key in pressedKeys)
+                    {
+                        if (!reservedBlackKeys.Contains(key))
+                        {
+                            ExecuteInputAllTimingGroups(NoteTypeGeneral.BLACK_NOTE);
+                            break;
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
+    {
+        List<GameObject> notesInFolders = new List<GameObject>();
+
+        for (int i = 0; i < timingGroups.Count; i++)
+        {
+            GameObject detectedFolder = null;
+
+            if (noteType == NoteTypeGeneral.TAP_NOTE) detectedFolder = timingGroups[i].tapFolder;
+            else if (noteType == NoteTypeGeneral.BLACK_NOTE) detectedFolder = timingGroups[i].blackFolder;
+            else if (noteType == NoteTypeGeneral.SLICE_NOTE) detectedFolder = timingGroups[i].sliceFolder;
+            else if (noteType == NoteTypeGeneral.LEFT_TELEPORT) detectedFolder = timingGroups[i].leftTeleportFolder;
+            else if (noteType == NoteTypeGeneral.RIGHT_TELEPORT) detectedFolder = timingGroups[i].rightTeleportFolder;
+            else if (noteType == NoteTypeGeneral.SPIKE) detectedFolder = timingGroups[i].spikeFolder;
+
+            foreach (Transform detectedNote in detectedFolder.transform)
+            {
+                notesInFolders.Add(detectedNote.gameObject);
+            }
+        }
+
+        ExecuteInput(notesInFolders, noteType == NoteTypeGeneral.BLACK_NOTE);
+    }
+
+    bool TryKeyControlToNewKey(KeyControl keyControl, out Key finalKey)
+    {
+        finalKey = Key.None;
+
+        if (keyControl == null)
+        {
+            return false;
+        }
+
+        finalKey = keyControl.keyCode;
+        return finalKey != Key.None;
+    }
+
+    void ExecuteInput(List<GameObject> notes, bool isBlackNote)
+    {
+        if (!isStarted)
+            return;
+
+        if (notes.Count == 0)
+            return;
+
+        MusicNote lowestNote = null;
+
+        foreach (GameObject note in notes)
+        {
+            if (!note)
+                continue;
+
+            MusicNote musicNote = note.GetComponent<MusicNote>();
+            if (!musicNote)
+                continue;
+
+            if (!lowestNote)
+            {
+                lowestNote = musicNote;
+                continue;
+            }
+
+            if (musicNote.timing < lowestNote.timing)
+                lowestNote = musicNote;
+        }
+
+        if (!lowestNote)
+            return;
+
+        if (isBlackNote)
+        {
+            List<MusicNote> lowestBlackNotes = new List<MusicNote>();
+            foreach (GameObject note in notes)
+            {
+                MusicNote musicNote = note.GetComponent<MusicNote>();
+                if (!musicNote)
+                    continue;
+
+                if (musicNote.timing <= lowestNote.timing)
+                    lowestBlackNotes.Add(musicNote);
+            }
+            foreach (MusicNote note in lowestBlackNotes)
+            {
+                note.ExecuteNote();
+            }
+            return;
+        }
+
+        lowestNote.ExecuteNote();
     }
 
     public void ChangeSpeedThroughTiming(double timing)

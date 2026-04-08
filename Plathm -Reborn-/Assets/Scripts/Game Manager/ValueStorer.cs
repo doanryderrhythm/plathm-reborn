@@ -56,6 +56,10 @@ public class ValueStorer : MonoBehaviour
 
     public static float playerXMoveAbs = 3.75f;
     public static float playerYPosition = -0.375f;
+
+    public static Vector3 leftLanePosition = new Vector3(-playerXMoveAbs, 0, 0);
+    public static Vector3 middleLanePosition = new Vector3(0, 0, 0);
+    public static Vector3 rightLanePosition = new Vector3(playerXMoveAbs, 0, 0);
     #endregion
 
     #region RHYTHM GAME PLAYER
@@ -82,5 +86,11 @@ public class ValueStorer : MonoBehaviour
     public const string sliceString = "slice(";
     public const string middleSpikeString = "middle_spike(";
     public const string sideSpikeString = "side_spike(";
+    #endregion
+
+    #region JUDGEMENTS
+    public static float cPerfectJudgement = 0.04f;
+    public static float perfectJudgement = 0.075f;
+    public static float goodJudgement = 0.14f;
     #endregion
 }
