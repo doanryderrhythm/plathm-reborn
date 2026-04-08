@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpeedStorer : MonoBehaviour
+public class SpeedStorer
 {
     public float timing = 0f;
     public float speedMulti = 0f;

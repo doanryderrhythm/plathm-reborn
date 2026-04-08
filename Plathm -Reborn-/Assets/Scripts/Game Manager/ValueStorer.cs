@@ -63,4 +63,14 @@ public class ValueStorer : MonoBehaviour
     public static Vector3 playerMiddlePosition = new Vector3(0, playerYPosition, 0);
     public static Vector3 playerRightPosition = new Vector3(playerXMoveAbs, playerYPosition, 0);
     #endregion
+
+    #region CHART FILE
+    public const string informationString = "\\information.ptminf";
+    public const string playerPositionString = "position: ";
+    public const string playerLeftString = "left";
+    public const string playerMiddleString = "middle";
+    public const string playerRightString = "right";
+    public const string difficultyString = "difficulty: ";
+    public const string speedString = "speed(";
+    #endregion
 }
