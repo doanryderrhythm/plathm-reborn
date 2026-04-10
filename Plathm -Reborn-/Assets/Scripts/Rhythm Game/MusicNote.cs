@@ -37,6 +37,9 @@ public class MusicNote : MonoBehaviour
                 new Vector3(this.transform.position.x, 0, 0),
                 Quaternion.identity);
             //audioManager.AddSound(audioManager.blackSound);
+            rhythmManager.CPerfectNotes += 1;
+            rhythmManager.comboCount += 1;
+            rhythmManager.CalculateScore();
             SwitchToUsedFolder();
             return;
         }
@@ -48,6 +51,16 @@ public class MusicNote : MonoBehaviour
                 Instantiate(rhythmManager.spikesPrefab, ValueStorer.middleLanePosition, Quaternion.identity);
                 //audioManager.AddSound(audioManager.spikeSound);
                 Debug.Log("Avoided MIDDLE SPIKE");
+                rhythmManager.CPerfectNotes += 1;
+                rhythmManager.comboCount += 1;
+                rhythmManager.CalculateScore();
+            }
+            else
+            {
+                rhythmManager.damageNotes += 1;
+                rhythmManager.comboCount = 0;
+                rhythmManager.DeductHealth(5f);
+                rhythmManager.CalculateScore();
             }
 
             SwitchToUsedFolder();
@@ -62,6 +75,16 @@ public class MusicNote : MonoBehaviour
                 Instantiate(rhythmManager.spikesPrefab, ValueStorer.rightLanePosition, Quaternion.identity);
                 //audioManager.AddSound(audioManager.spikeSound);
                 Debug.Log("Avoided SIDE SPIKE");
+                rhythmManager.CPerfectNotes += 1;
+                rhythmManager.comboCount += 1;
+                rhythmManager.CalculateScore();
+            }
+            else
+            {
+                rhythmManager.damageNotes += 1;
+                rhythmManager.comboCount = 0;
+                rhythmManager.DeductHealth(5f);
+                rhythmManager.CalculateScore();
             }
 
             SwitchToUsedFolder();
@@ -72,6 +95,17 @@ public class MusicNote : MonoBehaviour
         if (timing - rhythmManager.currentTiming / 1000f < -ValueStorer.goodJudgement && rhythmManager.isStarted)
         {
             Debug.Log("MISSED, " + timingGroup);
+            rhythmManager.comboCount = 0;
+            if (noteType == NoteType.SLICE_NOTE)
+            {
+                rhythmManager.damageNotes += 1;
+                rhythmManager.DeductHealth(10f);
+            }
+            else
+            {
+                rhythmManager.missNotes += 1;
+            }
+            rhythmManager.CalculateScore();
             SwitchToUsedFolder();
         }
     }
@@ -120,6 +154,9 @@ public class MusicNote : MonoBehaviour
         {
             judgementSelected = SelectJudgementVFX(RhythmGameManager.JudgementType.CPERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
+            rhythmManager.CPerfectNotes += 1;
+            rhythmManager.comboCount += 1;
+            rhythmManager.CalculateScore();
             return;
         }
 
@@ -127,6 +164,9 @@ public class MusicNote : MonoBehaviour
         {
             judgementSelected = SelectJudgementVFX(RhythmGameManager.JudgementType.PERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
+            rhythmManager.perfectNotes += 1;
+            rhythmManager.comboCount += 1;
+            rhythmManager.CalculateScore();
             return;
         }
 
@@ -134,6 +174,9 @@ public class MusicNote : MonoBehaviour
         {
             judgementSelected = SelectJudgementVFX(RhythmGameManager.JudgementType.GOOD);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
+            rhythmManager.goodNotes += 1;
+            rhythmManager.comboCount += 1;
+            rhythmManager.CalculateScore();
             return;
         }
     }

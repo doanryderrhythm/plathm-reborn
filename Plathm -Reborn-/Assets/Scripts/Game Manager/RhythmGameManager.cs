@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -46,6 +47,9 @@ public class RhythmGameManager : MonoBehaviour
     public bool isStarted = false;
     public double chartSpeed;
 
+    [SerializeField] int noteCount = 0;
+    float totalScore = 0.0f;
+
     [Header("Note Groups")]
     public List<TimingGroup> timingGroups;
     public GameObject timingGroupPrefab;
@@ -79,6 +83,31 @@ public class RhythmGameManager : MonoBehaviour
     [Space(10.0f)]
     public GameObject spikesPrefab;
 
+    [Header("Scoring")]
+    public int comboCount = 0;
+
+    public int CPerfectNotes;
+    public int perfectNotes;
+    public int goodNotes;
+    public int damageNotes;
+    public int missNotes;
+
+    public float health = 100f;
+
+    [Header("UI")]
+    [SerializeField] TMP_Text songNameText;
+
+    [SerializeField] TMP_Text comboText;
+    [SerializeField] TMP_Text scoreText;
+
+    [SerializeField] TMP_Text CPerfectText;
+    [SerializeField] TMP_Text perfectText;
+    [SerializeField] TMP_Text goodText;
+    [SerializeField] TMP_Text damageText;
+    [SerializeField] TMP_Text missText;
+
+    [SerializeField] RectTransform healthBar;
+
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
     private HashSet<Key> pressedKeys = new HashSet<Key>();
@@ -110,6 +139,9 @@ public class RhythmGameManager : MonoBehaviour
     private void Start()
     {
         RebuildReservedKeys();
+
+        InsertInfo();
+        UpdateScoreUI();
 
         speedItems = new List<List<SpeedStorer>>();
         StartCoroutine(GetReady());
@@ -411,6 +443,8 @@ public class RhythmGameManager : MonoBehaviour
         MusicNote musicNote = confirmedNote.GetComponent<MusicNote>();
         musicNote.timingGroup = timingGroups[group];
         musicNote.timing = timing / 1000f;
+
+        noteCount += 1;
     }
 
     public void ApplyTimingSpeed()
@@ -497,7 +531,37 @@ public class RhythmGameManager : MonoBehaviour
         return foundNotes;
     }
 
-    public void InsertChart(int difficultyIndex)
+    public void InsertInfo()
+    {
+        if (songInfo == null)
+        {
+            return;
+        }
+
+        if (songInfo is TextAsset chart)
+        {
+            using (StringReader reader = new StringReader(chart.text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line == string.Empty)
+                    {
+                        continue;
+                    }
+
+                    if (line.StartsWith(ValueStorer.songNameString))
+                    {
+                        string songName = line.Substring(ValueStorer.songNameString.Length);
+                        songNameText.text = songName;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    IEnumerator InsertChart(int difficultyIndex)
     {
         player.ChangePosition(LanePosition.MIDDLE_POS);
         this.difficulty = difficultyIndex;
@@ -517,16 +581,25 @@ public class RhythmGameManager : MonoBehaviour
 
         if (chartFile == null)
         {
-            return;
+            yield break;
         }
 
         if (chartFile is TextAsset chart)
         {
             using (StringReader reader = new StringReader(chart.text))
             {
+                int batchSize = 400;
+                int batchCount = 0;
+
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    if (batchCount >= batchSize)
+                    {
+                        batchCount = 0;
+                        yield return null;
+                    }
+
                     if (line == string.Empty)
                     {
                         continue;
@@ -574,7 +647,10 @@ public class RhythmGameManager : MonoBehaviour
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing) &&
                             float.TryParse(values[2], out float xPos))
+                        {
                             InsertNote(group, ValueStorer.tapString, timing, xPos);
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -584,7 +660,10 @@ public class RhythmGameManager : MonoBehaviour
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing) &&
                             float.TryParse(values[2], out float xPos))
-                            InsertNote(group, ValueStorer.blackString, timing, xPos);
+                        {
+                            InsertNote(group, ValueStorer.blackString, timing, xPos); 
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -594,7 +673,10 @@ public class RhythmGameManager : MonoBehaviour
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing) &&
                             float.TryParse(values[2], out float xPos))
-                            InsertNote(group, ValueStorer.leftTeleportString, timing, xPos);
+                        {
+                            InsertNote(group, ValueStorer.leftTeleportString, timing, xPos); 
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -604,7 +686,10 @@ public class RhythmGameManager : MonoBehaviour
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing) &&
                             float.TryParse(values[2], out float xPos))
-                            InsertNote(group, ValueStorer.rightTeleportString, timing, xPos);
+                        {
+                            InsertNote(group, ValueStorer.rightTeleportString, timing, xPos); 
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -613,7 +698,10 @@ public class RhythmGameManager : MonoBehaviour
                         string[] values = GetConvertedNoteProperties(ValueStorer.sliceString, line);
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing))
-                            InsertNote(group, ValueStorer.sliceString, timing);
+                        {
+                            InsertNote(group, ValueStorer.sliceString, timing); 
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -622,7 +710,10 @@ public class RhythmGameManager : MonoBehaviour
                         string[] values = GetConvertedNoteProperties(ValueStorer.middleSpikeString, line);
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing))
+                        {
                             InsertNote(group, ValueStorer.middleSpikeString, timing);
+                            batchCount += 1;
+                        }
                         continue;
                     }
 
@@ -631,7 +722,9 @@ public class RhythmGameManager : MonoBehaviour
                         string[] values = GetConvertedNoteProperties(ValueStorer.sideSpikeString, line);
                         if (int.TryParse(values[0], out int group) &&
                             float.TryParse(values[1], out float timing))
-                            InsertNote(group, ValueStorer.sideSpikeString, timing);
+                        {
+                            InsertNote(group, ValueStorer.sideSpikeString, timing); batchCount += 1;
+                        }
                         continue;
                     }
                 }
@@ -641,10 +734,36 @@ public class RhythmGameManager : MonoBehaviour
         ApplyTimingSpeed();
     }
 
+    public void DeductHealth(float value)
+    {
+        health -= value;
+        if (health < 0) health = 0;
+    }
+
+    public void CalculateScore()
+    {
+        totalScore = 101.0f / (float)noteCount * ((float)CPerfectNotes + (float)perfectNotes * 0.9f + (float)goodNotes * 0.5f);
+        UpdateScoreUI();
+    }
+
+    void UpdateScoreUI()
+    {
+        comboText.text = comboCount.ToString();
+        scoreText.text = totalScore.ToString("0.0000") + "%";
+
+        CPerfectText.text = CPerfectNotes.ToString();
+        perfectText.text = perfectNotes.ToString();
+        goodText.text = goodNotes.ToString();
+        damageText.text = damageNotes.ToString();
+        missText.text = missNotes.ToString();
+
+        healthBar.localScale = new Vector2(1f, health / 100f);
+    }
+
     IEnumerator GetReady()
     {
         yield return new WaitForSeconds(2.0f);
-        InsertChart(0);
+        StartCoroutine(InsertChart(0));
         yield return new WaitForSeconds(3.0f);
         audioSource.Play();
         isStarted = true;

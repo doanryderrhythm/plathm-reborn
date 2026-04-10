@@ -630,6 +630,7 @@ GameObject:
   - component: {fileID: 336381908}
   - component: {fileID: 336381907}
   - component: {fileID: 336381911}
+  - component: {fileID: 336381912}
   m_Layer: 5
   m_Name: Information Canvas
   m_TagString: Untagged
@@ -746,6 +747,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &336381912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 336381906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff2a7d363c2cb6343a6724f9b5373279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InformationCanvas
 --- !u!1 &352896233
 GameObject:
   m_ObjectHideFlags: 0
@@ -907,7 +920,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 871b3a71885e96a4b85b021713bd1af1, type: 2}
   m_sharedMaterial: {fileID: -4766797297135107798, guid: 871b3a71885e96a4b85b021713bd1af1, type: 2}
@@ -2626,6 +2639,7 @@ MonoBehaviour:
   difficulty: 0
   isStarted: 0
   chartSpeed: 15
+  noteCount: 0
   timingGroups: []
   timingGroupPrefab: {fileID: 4819528474690694572, guid: cbf81ebf09386034196b01ad7c89eb1a, type: 3}
   timingGroupStorer: {fileID: 1141691752}
@@ -2646,6 +2660,22 @@ MonoBehaviour:
   rightTeleportPerfectPrefab: {fileID: 9141352313010921072, guid: 2c3693506873f68468469bf3cda5ae36, type: 3}
   rightTeleportGoodPrefab: {fileID: 9141352313010921072, guid: 0b0e3bd9746a2ce42bf5bb58b9e0ae51, type: 3}
   spikesPrefab: {fileID: 8907948089654706144, guid: 4e295e855ace9b1479c68fd5904fd50f, type: 3}
+  comboCount: 0
+  CPerfectNotes: 0
+  perfectNotes: 0
+  goodNotes: 0
+  damageNotes: 0
+  missNotes: 0
+  health: 100
+  songNameText: {fileID: 629387148}
+  comboText: {fileID: 394168190}
+  scoreText: {fileID: 1425882626}
+  CPerfectText: {fileID: 1079208537}
+  perfectText: {fileID: 858836016}
+  goodText: {fileID: 1934885990}
+  damageText: {fileID: 1746336246}
+  missText: {fileID: 1835437557}
+  healthBar: {fileID: 261625562}
   player: {fileID: 1046120165}
   tapNotePrefab: {fileID: 2159962873561827010, guid: 0b08636324fcb724eb078b5785b8efd2, type: 3}
   blackNotePrefab: {fileID: 7209872535530316003, guid: 9af839e4b36edbd4eba5ad7965fb12d7, type: 3}
@@ -3864,7 +3894,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 101.0000%
+  m_text: 0.0000%
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 871b3a71885e96a4b85b021713bd1af1, type: 2}
   m_sharedMaterial: {fileID: -4766797297135107798, guid: 871b3a71885e96a4b85b021713bd1af1, type: 2}

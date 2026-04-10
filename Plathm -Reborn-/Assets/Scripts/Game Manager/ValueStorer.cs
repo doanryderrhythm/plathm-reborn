@@ -69,6 +69,10 @@ public class ValueStorer : MonoBehaviour
     #endregion
 
     #region CHART FILE
+    public const string songNameString = "song_name: ";
+    public const string songArtistString = "song_artist: ";
+    public const string charterNameString = "charter: ";
+
     public const string informationString = "\\information.ptminf";
     public const string playerPositionString = "position: ";
     public const string playerLeftString = "left";
