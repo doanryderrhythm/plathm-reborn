@@ -2255,7 +2255,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &854234853
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2639,6 +2639,7 @@ MonoBehaviour:
   difficulty: 0
   isStarted: 0
   chartSpeed: 15
+  isMirrored: 0
   noteCount: 0
   timingGroups: []
   timingGroupPrefab: {fileID: 4819528474690694572, guid: cbf81ebf09386034196b01ad7c89eb1a, type: 3}
@@ -2668,6 +2669,7 @@ MonoBehaviour:
   missNotes: 0
   health: 100
   songNameText: {fileID: 629387148}
+  mirrorText: {fileID: 854234854}
   comboText: {fileID: 394168190}
   scoreText: {fileID: 1425882626}
   CPerfectText: {fileID: 1079208537}

@@ -47,6 +47,8 @@ public class RhythmGameManager : MonoBehaviour
     public bool isStarted = false;
     public double chartSpeed;
 
+    public bool isMirrored = false;
+
     [SerializeField] int noteCount = 0;
     float totalScore = 0.0f;
 
@@ -96,6 +98,7 @@ public class RhythmGameManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] TMP_Text songNameText;
+    [SerializeField] TMP_Text mirrorText;
 
     [SerializeField] TMP_Text comboText;
     [SerializeField] TMP_Text scoreText;
@@ -140,6 +143,8 @@ public class RhythmGameManager : MonoBehaviour
     {
         RebuildReservedKeys();
 
+        if (isMirrored)
+            mirrorText.gameObject.SetActive(true);
         InsertInfo();
         UpdateScoreUI();
 
@@ -414,7 +419,11 @@ public class RhythmGameManager : MonoBehaviour
     void InsertNote(int group, string noteTypeString, double timing, float xPos = 0f)
     {
         GameObject confirmedNote = null;
-        Vector3 confirmedPosition = new Vector3(xPos, (float)(timing * chartSpeed) / 1000f, 0f);
+        Vector3 confirmedPosition;
+        if (!isMirrored)
+            confirmedPosition = new Vector3(xPos, (float)(timing * chartSpeed) / 1000f, 0f);
+        else
+            confirmedPosition = new Vector3(-xPos, (float)(timing * chartSpeed) / 1000f, 0f);
 
         if (group > timingGroups.Count - 1)
         {
@@ -425,8 +434,18 @@ public class RhythmGameManager : MonoBehaviour
         {
             case ValueStorer.tapString: confirmedNote = Instantiate(tapNotePrefab, timingGroups[group].tapFolder.gameObject.transform, false) as GameObject; break;
             case ValueStorer.blackString: confirmedNote = Instantiate(blackNotePrefab, timingGroups[group].blackFolder.gameObject.transform, false) as GameObject; break;
-            case ValueStorer.leftTeleportString: confirmedNote = Instantiate(leftTeleportPrefab, timingGroups[group].leftTeleportFolder.gameObject.transform, false) as GameObject; break;
-            case ValueStorer.rightTeleportString: confirmedNote = Instantiate(rightTeleportPrefab, timingGroups[group].rightTeleportFolder.gameObject.transform, false) as GameObject; break;
+            case ValueStorer.leftTeleportString: 
+                if (!isMirrored)
+                    confirmedNote = Instantiate(leftTeleportPrefab, timingGroups[group].leftTeleportFolder.gameObject.transform, false) as GameObject;
+                else
+                    confirmedNote = Instantiate(rightTeleportPrefab, timingGroups[group].rightTeleportFolder.gameObject.transform, false) as GameObject;
+                break;
+            case ValueStorer.rightTeleportString:
+                if (!isMirrored)
+                    confirmedNote = Instantiate(rightTeleportPrefab, timingGroups[group].rightTeleportFolder.gameObject.transform, false) as GameObject;
+                else
+                    confirmedNote = Instantiate(leftTeleportPrefab, timingGroups[group].leftTeleportFolder.gameObject.transform, false) as GameObject;
+                break;
             case ValueStorer.sliceString: confirmedNote = Instantiate(sliceNotePrefab, timingGroups[group].sliceFolder.gameObject.transform, false) as GameObject; break;
             case ValueStorer.middleSpikeString: confirmedNote = Instantiate(middleSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
             case ValueStorer.sideSpikeString: confirmedNote = Instantiate(sideSpikePrefab, timingGroups[group].spikeFolder.gameObject.transform, false) as GameObject; break;
@@ -617,9 +636,22 @@ public class RhythmGameManager : MonoBehaviour
                     if (line.StartsWith(ValueStorer.playerPositionString))
                     {
                         string pos = line.Substring(ValueStorer.playerPositionString.Length);
-                        if (pos == ValueStorer.playerLeftString) player.ChangePosition(LanePosition.LEFT_POS);
-                        else if (pos == ValueStorer.playerMiddleString) player.ChangePosition(LanePosition.MIDDLE_POS);
-                        else if (pos == ValueStorer.playerRightString) player.ChangePosition(LanePosition.RIGHT_POS);
+                        if (pos == ValueStorer.playerLeftString)
+                        {
+                            if (!isMirrored)
+                                player.ChangePosition(LanePosition.LEFT_POS);
+                            else
+                                player.ChangePosition(LanePosition.RIGHT_POS);
+                        }
+                        else if (pos == ValueStorer.playerMiddleString)
+                            player.ChangePosition(LanePosition.MIDDLE_POS);
+                        else if (pos == ValueStorer.playerRightString)
+                        {
+                            if (!isMirrored)
+                                player.ChangePosition(LanePosition.RIGHT_POS);
+                            else
+                                player.ChangePosition(LanePosition.LEFT_POS);
+                        }
                     }
 
                     if (line.StartsWith(ValueStorer.speedString))
