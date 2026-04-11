@@ -1,4 +1,7 @@
+using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SongCheckpoint : MonoBehaviour
 {
@@ -14,10 +17,69 @@ public class SongCheckpoint : MonoBehaviour
     }
 
     [SerializeField] State currentState;
+    private bool isReached = false;
+
+    [Header("Chart File")]
+    [SerializeField] string folderPath;
+    [SerializeField] TextAsset chartInfo;
+    [SerializeField] TextAsset pointChart;
+    [SerializeField] TextAsset lineChart;
+    [SerializeField] TextAsset triangleChart;
+    [SerializeField] TextAsset squareChart;
+    [SerializeField] Sprite jacketArt;
+    [SerializeField] AudioClip music;
+
+    void ImportChart()
+    {
+        if (string.IsNullOrEmpty(folderPath))
+            return;
+
+        chartInfo = Resources.Load<TextAsset>(folderPath + "/information");
+        //pointChart = Resources.Load<TextAsset>(folderPath + "/0");
+        //lineChart = Resources.Load<TextAsset>(folderPath + "/1");
+        //triangleChart = Resources.Load<TextAsset>(folderPath + "/2");
+        //squareChart = Resources.Load<TextAsset>(folderPath + "/3");
+        jacketArt = Resources.Load<Sprite>(folderPath + "/jacket");
+        music = Resources.Load<AudioClip>(folderPath + "/music");
+    }
+
+    void ShowUI()
+    {
+        string songName = "";
+        string songArtist = "";
+
+        using (StringReader reader = new StringReader(chartInfo.text))
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line == string.Empty)
+                {
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.songNameString))
+                {
+                    songName = line.Substring(ValueStorer.songNameString.Length);
+                    continue;
+                }
+
+                if (line.StartsWith(ValueStorer.songArtistString))
+                {
+                    songArtist = line.Substring(ValueStorer.songArtistString.Length);
+                    continue;
+                }
+            }
+        }
+
+        GameManager.Instance.ShowChartInformation(songName, songArtist, jacketArt, music);
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        ImportChart();
+
         currentState = State.NONE;
         ChangeState();
     }
@@ -25,13 +87,18 @@ public class SongCheckpoint : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame && isReached)
+        {
+            ShowUI();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.playerLM)
         {
+            isReached = true;
+
             if (currentState == State.NONE)
             {
                 currentState = State.REACHED;
@@ -39,6 +106,14 @@ public class SongCheckpoint : MonoBehaviour
             }
 
             ChangeState();
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (LayerMask.LayerToName(collision.gameObject.layer) == ValueStorer.playerLM)
+        {
+            isReached = false;
         }
     }
 

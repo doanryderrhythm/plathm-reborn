@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject player;
     [SerializeField] Transform spawnPoint;
     [SerializeField] Vector2 safePosition;
+
+    [Header("Song Information UI")]
+    [SerializeField] Canvas songInformationCanvas;
+    [SerializeField] TMP_Text songNameText;
+    [SerializeField] TMP_Text artistText;
+    [SerializeField] Image jacketArtImage;
+    [SerializeField] AudioSource musicSource;
 
     private void Awake()
     {
@@ -57,5 +65,16 @@ public class GameManager : MonoBehaviour
     public void UpdateSafePosition(Vector2 pos)
     {
         safePosition = pos;
+    }
+
+    public void ShowChartInformation(string songName, string artist, Sprite jacketArt, AudioClip music)
+    {
+        songNameText.text = songName;
+        artistText.text = artist;
+        jacketArtImage.sprite = jacketArt;
+        musicSource.clip = music;
+
+        songInformationCanvas.gameObject.SetActive(true);
+        musicSource.Play();
     }
 }
