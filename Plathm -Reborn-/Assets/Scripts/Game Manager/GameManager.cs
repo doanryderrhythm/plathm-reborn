@@ -13,11 +13,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] Vector2 safePosition;
 
     [Header("Song Information UI")]
-    [SerializeField] Canvas songInformationCanvas;
-    [SerializeField] TMP_Text songNameText;
-    [SerializeField] TMP_Text artistText;
-    [SerializeField] Image jacketArtImage;
-    [SerializeField] AudioSource musicSource;
+    public bool isSongReached = false;
+    public Canvas songInformationCanvas;
+    public TMP_Text songNameText;
+    public TMP_Text artistText;
+    public Image jacketArtImage;
+    public AudioSource musicSource;
+    [Space(10.0f)]
+    public TMP_Text pointDifficultyText;
+    public TMP_Text lineDifficultyText;
+    public TMP_Text triangleDifficultyText;
+    public TMP_Text squareDifficultyText;
 
     private void Awake()
     {
@@ -67,14 +73,65 @@ public class GameManager : MonoBehaviour
         safePosition = pos;
     }
 
-    public void ShowChartInformation(string songName, string artist, Sprite jacketArt, AudioClip music)
+    public void ShowChartInformation(string songName, string artist, Sprite jacketArt, AudioClip music,
+        string pointDiff, string lineDiff, string triangleDiff, string squareDiff)
     {
         songNameText.text = songName;
         artistText.text = artist;
         jacketArtImage.sprite = jacketArt;
         musicSource.clip = music;
 
+        if (!string.IsNullOrEmpty(pointDiff))
+            pointDifficultyText.text = pointDiff;
+        else
+            pointDifficultyText.text = "-1";
+        if (!string.IsNullOrEmpty(lineDiff))
+            lineDifficultyText.text = lineDiff;
+        else
+            lineDifficultyText.text = "-1";
+        if (!string.IsNullOrEmpty(triangleDiff))
+            triangleDifficultyText.text = triangleDiff;
+        else
+            triangleDifficultyText.text = "-1";
+        if (!string.IsNullOrEmpty(squareDiff))
+            squareDifficultyText.text = squareDiff;
+        else
+            squareDifficultyText.text = "-1";
+
+        isSongReached = true;
         songInformationCanvas.gameObject.SetActive(true);
         musicSource.Play();
+    }
+
+    //SELECTED CHART FILES
+    public TextAsset chosenSongInfo;
+
+    TextAsset chosenPointChart;
+    TextAsset chosenLineChart;
+    TextAsset chosenTriangleChart;
+    TextAsset chosenSquareChart;
+    public TextAsset chosenChart;
+    public AudioClip musicClip;
+
+    public void AddChosenCharts(TextAsset songInfo, TextAsset pointChart, TextAsset lineChart, TextAsset triangleChart, TextAsset squareChart)
+    {
+        chosenSongInfo = songInfo;
+
+        chosenPointChart = pointChart;
+        chosenLineChart = lineChart;
+        chosenTriangleChart = triangleChart;
+        chosenSquareChart = squareChart;
+    }
+
+    public void SelectChart(int diff)
+    {
+        switch (diff)
+        {
+            case 0: chosenChart = chosenPointChart; break;
+            case 1: chosenChart = chosenLineChart; break;
+            case 2: chosenChart = chosenTriangleChart; break;
+            case 3: chosenChart = chosenSquareChart; break;
+            default: chosenChart = chosenPointChart; break;
+        }
     }
 }

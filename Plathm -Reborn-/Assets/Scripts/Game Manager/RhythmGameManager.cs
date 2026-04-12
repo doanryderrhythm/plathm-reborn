@@ -143,6 +143,7 @@ public class RhythmGameManager : MonoBehaviour
     {
         RebuildReservedKeys();
 
+        ImportChart();
         if (isMirrored)
             mirrorText.gameObject.SetActive(true);
         InsertInfo();
@@ -150,6 +151,13 @@ public class RhythmGameManager : MonoBehaviour
 
         speedItems = new List<List<SpeedStorer>>();
         StartCoroutine(GetReady());
+    }
+
+    void ImportChart()
+    {
+        songInfo = GameManager.Instance.chosenSongInfo;
+        chartFile = GameManager.Instance.chosenChart;
+        audioSource.clip = GameManager.Instance.musicClip;
     }
 
     void RebuildReservedKeys()

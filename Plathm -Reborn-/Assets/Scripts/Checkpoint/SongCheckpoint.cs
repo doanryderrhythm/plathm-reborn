@@ -35,10 +35,10 @@ public class SongCheckpoint : MonoBehaviour
             return;
 
         chartInfo = Resources.Load<TextAsset>(folderPath + "/information");
-        //pointChart = Resources.Load<TextAsset>(folderPath + "/0");
-        //lineChart = Resources.Load<TextAsset>(folderPath + "/1");
-        //triangleChart = Resources.Load<TextAsset>(folderPath + "/2");
-        //squareChart = Resources.Load<TextAsset>(folderPath + "/3");
+        pointChart = Resources.Load<TextAsset>(folderPath + "/0");
+        lineChart = Resources.Load<TextAsset>(folderPath + "/1");
+        triangleChart = Resources.Load<TextAsset>(folderPath + "/2");
+        squareChart = Resources.Load<TextAsset>(folderPath + "/3");
         jacketArt = Resources.Load<Sprite>(folderPath + "/jacket");
         music = Resources.Load<AudioClip>(folderPath + "/music");
     }
@@ -48,7 +48,57 @@ public class SongCheckpoint : MonoBehaviour
         string songName = "";
         string songArtist = "";
 
-        using (StringReader reader = new StringReader(chartInfo.text))
+        if (chartInfo)
+        {
+            using (StringReader reader = new StringReader(chartInfo.text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line == string.Empty)
+                    {
+                        continue;
+                    }
+
+                    if (line.StartsWith(ValueStorer.songNameString))
+                    {
+                        songName = line.Substring(ValueStorer.songNameString.Length);
+                        continue;
+                    }
+
+                    if (line.StartsWith(ValueStorer.songArtistString))
+                    {
+                        songArtist = line.Substring(ValueStorer.songArtistString.Length);
+                        continue;
+                    }
+                }
+            }
+        }
+
+        string pointDiff = "";
+        string lineDiff = "";
+        string triangleDiff = "";
+        string squareDiff = "";
+
+        if (pointChart)
+            ReadDifficulty(pointChart, ref pointDiff);
+        if (lineChart)
+            ReadDifficulty(lineChart, ref lineDiff);
+        if (triangleChart)
+            ReadDifficulty(triangleChart, ref triangleDiff);
+        if (squareChart)
+            ReadDifficulty(squareChart, ref squareDiff);
+
+        GameManager.Instance.AddChosenCharts(chartInfo, pointChart, lineChart, triangleChart, squareChart);
+        GameManager.Instance.ShowChartInformation(songName, songArtist, jacketArt, music,
+            pointDiff, lineDiff, triangleDiff, squareDiff);
+
+        Time.timeScale = 0f;
+    }
+
+    void ReadDifficulty(TextAsset chart, ref string diff)
+    {
+        using (StringReader reader = new StringReader(chart.text))
         {
             string line;
             while ((line = reader.ReadLine()) != null)
@@ -58,21 +108,13 @@ public class SongCheckpoint : MonoBehaviour
                     continue;
                 }
 
-                if (line.StartsWith(ValueStorer.songNameString))
+                if (line.StartsWith(ValueStorer.difficultyString))
                 {
-                    songName = line.Substring(ValueStorer.songNameString.Length);
-                    continue;
-                }
-
-                if (line.StartsWith(ValueStorer.songArtistString))
-                {
-                    songArtist = line.Substring(ValueStorer.songArtistString.Length);
+                    diff = line.Substring(ValueStorer.difficultyString.Length);
                     continue;
                 }
             }
         }
-
-        GameManager.Instance.ShowChartInformation(songName, songArtist, jacketArt, music);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created

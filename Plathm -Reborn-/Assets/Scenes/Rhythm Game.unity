@@ -2633,8 +2633,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RhythmGameManager
   currentTiming: 0
-  songInfo: {fileID: 2811297602134710623, guid: bd28b62150befb543933004defb39833, type: 3}
-  chartFile: {fileID: 2811297602134710623, guid: 8d91864c72bf3834fa9f0530c8967889, type: 3}
+  songInfo: {fileID: 0}
+  chartFile: {fileID: 0}
   audioSource: {fileID: 1173001189}
   difficulty: 0
   isStarted: 0
@@ -3198,7 +3198,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: f34fba59db0123c47aab8b40c360deb0, type: 3}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1

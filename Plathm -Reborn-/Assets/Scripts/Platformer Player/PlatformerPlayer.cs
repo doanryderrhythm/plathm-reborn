@@ -75,6 +75,9 @@ public class PlatformerPlayer : MonoBehaviour
 
     void ManageJump()
     {
+        if (GameManager.Instance.isSongReached)
+            return;
+
         if (playerJumpInput.action.WasPressedThisFrame())
         {
             jumpBufferTime = ValueStorer.bufferTime;
