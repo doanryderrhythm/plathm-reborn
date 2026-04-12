@@ -40,6 +40,9 @@ public class ValueStorer : MonoBehaviour
     public static float bombWarningAlpha = 100f / 255f;
 
     public static float tankWarningAlpha = 80f / 255f;
+
+    public const string songInfoTitle = "SONG INFO";
+    public const string configurationTitle = "CONFIGURATION";
     #endregion
 
     #region COLORS

@@ -59,7 +59,7 @@ public class NumericalItem : MonoBehaviour
         }
     }
 
-    void Toggle(bool isSelected)
+    public void Toggle(bool isSelected)
     {
         this.isSelected = isSelected;
         ChangeHighlight();
@@ -109,6 +109,9 @@ public class NumericalItem : MonoBehaviour
 
     void OnUp()
     {
+        if (!isSelected)
+            return;
+
         if (numericalType == NumericalType.NUMERIC)
         {
             if (currentValue + step > maxValue)
@@ -130,6 +133,9 @@ public class NumericalItem : MonoBehaviour
 
     void OnDown()
     {
+        if (!isSelected)
+            return;
+
         if (numericalType == NumericalType.NUMERIC)
         {
             if (currentValue - step < minValue)
