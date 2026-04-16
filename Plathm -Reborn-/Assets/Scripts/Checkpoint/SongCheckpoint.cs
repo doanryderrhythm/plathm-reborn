@@ -18,6 +18,7 @@ public class SongCheckpoint : MonoBehaviour
 
     [SerializeField] State currentState;
     private bool isReached = false;
+    private bool isAccessed = false;
 
     [Header("Chart File")]
     [SerializeField] string folderPath;
@@ -90,7 +91,7 @@ public class SongCheckpoint : MonoBehaviour
             ReadDifficulty(squareChart, ref squareDiff);
 
         GameManager.Instance.AddChosenCharts(chartInfo, pointChart, lineChart, triangleChart, squareChart);
-        GameManager.Instance.ShowChartInformation(songName, songArtist, jacketArt, music,
+        GameManager.Instance.ShowChartInformation(ref isAccessed, songName, songArtist, jacketArt, music,
             pointDiff, lineDiff, triangleDiff, squareDiff);
 
         Time.timeScale = 0f;
@@ -129,7 +130,8 @@ public class SongCheckpoint : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame && isReached)
+        if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame
+            && isReached && !GameManager.Instance.IsUIAppearing())
         {
             ShowUI();
         }

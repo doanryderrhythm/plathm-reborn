@@ -4,6 +4,11 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    [SerializeField] Canvas newDiscoveryCanvas;
+    [SerializeField] TMP_Text newSongNameText;
+    [SerializeField] TMP_Text newSongArtistText;
+    [SerializeField] Image newJacketArtImage;
+    [Space(10.0f)]
     [SerializeField] Canvas songInformationCanvas;
     [SerializeField] TMP_Text songNameText;
     [SerializeField] TMP_Text artistText;
@@ -17,6 +22,11 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        GameManager.Instance.newDiscoveryCanvas = newDiscoveryCanvas;
+        GameManager.Instance.newSongNameText = newSongNameText;
+        GameManager.Instance.newSongArtistText = newSongArtistText;
+        GameManager.Instance.newJacketArtImage = newJacketArtImage;
+
         GameManager.Instance.songInformationCanvas = songInformationCanvas;
         GameManager.Instance.songNameText = songNameText;
         GameManager.Instance.artistText = artistText;

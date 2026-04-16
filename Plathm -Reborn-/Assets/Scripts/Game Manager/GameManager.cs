@@ -12,6 +12,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] Transform spawnPoint;
     [SerializeField] Vector2 safePosition;
 
+    [Header("New Discovery UI")]
+    public Canvas newDiscoveryCanvas;
+    public TMP_Text newSongNameText;
+    public TMP_Text newSongArtistText;
+    public Image newJacketArtImage;
     [Header("Song Information UI")]
     public bool isSongReached = false;
     public Canvas songInformationCanvas;
@@ -73,9 +78,13 @@ public class GameManager : MonoBehaviour
         safePosition = pos;
     }
 
-    public void ShowChartInformation(string songName, string artist, Sprite jacketArt, AudioClip music,
+    public void ShowChartInformation(ref bool isAccessed, string songName, string artist, Sprite jacketArt, AudioClip music,
         string pointDiff, string lineDiff, string triangleDiff, string squareDiff)
     {
+        newSongNameText.text = songName;
+        newSongArtistText.text = artist;
+        newJacketArtImage.sprite = jacketArt;
+
         songNameText.text = songName;
         artistText.text = artist;
         jacketArtImage.sprite = jacketArt;
@@ -99,8 +108,13 @@ public class GameManager : MonoBehaviour
             squareDifficultyText.text = "-1";
 
         isSongReached = true;
-        songInformationCanvas.gameObject.SetActive(true);
-        musicSource.Play();
+        if (isAccessed) songInformationCanvas.gameObject.SetActive(true);
+        else
+        {
+            isAccessed = true;
+            newDiscoveryCanvas.gameObject.SetActive(true);
+            newDiscoveryCanvas.GetComponent<Animator>().Play("New Discovery Canvas");
+        }
     }
 
     //SELECTED CHART FILES
@@ -133,5 +147,11 @@ public class GameManager : MonoBehaviour
             case 3: chosenChart = chosenSquareChart; break;
             default: chosenChart = chosenPointChart; break;
         }
+    }
+
+    public bool IsUIAppearing()
+    {
+        return newDiscoveryCanvas.gameObject.activeSelf
+            || songInformationCanvas.gameObject.activeSelf;
     }
 }
