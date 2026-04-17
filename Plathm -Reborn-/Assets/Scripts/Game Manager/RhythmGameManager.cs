@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.UI;
 
 public class RhythmGameManager : MonoBehaviour
 {
@@ -34,6 +35,13 @@ public class RhythmGameManager : MonoBehaviour
         RIGHT_TELEPORT,
         SLICE_NOTE,
         SPIKE,
+    }
+
+    public enum IndicatorType
+    {
+        FULL_PERFECT,
+        ALL_COMBO,
+        NORMAL,
     }
 
     public double currentTiming = 0f;
@@ -87,6 +95,7 @@ public class RhythmGameManager : MonoBehaviour
 
     [Header("Scoring")]
     public int comboCount = 0;
+    IndicatorType indicatorType;
 
     public int CPerfectNotes;
     public int perfectNotes;
@@ -112,6 +121,11 @@ public class RhythmGameManager : MonoBehaviour
     [SerializeField] TMP_Text currentDifficultyText;
 
     [SerializeField] RectTransform healthBar;
+
+    [SerializeField] Image indicator;
+    [SerializeField] Sprite FPIndicator;
+    [SerializeField] Sprite ACIndicator;
+    [SerializeField] Sprite normalIndicator;
 
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
@@ -152,6 +166,7 @@ public class RhythmGameManager : MonoBehaviour
             mirrorText.gameObject.SetActive(true);
         InsertInfo();
         UpdateScoreUI();
+        UpdateIndicatorUI();
 
         speedItems = new List<List<SpeedStorer>>();
         StartCoroutine(GetReady());
@@ -834,7 +849,10 @@ public class RhythmGameManager : MonoBehaviour
     public void CalculateScore()
     {
         totalScore = 101.0f / (float)noteCount * ((float)CPerfectNotes + (float)perfectNotes * 0.9f + (float)goodNotes * 0.5f);
+        UpdateIndicator();
+        
         UpdateScoreUI();
+        UpdateIndicatorUI();
     }
 
     void UpdateScoreUI()
@@ -849,6 +867,36 @@ public class RhythmGameManager : MonoBehaviour
         missText.text = missNotes.ToString();
 
         healthBar.localScale = new Vector2(1f, health / 100f);
+    }
+
+    void UpdateIndicator()
+    {
+        if (missNotes + damageNotes == 0)
+        {
+            if (goodNotes > 0)
+            {
+                indicatorType = IndicatorType.ALL_COMBO;
+            }
+            else
+            {
+                indicatorType = IndicatorType.FULL_PERFECT;
+            }
+        }
+        else
+        {
+            indicatorType = IndicatorType.NORMAL;
+        }
+    }
+
+    void UpdateIndicatorUI()
+    {
+        switch (indicatorType)
+        {
+            case IndicatorType.ALL_COMBO: indicator.sprite = ACIndicator; break;
+            case IndicatorType.FULL_PERFECT: indicator.sprite = FPIndicator; break;
+            case IndicatorType.NORMAL: indicator.sprite = normalIndicator; break;
+            default: break;
+        }
     }
 
     void EndSongTransition()

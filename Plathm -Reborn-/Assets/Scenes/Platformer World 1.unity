@@ -54414,6 +54414,7 @@ MonoBehaviour:
   lineDifficultyText: {fileID: 0}
   triangleDifficultyText: {fileID: 0}
   squareDifficultyText: {fileID: 0}
+  difficultyIndex: 0
   isRhythmStarting: 0
   chosenSongInfo: {fileID: 0}
   chosenChart: {fileID: 0}
@@ -61901,7 +61902,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &1704771001
 RectTransform:
