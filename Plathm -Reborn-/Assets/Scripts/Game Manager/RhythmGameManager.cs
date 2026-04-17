@@ -109,11 +109,14 @@ public class RhythmGameManager : MonoBehaviour
     [SerializeField] TMP_Text damageText;
     [SerializeField] TMP_Text missText;
 
+    [SerializeField] TMP_Text currentDifficultyText;
+
     [SerializeField] RectTransform healthBar;
 
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
     private HashSet<Key> pressedKeys = new HashSet<Key>();
+    private HashSet<Key> heldKeys = new HashSet<Key>();
 
     private void OnEnable()
     {
@@ -143,6 +146,7 @@ public class RhythmGameManager : MonoBehaviour
     {
         RebuildReservedKeys();
 
+        EndSongTransition();
         ImportChart();
         if (isMirrored)
             mirrorText.gameObject.SetActive(true);
@@ -217,11 +221,16 @@ public class RhythmGameManager : MonoBehaviour
                     {
                         pressedKeys.Remove(finalKey);
                     }
+
+                    if (keyControl.isPressed)
+                    {
+                        heldKeys.Add(finalKey);
+                    }
                 }
 
-                if (pressedKeys.Count > 0)
+                if (heldKeys.Count > 0)
                 {
-                    foreach (Key key in pressedKeys)
+                    foreach (Key key in heldKeys)
                     {
                         if (!reservedBlackKeys.Contains(key))
                         {
@@ -588,21 +597,93 @@ public class RhythmGameManager : MonoBehaviour
         }
     }
 
-    IEnumerator InsertChart(int difficultyIndex)
+    void InsertChartInfo(int difficultyIndex)
     {
         player.ChangePosition(LanePosition.MIDDLE_POS);
         this.difficulty = difficultyIndex;
 
-        /*
         switch (this.difficulty)
         {
-            case 0: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.pointText; break;
-            case 1: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.lineText; break;
-            case 2: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.triangleText; break;
-            case 3: currentDifficultyText.text = ValueStorer.difficultyText + ValueStorer.squareText; break;
+            case 0:
+                currentDifficultyText.text = ValueStorer.pointText;
+                currentDifficultyText.color = ValueStorer.pointDifficultyColor;
+                break;
+            case 1:
+                currentDifficultyText.text = ValueStorer.lineText;
+                currentDifficultyText.color = ValueStorer.lineDifficultyColor;
+                break;
+            case 2:
+                currentDifficultyText.text = ValueStorer.triangleText;
+                currentDifficultyText.color = ValueStorer.triangleDifficultyColor;
+                break;
+            case 3:
+                currentDifficultyText.text = ValueStorer.squareText;
+                currentDifficultyText.color = ValueStorer.squareDifficultyColor;
+                break;
             default: break;
         }
-        */
+
+        speedItems.Clear();
+
+        if (chartFile == null)
+        {
+            return;
+        }
+
+        if (chartFile is TextAsset chart)
+        {
+            using (StringReader reader = new StringReader(chart.text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith(ValueStorer.playerPositionString))
+                    {
+                        string pos = line.Substring(ValueStorer.playerPositionString.Length);
+                        if (pos == ValueStorer.playerLeftString)
+                        {
+                            if (!isMirrored)
+                                player.ChangePosition(LanePosition.LEFT_POS);
+                            else
+                                player.ChangePosition(LanePosition.RIGHT_POS);
+                        }
+                        else if (pos == ValueStorer.playerMiddleString)
+                            player.ChangePosition(LanePosition.MIDDLE_POS);
+                        else if (pos == ValueStorer.playerRightString)
+                        {
+                            if (!isMirrored)
+                                player.ChangePosition(LanePosition.RIGHT_POS);
+                            else
+                                player.ChangePosition(LanePosition.LEFT_POS);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    IEnumerator InsertChart()
+    {
+        switch (this.difficulty)
+        {
+            case 0: 
+                currentDifficultyText.text = ValueStorer.pointText; 
+                currentDifficultyText.color = ValueStorer.pointDifficultyColor; 
+                break;
+            case 1: 
+                currentDifficultyText.text = ValueStorer.lineText; 
+                currentDifficultyText.color = ValueStorer.lineDifficultyColor; 
+                break;
+            case 2: 
+                currentDifficultyText.text = ValueStorer.triangleText; 
+                currentDifficultyText.color = ValueStorer.triangleDifficultyColor; 
+                break;
+            case 3: 
+                currentDifficultyText.text = ValueStorer.squareText; 
+                currentDifficultyText.color = ValueStorer.squareDifficultyColor; 
+                break;
+            default: break;
+        }
 
         speedItems.Clear();
 
@@ -630,36 +711,6 @@ public class RhythmGameManager : MonoBehaviour
                     if (line == string.Empty)
                     {
                         continue;
-                    }
-
-                    /*
-                    if (line.StartsWith(ValueStorer.difficultyString))
-                    {
-                        string diff = line.Substring(ValueStorer.difficultyString.Length);
-                        difficultyInputField.text = diff;
-                        continue;
-                    }
-                    */
-
-                    if (line.StartsWith(ValueStorer.playerPositionString))
-                    {
-                        string pos = line.Substring(ValueStorer.playerPositionString.Length);
-                        if (pos == ValueStorer.playerLeftString)
-                        {
-                            if (!isMirrored)
-                                player.ChangePosition(LanePosition.LEFT_POS);
-                            else
-                                player.ChangePosition(LanePosition.RIGHT_POS);
-                        }
-                        else if (pos == ValueStorer.playerMiddleString)
-                            player.ChangePosition(LanePosition.MIDDLE_POS);
-                        else if (pos == ValueStorer.playerRightString)
-                        {
-                            if (!isMirrored)
-                                player.ChangePosition(LanePosition.RIGHT_POS);
-                            else
-                                player.ChangePosition(LanePosition.LEFT_POS);
-                        }
                     }
 
                     if (line.StartsWith(ValueStorer.speedString))
@@ -800,10 +851,22 @@ public class RhythmGameManager : MonoBehaviour
         healthBar.localScale = new Vector2(1f, health / 100f);
     }
 
+    void EndSongTransition()
+    {
+        GameManager.Instance.isRhythmStarting = false;
+
+        if (GameManager.Instance.songTransitionCanvas == null)
+            return;
+
+        Animator anim = GameManager.Instance.songTransitionCanvas.GetComponent<Animator>();
+        anim.Play("Song Transition End");
+    }
+
     IEnumerator GetReady()
     {
+        InsertChartInfo(GameManager.Instance.difficultyIndex);
         yield return new WaitForSeconds(2.0f);
-        StartCoroutine(InsertChart(0));
+        StartCoroutine(InsertChart());
         yield return new WaitForSeconds(3.0f);
         audioSource.Play();
         isStarted = true;

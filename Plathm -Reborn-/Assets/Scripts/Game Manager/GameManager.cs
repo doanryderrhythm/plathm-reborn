@@ -24,11 +24,20 @@ public class GameManager : MonoBehaviour
     public TMP_Text artistText;
     public Image jacketArtImage;
     public AudioSource musicSource;
+    [Header("Song Transition UI")]
+    public Canvas songTransitionCanvas;
+    public TMP_Text transitionDifficultyText;
+    public TMP_Text transitionSongNameText;
+    public TMP_Text transitionSongArtistText;
+    public Image transitionJacketArtImage;
     [Space(10.0f)]
     public TMP_Text pointDifficultyText;
     public TMP_Text lineDifficultyText;
     public TMP_Text triangleDifficultyText;
     public TMP_Text squareDifficultyText;
+
+    public int difficultyIndex = 0;
+    public bool isRhythmStarting = false;
 
     private void Awake()
     {
@@ -85,6 +94,10 @@ public class GameManager : MonoBehaviour
         newSongArtistText.text = artist;
         newJacketArtImage.sprite = jacketArt;
 
+        transitionSongNameText.text = songName;
+        transitionSongArtistText.text = artist;
+        transitionJacketArtImage.sprite = jacketArt;
+
         songNameText.text = songName;
         artistText.text = artist;
         jacketArtImage.sprite = jacketArt;
@@ -108,7 +121,11 @@ public class GameManager : MonoBehaviour
             squareDifficultyText.text = "-1";
 
         isSongReached = true;
-        if (isAccessed) songInformationCanvas.gameObject.SetActive(true);
+        if (isAccessed)
+        {
+            songInformationCanvas.gameObject.SetActive(true);
+            songInformationCanvas.GetComponent<Animator>().Play("Song Select Canvas Open");
+        }
         else
         {
             isAccessed = true;
@@ -139,13 +156,38 @@ public class GameManager : MonoBehaviour
 
     public void SelectChart(int diff)
     {
+        difficultyIndex = diff;
+        UIManager uiManager = GameObject.FindFirstObjectByType<UIManager>();
+
         switch (diff)
         {
-            case 0: chosenChart = chosenPointChart; break;
-            case 1: chosenChart = chosenLineChart; break;
-            case 2: chosenChart = chosenTriangleChart; break;
-            case 3: chosenChart = chosenSquareChart; break;
-            default: chosenChart = chosenPointChart; break;
+            case 0: 
+                chosenChart = chosenPointChart; 
+                transitionDifficultyText.text = pointDifficultyText.text;
+                uiManager.transitionBackground.color = ValueStorer.pointDifficultyColor;
+                uiManager.transitionDifficultyIndicator.color = ValueStorer.pointDifficultyColor;
+                break;
+            case 1: 
+                chosenChart = chosenLineChart; 
+                transitionDifficultyText.text = lineDifficultyText.text;
+                uiManager.transitionBackground.color = ValueStorer.lineDifficultyColor;
+                uiManager.transitionDifficultyIndicator.color = ValueStorer.lineDifficultyColor;
+                break;
+            case 2: 
+                chosenChart = chosenTriangleChart; 
+                transitionDifficultyText.text = triangleDifficultyText.text;
+                uiManager.transitionBackground.color = ValueStorer.triangleDifficultyColor;
+                uiManager.transitionDifficultyIndicator.color = ValueStorer.triangleDifficultyColor;
+                break;
+            case 3: 
+                chosenChart = chosenSquareChart; 
+                transitionDifficultyText.text = squareDifficultyText.text;
+                uiManager.transitionBackground.color = ValueStorer.squareDifficultyColor;
+                uiManager.transitionDifficultyIndicator.color = ValueStorer.squareDifficultyColor;
+                break;
+            default: 
+                chosenChart = chosenPointChart; 
+                break;
         }
     }
 

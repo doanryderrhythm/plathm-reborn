@@ -15,6 +15,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] Image jacketArtImage;
     [SerializeField] AudioSource musicSource;
     [Space(10.0f)]
+    public Image transitionBackground;
+    public Image transitionDifficultyIndicator;
+    [SerializeField] TMP_Text transitionDifficultyText;
+    [SerializeField] TMP_Text transitionSongNameText;
+    [SerializeField] TMP_Text transitionSongArtistText;
+    [SerializeField] Image transitionJacketArtImage;
+    [Space(10.0f)]
     [SerializeField] TMP_Text pointDifficultyText;
     [SerializeField] TMP_Text lineDifficultyText;
     [SerializeField] TMP_Text triangleDifficultyText;
@@ -32,6 +39,11 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.artistText = artistText;
         GameManager.Instance.jacketArtImage = jacketArtImage;
         GameManager.Instance.musicSource = musicSource;
+
+        GameManager.Instance.transitionDifficultyText = transitionDifficultyText;
+        GameManager.Instance.transitionSongNameText = transitionSongNameText;
+        GameManager.Instance.transitionSongArtistText = transitionSongArtistText;
+        GameManager.Instance.transitionJacketArtImage = transitionJacketArtImage;
 
         GameManager.Instance.pointDifficultyText = pointDifficultyText;
         GameManager.Instance.lineDifficultyText = lineDifficultyText;

@@ -43,6 +43,11 @@ public class ValueStorer : MonoBehaviour
 
     public const string songInfoTitle = "SONG INFO";
     public const string configurationTitle = "CONFIGURATION";
+
+    public const string pointText = "POINT";
+    public const string lineText = "LINE";
+    public const string triangleText = "TRIANGLE";
+    public const string squareText = "SQUARE";
     #endregion
 
     #region COLORS
@@ -51,6 +56,11 @@ public class ValueStorer : MonoBehaviour
 
     public static Color32 toggledMinParticles = new Color32(0, 78, 0, 255);
     public static Color32 toggledMaxParticles = new Color32(0, 255, 0, 255);
+
+    public static Color32 pointDifficultyColor = new Color32(30, 255, 0, 255);
+    public static Color32 lineDifficultyColor = new Color32(255, 227, 0, 255);
+    public static Color32 triangleDifficultyColor = new Color32(255, 0, 0, 255);
+    public static Color32 squareDifficultyColor = new Color32(183, 0, 255, 255);
     #endregion
 
     #region LANE PROPERTIES

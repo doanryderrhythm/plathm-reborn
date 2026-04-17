@@ -2677,6 +2677,7 @@ MonoBehaviour:
   goodText: {fileID: 1934885990}
   damageText: {fileID: 1746336246}
   missText: {fileID: 1835437557}
+  currentDifficultyText: {fileID: 512804220}
   healthBar: {fileID: 261625562}
   player: {fileID: 1046120165}
   tapNotePrefab: {fileID: 2159962873561827010, guid: 0b08636324fcb724eb078b5785b8efd2, type: 3}

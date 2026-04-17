@@ -25,6 +25,8 @@ public class SongSelectPlatformer : MonoBehaviour
     [SerializeField] GameObject difficultySelectScreen;
     [SerializeField] GameObject configurationScreen;
 
+    [SerializeField] Canvas songTransitionCanvas;
+
     private void Start()
     {
         titleText.text = ValueStorer.songInfoTitle;
@@ -40,6 +42,9 @@ public class SongSelectPlatformer : MonoBehaviour
     {
         if (Keyboard.current != null)
         {
+            if (GameManager.Instance.isRhythmStarting)
+                return;
+
             if (Keyboard.current.upArrowKey.wasPressedThisFrame)
             {
                 if (!isDifficultyChosen)
@@ -95,10 +100,16 @@ public class SongSelectPlatformer : MonoBehaviour
                 }
                 else
                 {
-                    Time.timeScale = 1f;
+                    GameManager.Instance.musicSource.Stop();
+
                     GameManager.Instance.SelectChart(chosenDiff);
                     GameManager.Instance.musicClip = GameManager.Instance.musicSource.clip;
-                    SceneManager.LoadScene("Rhythm Game");
+
+                    GameManager.Instance.isRhythmStarting = true;
+                    GameManager.Instance.songTransitionCanvas = songTransitionCanvas;
+                    songTransitionCanvas.gameObject.SetActive(true);
+                    songTransitionCanvas.GetComponent<Animator>().Play("Song Transition Start");
+                    DontDestroyOnLoad(songTransitionCanvas.gameObject);
                 }
             }
         }
