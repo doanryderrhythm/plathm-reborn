@@ -253,6 +253,7 @@ public class RhythmGameManager : MonoBehaviour
                             break;
                         }
                     }
+                    heldKeys.Clear();
                 }
             }
         }

@@ -175,7 +175,7 @@ public class SongCheckpoint : MonoBehaviour
         {
             checkpointTile.color = new Color32(0, 255, 169, 255);
             startColor.color = new Color32(112, 255, 207, 255);
-            wall.SetActive(false);
+            wall.SetActive(true);
         }
         else if (currentState == State.PLAYED)
         {
