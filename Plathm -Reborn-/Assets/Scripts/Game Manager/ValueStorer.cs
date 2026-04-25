@@ -61,6 +61,11 @@ public class ValueStorer : MonoBehaviour
     public static Color32 lineDifficultyColor = new Color32(255, 227, 0, 255);
     public static Color32 triangleDifficultyColor = new Color32(255, 0, 0, 255);
     public static Color32 squareDifficultyColor = new Color32(183, 0, 255, 255);
+
+    public static Color32 pointDifficultyBackground = new Color32(0, 24, 0, 255);
+    public static Color32 lineDifficultyBackground = new Color32(24, 24, 0, 255);
+    public static Color32 triangleDifficultyBackground = new Color32(24, 0, 0, 255);
+    public static Color32 squareDifficultyBackground = new Color32(24, 0, 24, 255);
     #endregion
 
     #region LANE PROPERTIES

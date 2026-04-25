@@ -333,6 +333,83 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 67580355}
   m_CullTransparentMesh: 1
+--- !u!1 &93251616
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 93251618}
+  - component: {fileID: 93251617}
+  m_Layer: 0
+  m_Name: Song Results
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &93251617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93251616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7c1207f679d6f34a9b1384a493ded61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SongResults
+  cam: {fileID: 417355411}
+  songTitleText: {fileID: 67580357}
+  songArtistText: {fileID: 149908188}
+  jacketArtImage: {fileID: 1787390744}
+  difficultyIndicatorImage: {fileID: 1472057610}
+  levelText: {fileID: 611829480}
+  CPerfectCountText: {fileID: 1552751882}
+  perfectCountText: {fileID: 908355037}
+  goodCountText: {fileID: 392227341}
+  damageCountText: {fileID: 223362571}
+  missCountText: {fileID: 899840969}
+  maxComboText: {fileID: 1150825488}
+  earlyCountText: {fileID: 1326502064}
+  lateCountText: {fileID: 781684839}
+  scoreText: {fileID: 2057293102}
+  rankImage: {fileID: 94076056}
+  clearImage: {fileID: 694347297}
+  allComboImage: {fileID: 125715633}
+  fullPerfectImage: {fileID: 106799270}
+  PPlusRankSprite: {fileID: -910504468207783204, guid: cf3505e5ef042ee41a384cb7ea2aa5b7, type: 3}
+  PRankSprite: {fileID: -7596694158097126462, guid: 5d6ce763b2f5b2244bbfae74e6de04ae, type: 3}
+  SPlusRankSprite: {fileID: 4163907836099982089, guid: 9c4cf4f923b937a499d699468a12ed91, type: 3}
+  SRankSprite: {fileID: 2973276643388647994, guid: 7685f45178c2974489f2527b2a569867, type: 3}
+  APlusRankSprite: {fileID: 1981437438712043621, guid: 5e77cd5bfca44a94a83a2d9b316b3e12, type: 3}
+  ARankSprite: {fileID: 5622448897852977416, guid: 3958ad24d1e840b4db33f06a144fcad6, type: 3}
+  BPlusRankSprite: {fileID: -4794458416138894450, guid: f34ea7bdd7ec76446b045695a5278e5c, type: 3}
+  BRankSprite: {fileID: -8991728581372646653, guid: f66c281d16767ce48be3e0dac312367b, type: 3}
+  CPlusRankSprite: {fileID: 8663498942277551897, guid: 726bca4c3df424045a9fca72e26a5654, type: 3}
+  CRankSprite: {fileID: -7953395468686016740, guid: 45ff0b1b751287c4496ad438e8c17e21, type: 3}
+  DRankSprite: {fileID: -1309626235184866350, guid: 8627254021a03844286cde130882cfbc, type: 3}
+  clearSprite: {fileID: 1588420799, guid: ace00d6cee389ee4b9720335f177f01c, type: 3}
+  allComboSprite: {fileID: -41350840, guid: ace00d6cee389ee4b9720335f177f01c, type: 3}
+  fullPerfectSprite: {fileID: -901915221, guid: ace00d6cee389ee4b9720335f177f01c, type: 3}
+--- !u!4 &93251618
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93251616}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &94076054
 GameObject:
   m_ObjectHideFlags: 0
@@ -707,7 +784,7 @@ GameObject:
   - component: {fileID: 182009808}
   - component: {fileID: 182009807}
   m_Layer: 5
-  m_Name: Early Container
+  m_Name: Max Combo Container
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1371,7 +1448,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 0}
+  m_BackGroundColor: {r: 0.09411765, g: 0.09411765, b: 0.09411765, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -9596,7 +9673,7 @@ GameObject:
   - component: {fileID: 2057293103}
   - component: {fileID: 2057293102}
   m_Layer: 5
-  m_Name: Judgement Count
+  m_Name: Score Value
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9829,6 +9906,7 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 93251618}
   - {fileID: 417355412}
   - {fileID: 1025631037}
   - {fileID: 445455257}

@@ -38,6 +38,11 @@ public class GameManager : MonoBehaviour
 
     public int difficultyIndex = 0;
     public bool isRhythmStarting = false;
+    [Space(10.0f)]
+    public string songName;
+    public string songArtist;
+    public Sprite jacketArtRaw;
+    public string level;
 
     private void Awake()
     {
@@ -103,6 +108,10 @@ public class GameManager : MonoBehaviour
         jacketArtImage.sprite = jacketArt;
         musicSource.clip = music;
 
+        this.songName = songName;
+        this.songArtist = artist;
+        this.jacketArtRaw = jacketArt;
+
         if (!string.IsNullOrEmpty(pointDiff))
             pointDifficultyText.text = pointDiff;
         else
@@ -164,24 +173,28 @@ public class GameManager : MonoBehaviour
             case 0: 
                 chosenChart = chosenPointChart; 
                 transitionDifficultyText.text = pointDifficultyText.text;
+                level = pointDifficultyText.text;
                 uiManager.transitionBackground.color = ValueStorer.pointDifficultyColor;
                 uiManager.transitionDifficultyIndicator.color = ValueStorer.pointDifficultyColor;
                 break;
             case 1: 
                 chosenChart = chosenLineChart; 
                 transitionDifficultyText.text = lineDifficultyText.text;
+                level = lineDifficultyText.text;
                 uiManager.transitionBackground.color = ValueStorer.lineDifficultyColor;
                 uiManager.transitionDifficultyIndicator.color = ValueStorer.lineDifficultyColor;
                 break;
             case 2: 
                 chosenChart = chosenTriangleChart; 
                 transitionDifficultyText.text = triangleDifficultyText.text;
+                level = triangleDifficultyText.text;
                 uiManager.transitionBackground.color = ValueStorer.triangleDifficultyColor;
                 uiManager.transitionDifficultyIndicator.color = ValueStorer.triangleDifficultyColor;
                 break;
             case 3: 
                 chosenChart = chosenSquareChart; 
                 transitionDifficultyText.text = squareDifficultyText.text;
+                level = squareDifficultyText.text;
                 uiManager.transitionBackground.color = ValueStorer.squareDifficultyColor;
                 uiManager.transitionDifficultyIndicator.color = ValueStorer.squareDifficultyColor;
                 break;

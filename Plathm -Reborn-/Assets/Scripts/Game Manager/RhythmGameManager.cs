@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class RhythmGameManager : MonoBehaviour
@@ -42,12 +43,17 @@ public class RhythmGameManager : MonoBehaviour
         FULL_PERFECT,
         ALL_COMBO,
         NORMAL,
+        FAILED,
     }
 
     public double currentTiming = 0f;
 
     [Header("Chart Information")]
     public TextAsset songInfo;
+    public string songName;
+    public string songArtist;
+    public Sprite jacketArtRaw;
+    public string level;
     public TextAsset chartFile;
     public AudioSource audioSource;
     public int difficulty;
@@ -58,7 +64,7 @@ public class RhythmGameManager : MonoBehaviour
     public bool isMirrored = false;
 
     [SerializeField] int noteCount = 0;
-    float totalScore = 0.0f;
+    public float totalScore = 0.0f;
 
     [Header("Note Groups")]
     public List<TimingGroup> timingGroups;
@@ -95,14 +101,18 @@ public class RhythmGameManager : MonoBehaviour
 
     [Header("Scoring")]
     public int comboCount = 0;
-    IndicatorType indicatorType;
+    public int maxComboCount = 0;
+    public IndicatorType indicatorType;
 
     public int CPerfectNotes;
     public int perfectNotes;
     public int goodNotes;
     public int damageNotes;
     public int missNotes;
-
+    [Space(10.0f)]
+    public int earlyCount;
+    public int lateCount;
+    [Space(10.0f)]
     public float health = 100f;
 
     [Header("UI")]
@@ -177,6 +187,11 @@ public class RhythmGameManager : MonoBehaviour
         songInfo = GameManager.Instance.chosenSongInfo;
         chartFile = GameManager.Instance.chosenChart;
         audioSource.clip = GameManager.Instance.musicClip;
+
+        songName = GameManager.Instance.songName;
+        songArtist = GameManager.Instance.songArtist;
+        jacketArtRaw = GameManager.Instance.jacketArtRaw;
+        level = GameManager.Instance.level;
     }
 
     void RebuildReservedKeys()
@@ -213,6 +228,9 @@ public class RhythmGameManager : MonoBehaviour
         if (isStarted)
         {
             currentTiming += (Time.deltaTime * 1000f);
+            if (currentTiming >= audioSource.clip.length * 1000f)
+                GoToResultsScreen();
+
             ChangeSpeedThroughTiming(currentTiming);
 
             var keyboard = Keyboard.current;
@@ -712,7 +730,7 @@ public class RhythmGameManager : MonoBehaviour
         {
             using (StringReader reader = new StringReader(chart.text))
             {
-                int batchSize = 400;
+                int batchSize = 150;
                 int batchCount = 0;
 
                 string line;
@@ -915,9 +933,19 @@ public class RhythmGameManager : MonoBehaviour
     {
         InsertChartInfo(GameManager.Instance.difficultyIndex);
         yield return new WaitForSeconds(2.0f);
-        StartCoroutine(InsertChart());
+        yield return StartCoroutine(InsertChart());
         yield return new WaitForSeconds(3.0f);
         audioSource.Play();
         isStarted = true;
+    }
+
+    void GoToResultsScreen()
+    {
+        isStarted = false;
+        if (totalScore < 80.0f)
+            indicatorType = IndicatorType.FAILED;
+
+        DontDestroyOnLoad(gameObject);
+        SceneManager.LoadScene("Result");
     }
 }

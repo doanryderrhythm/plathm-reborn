@@ -39,6 +39,8 @@ public class MusicNote : MonoBehaviour
             //audioManager.AddSound(audioManager.blackSound);
             rhythmManager.CPerfectNotes += 1;
             rhythmManager.comboCount += 1;
+            if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                rhythmManager.maxComboCount += 1;
             rhythmManager.CalculateScore();
             SwitchToUsedFolder();
             return;
@@ -53,6 +55,8 @@ public class MusicNote : MonoBehaviour
                 Debug.Log("Avoided MIDDLE SPIKE");
                 rhythmManager.CPerfectNotes += 1;
                 rhythmManager.comboCount += 1;
+                if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                    rhythmManager.maxComboCount += 1;
                 rhythmManager.CalculateScore();
             }
             else
@@ -77,6 +81,8 @@ public class MusicNote : MonoBehaviour
                 Debug.Log("Avoided SIDE SPIKE");
                 rhythmManager.CPerfectNotes += 1;
                 rhythmManager.comboCount += 1;
+                if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                    rhythmManager.maxComboCount += 1;
                 rhythmManager.CalculateScore();
             }
             else
@@ -156,26 +162,38 @@ public class MusicNote : MonoBehaviour
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             rhythmManager.CPerfectNotes += 1;
             rhythmManager.comboCount += 1;
+            if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                rhythmManager.maxComboCount += 1;
             rhythmManager.CalculateScore();
             return;
         }
 
         if (Mathf.Abs((float)(timing - rhythmManager.currentTiming / 1000f)) <= ValueStorer.perfectJudgement)
         {
+            if (rhythmManager.currentTiming / 1000f < timing) rhythmManager.earlyCount += 1;
+            else if (rhythmManager.currentTiming / 1000f > timing) rhythmManager.lateCount += 1;
+
             judgementSelected = SelectJudgementVFX(RhythmGameManager.JudgementType.PERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             rhythmManager.perfectNotes += 1;
             rhythmManager.comboCount += 1;
+            if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                rhythmManager.maxComboCount += 1;
             rhythmManager.CalculateScore();
             return;
         }
 
         if (Mathf.Abs((float)(timing - rhythmManager.currentTiming / 1000f)) <= ValueStorer.goodJudgement)
         {
+            if (rhythmManager.currentTiming / 1000f < timing) rhythmManager.earlyCount += 1;
+            else if (rhythmManager.currentTiming / 1000f > timing) rhythmManager.lateCount += 1;
+
             judgementSelected = SelectJudgementVFX(RhythmGameManager.JudgementType.GOOD);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             rhythmManager.goodNotes += 1;
             rhythmManager.comboCount += 1;
+            if (rhythmManager.comboCount > rhythmManager.maxComboCount)
+                rhythmManager.maxComboCount += 1;
             rhythmManager.CalculateScore();
             return;
         }
