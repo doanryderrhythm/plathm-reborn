@@ -131,5 +131,11 @@ TagManager:
   - name: Judgement/DAMAGE
     uniqueID: 1738395385
     locked: 0
+  - name: 
+    uniqueID: 2101309887
+    locked: 0
+  - name: UI
+    uniqueID: 4193721781
+    locked: 0
   m_RenderingLayers:
   - Default

@@ -175,7 +175,7 @@ public class RhythmGameManager : MonoBehaviour
         if (isMirrored)
             mirrorText.gameObject.SetActive(true);
         InsertInfo();
-        UpdateScoreUI();
+        UpdateScoreUI(true);
         UpdateIndicatorUI();
 
         speedItems = new List<List<SpeedStorer>>();
@@ -275,6 +275,32 @@ public class RhythmGameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private float totalScoreCount = 0f;
+    private float scoreCountRate = 0f;
+    private float countDuration = 0.325f;
+
+    private bool isScoreCount = false;
+
+    private void FixedUpdate()
+    {
+        if (isScoreCount)
+        {
+            totalScoreCount += scoreCountRate;
+            if (totalScoreCount >= totalScore)
+            {
+                totalScoreCount = totalScore;
+                isScoreCount = false;
+            }
+            scoreText.text = totalScoreCount.ToString("0.0000") + "%";
+        }
+    }
+
+    public void StartCountingScore()
+    {
+        scoreCountRate = (totalScore - totalScoreCount) / (countDuration / Time.fixedDeltaTime);
+        isScoreCount = true;
     }
 
     void ExecuteInputAllTimingGroups(NoteTypeGeneral noteType)
@@ -865,19 +891,20 @@ public class RhythmGameManager : MonoBehaviour
         if (health < 0) health = 0;
     }
 
-    public void CalculateScore()
+    public void CalculateScore(bool isMissed = false)
     {
         totalScore = 101.0f / (float)noteCount * ((float)CPerfectNotes + (float)perfectNotes * 0.9f + (float)goodNotes * 0.5f);
         UpdateIndicator();
-        
-        UpdateScoreUI();
+
+        if (!isMissed) StartCountingScore();
+        UpdateScoreUI(isMissed);
         UpdateIndicatorUI();
     }
 
-    void UpdateScoreUI()
+    void UpdateScoreUI(bool isMissed = false)
     {
         comboText.text = comboCount.ToString();
-        scoreText.text = totalScore.ToString("0.0000") + "%";
+        comboText.gameObject.SetActive(!isMissed);
 
         CPerfectText.text = CPerfectNotes.ToString();
         perfectText.text = perfectNotes.ToString();

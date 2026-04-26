@@ -64,7 +64,7 @@ public class MusicNote : MonoBehaviour
                 rhythmManager.damageNotes += 1;
                 rhythmManager.comboCount = 0;
                 rhythmManager.DeductHealth(5f);
-                rhythmManager.CalculateScore();
+                rhythmManager.CalculateScore(true);
             }
 
             SwitchToUsedFolder();
@@ -90,7 +90,7 @@ public class MusicNote : MonoBehaviour
                 rhythmManager.damageNotes += 1;
                 rhythmManager.comboCount = 0;
                 rhythmManager.DeductHealth(5f);
-                rhythmManager.CalculateScore();
+                rhythmManager.CalculateScore(true);
             }
 
             SwitchToUsedFolder();
@@ -111,7 +111,7 @@ public class MusicNote : MonoBehaviour
             {
                 rhythmManager.missNotes += 1;
             }
-            rhythmManager.CalculateScore();
+            rhythmManager.CalculateScore(true);
             SwitchToUsedFolder();
         }
     }
