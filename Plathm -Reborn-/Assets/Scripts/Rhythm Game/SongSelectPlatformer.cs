@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System;
 
 public class SongSelectPlatformer : MonoBehaviour
 {
@@ -26,6 +27,7 @@ public class SongSelectPlatformer : MonoBehaviour
     [SerializeField] GameObject configurationScreen;
 
     [SerializeField] Canvas songTransitionCanvas;
+    [SerializeField] InputPlaceholder inputPlaceholder;
 
     private void Start()
     {
@@ -80,6 +82,8 @@ public class SongSelectPlatformer : MonoBehaviour
                     titleText.text = ValueStorer.songInfoTitle;
                     difficultySelectScreen.SetActive(true);
                     configurationScreen.SetActive(false);
+
+                    inputPlaceholder.UpdatePage(0);
                 }
                 else
                 {
@@ -97,6 +101,8 @@ public class SongSelectPlatformer : MonoBehaviour
                     titleText.text = ValueStorer.configurationTitle;
                     difficultySelectScreen.SetActive(false);
                     configurationScreen.SetActive(true);
+
+                    inputPlaceholder.UpdatePage(1);
                 }
                 else
                 {

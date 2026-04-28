@@ -17,6 +17,6 @@ public class InformationCanvas : MonoBehaviour
 
     public void StopAnimation()
     {
-        animator.enabled = false;
+        animator.runtimeAnimatorController = null;
     }
 }

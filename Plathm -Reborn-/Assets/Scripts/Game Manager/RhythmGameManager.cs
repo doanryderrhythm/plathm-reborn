@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -115,6 +116,10 @@ public class RhythmGameManager : MonoBehaviour
     [Space(10.0f)]
     public float health = 100f;
 
+    [Header("Animators")]
+    [SerializeField] AnimatorController openingAnimator;
+    [SerializeField] AnimatorController closingAnimator;
+
     [Header("UI")]
     [SerializeField] TMP_Text songNameText;
     [SerializeField] TMP_Text mirrorText;
@@ -136,6 +141,14 @@ public class RhythmGameManager : MonoBehaviour
     [SerializeField] Sprite FPIndicator;
     [SerializeField] Sprite ACIndicator;
     [SerializeField] Sprite normalIndicator;
+
+    [Header("Chart Status")]
+    [SerializeField] Canvas informationCanvas;
+    [SerializeField] GameObject failedStatus;
+    [SerializeField] GameObject healthLostStatus;
+    [SerializeField] GameObject passedStatus;
+    [SerializeField] GameObject allComboStatus;
+    [SerializeField] GameObject fullPerfectStatus;
 
     private HashSet<Key> reservedTapKeys;
     private HashSet<Key> reservedBlackKeys;
@@ -229,7 +242,7 @@ public class RhythmGameManager : MonoBehaviour
         {
             currentTiming += (Time.deltaTime * 1000f);
             if (currentTiming >= audioSource.clip.length * 1000f)
-                GoToResultsScreen();
+                StartCoroutine(GoToResultsScreen(false));
 
             ChangeSpeedThroughTiming(currentTiming);
 
@@ -888,7 +901,11 @@ public class RhythmGameManager : MonoBehaviour
     public void DeductHealth(float value)
     {
         health -= value;
-        if (health < 0) health = 0;
+        if (health <= 0)
+        {
+            health = 0;
+            StartCoroutine(GoToResultsScreen(true));
+        }
     }
 
     public void CalculateScore(bool isMissed = false)
@@ -966,12 +983,46 @@ public class RhythmGameManager : MonoBehaviour
         isStarted = true;
     }
 
-    void GoToResultsScreen()
+    void SelectChartStatus(bool isHealthLost = false)
+    {
+        if (isHealthLost)
+        {
+            indicatorType = IndicatorType.FAILED;
+            healthLostStatus.SetActive(true);
+            return;
+        }
+
+        if (totalScore < 80.0f)
+        {
+            indicatorType = IndicatorType.FAILED;
+            failedStatus.SetActive(true);
+            return;
+        }
+
+        switch (indicatorType)
+        {
+            case IndicatorType.NORMAL: passedStatus.SetActive(true); break;
+            case IndicatorType.ALL_COMBO: allComboStatus.SetActive(true); break;
+            case IndicatorType.FULL_PERFECT: fullPerfectStatus.SetActive(true); break;
+            default: break;
+        }
+    }
+
+    IEnumerator GoToResultsScreen(bool isHealthLost)
     {
         isStarted = false;
-        if (totalScore < 80.0f)
-            indicatorType = IndicatorType.FAILED;
+        audioSource.Stop();
+        
+        Animator anim = informationCanvas.GetComponent<Animator>();
+        if (anim)
+        {
+            anim.runtimeAnimatorController = closingAnimator;
+            anim.enabled = true;
+            anim.Play("Song End Animation");
+        }
 
+        SelectChartStatus(isHealthLost);
+        yield return new WaitForSeconds(5.0f);
         DontDestroyOnLoad(gameObject);
         SceneManager.LoadScene("Result");
     }
