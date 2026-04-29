@@ -81,6 +81,7 @@ public class ValueStorer : MonoBehaviour
     #region Project Information
     public const string songNameString = "song_name: ";
     public const string songArtistString = "song_artist: ";
+    public const string illustratorString = "illustrator: ";
     public const string charterNameString = "charter: ";
     public const string chartOffsetString = "offset: ";
     public const string chartSpeedString = "speed: ";

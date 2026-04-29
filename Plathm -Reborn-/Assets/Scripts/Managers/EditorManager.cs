@@ -392,8 +392,16 @@ public class EditorManager : MonoBehaviour
 
                 if (keyboard.mKey.wasPressedThisFrame)
                 {
-                    if (IsNoteAreaFullyLocked()) ExecuteMirrorAreaNotes();
-                    if (selectedNotes.Count > 0 && selectedNotes.All(e => e != null)) ExecuteMirrorManualNotes();
+                    if (!isControlHeld)
+                    {
+                        if (IsNoteAreaFullyLocked()) ExecuteMirrorAreaNotes();
+                        if (selectedNotes.Count > 0 && selectedNotes.All(e => e != null)) ExecuteMirrorManualNotes();
+                    }
+                    else
+                    {
+                        if (IsNoteAreaFullyLocked()) ExecuteMirrorAreaNotes(true);
+                        if (selectedNotes.Count > 0 && selectedNotes.All(e => e != null)) ExecuteMirrorManualNotes(true);
+                    }
                 }
 
                 isControlHeld = keyboard.ctrlKey.isPressed;
@@ -982,10 +990,20 @@ public class EditorManager : MonoBehaviour
         selectedNotes.Clear();
     }
 
-    void ExecuteMirrorAreaNotes()
+    void ExecuteMirrorAreaNotes(bool isCopy = false)
     {
         InsertNotesInArea();
         List<Transform> archives = new List<Transform>();
+
+        if (isCopy)
+        {
+            foreach (Transform foundNote in foundNotesInArea)
+            {
+                GameObject duplicatedNote = null;
+                duplicatedNote = Instantiate(foundNote.gameObject, foundNote.parent) as GameObject;
+                duplicatedNote.transform.position = foundNote.transform.position;
+            }
+        }
 
         foreach (Transform foundNote in foundNotesInArea)
         {
@@ -1032,9 +1050,14 @@ public class EditorManager : MonoBehaviour
             musicNote.timingGroup = timingGroups[timingGroupIndex];
             musicNote.temporaryTiming = musicNote.timing;
         }
+
+        if (isCopy)
+        {
+            ResetNoteSelectArea(ref isNoteAreaAdded);
+        }
     }
 
-    void ExecuteMirrorManualNotes()
+    void ExecuteMirrorManualNotes(bool isCopy = false)
     {
         if (selectedNotes.Count <= 0)
         {
@@ -1042,6 +1065,18 @@ public class EditorManager : MonoBehaviour
         }
 
         List<MusicNote> archives = new List<MusicNote>();
+
+        if (isCopy)
+        {
+            foreach (MusicNote foundNote in selectedNotes)
+            {
+                GameObject duplicatedNote = null;
+                duplicatedNote = Instantiate(foundNote.gameObject, foundNote.transform.parent) as GameObject;
+                duplicatedNote.transform.position = foundNote.transform.position;
+
+                duplicatedNote.GetComponent<MusicNote>().ToggleSelected(false);
+            }
+        }
 
         foreach (MusicNote note in selectedNotes)
         {
@@ -1471,6 +1506,9 @@ public class EditorManager : MonoBehaviour
         float lowestTiming = 0f;
         foreach (Transform note in foundNotesInArea)
         {
+            if (note == null)
+                continue;
+
             MusicNote musicNote = note.gameObject.GetComponent<MusicNote>();
             if (musicNote == null)
             {

@@ -12,6 +12,7 @@ public class SaveFile : MonoBehaviour
 
     [SerializeField] TMP_InputField songNameInputField;
     [SerializeField] TMP_InputField songArtistInputField;
+    [SerializeField] TMP_InputField illustratorInputField;
     [SerializeField] TMP_InputField charterInputField;
     [SerializeField] TMP_InputField chartOffsetInputField;
     [SerializeField] TMP_InputField chartSpeedInputField;
@@ -33,6 +34,7 @@ public class SaveFile : MonoBehaviour
 
         chartInfo = chartInfo + ValueStorer.songNameString + songNameInputField.text + "\n" +
                                 ValueStorer.songArtistString + songArtistInputField.text + "\n" +
+                                ValueStorer.illustratorString + illustratorInputField.text + "\n" +
                                 ValueStorer.charterNameString + charterInputField.text + "\n" +
                                 ValueStorer.chartOffsetString + chartOffsetInputField.text + "\n" +
                                 ValueStorer.chartSpeedString + chartSpeedInputField.text + "\n\n";

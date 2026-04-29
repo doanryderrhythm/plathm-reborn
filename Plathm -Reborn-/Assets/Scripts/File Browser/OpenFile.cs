@@ -19,6 +19,7 @@ public class OpenFile : MonoBehaviour
     [SerializeField] TMP_Text directoryText;
     [SerializeField] TMP_InputField songNameInputField;
     [SerializeField] TMP_InputField songArtistInputField;
+    [SerializeField] TMP_InputField illustratorInputField;
     [SerializeField] TMP_InputField charterNameInputField;
     [SerializeField] TMP_InputField chartOffsetInputField;
     [SerializeField] TMP_InputField chartSpeedInputField;
@@ -140,6 +141,13 @@ public class OpenFile : MonoBehaviour
                         {
                             string songArtist = line.Substring(ValueStorer.songArtistString.Length);
                             songArtistInputField.text = songArtist;
+                            continue;
+                        }
+
+                        if (line.StartsWith(ValueStorer.illustratorString))
+                        {
+                            string illustrator = line.Substring(ValueStorer.illustratorString.Length);
+                            illustratorInputField.text = illustrator;
                             continue;
                         }
 
