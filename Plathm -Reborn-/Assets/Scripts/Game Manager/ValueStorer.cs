@@ -115,4 +115,10 @@ public class ValueStorer : MonoBehaviour
     public static float perfectJudgement = 0.075f;
     public static float goodJudgement = 0.14f;
     #endregion
+
+    #region PLAYERPREFS
+    public const string prefsChartSpeed = "Chart Speed";
+    public const string prefsChartOffset = "Chart Offset";
+    public const string prefsIsMirror = "Is Mirrored";
+    #endregion
 }

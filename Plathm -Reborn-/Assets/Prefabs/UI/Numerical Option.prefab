@@ -92,12 +92,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 100
+  m_fontSize: 86.95
   m_fontSizeBase: 100
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 100
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -351,10 +351,19 @@ MonoBehaviour:
   highlightedSprite: {fileID: 6300051041181553829, guid: fa95a00c74d6e454c82706d70ef6a331, type: 3}
   background: {fileID: 8751331859866079364}
   valueText: {fileID: 907611284432926733}
-  onUp:
+  onStart:
     m_PersistentCalls:
       m_Calls: []
-  onDown:
+  onUpFloat:
+    m_PersistentCalls:
+      m_Calls: []
+  onDownFloat:
+    m_PersistentCalls:
+      m_Calls: []
+  onUpBool:
+    m_PersistentCalls:
+      m_Calls: []
+  onDownBool:
     m_PersistentCalls:
       m_Calls: []
 --- !u!1 &4124054483572612060

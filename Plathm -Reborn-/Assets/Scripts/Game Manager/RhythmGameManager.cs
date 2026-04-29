@@ -62,7 +62,7 @@ public class RhythmGameManager : MonoBehaviour
     public bool isStarted = false;
     public double chartSpeed;
 
-    public bool isMirrored = false;
+    public bool isMirrored;
 
     [SerializeField] int noteCount = 0;
     public float totalScore = 0.0f;
@@ -181,6 +181,9 @@ public class RhythmGameManager : MonoBehaviour
 
     private void Start()
     {
+        chartSpeed = (double)PlayerPrefs.GetFloat(ValueStorer.prefsChartSpeed, 2.0f);
+        currentTiming = (double)PlayerPrefs.GetFloat(ValueStorer.prefsChartOffset, 0.0f);
+        isMirrored = PlayerPrefs.GetInt(ValueStorer.prefsIsMirror, 0) == 0 ? false : true;
         RebuildReservedKeys();
 
         EndSongTransition();
@@ -903,6 +906,7 @@ public class RhythmGameManager : MonoBehaviour
         health -= value;
         if (health <= 0)
         {
+            isStarted = false;
             health = 0;
             StartCoroutine(GoToResultsScreen(true));
         }
@@ -910,6 +914,9 @@ public class RhythmGameManager : MonoBehaviour
 
     public void CalculateScore(bool isMissed = false)
     {
+        if (indicatorType == IndicatorType.FAILED)
+            return;
+
         totalScore = 101.0f / (float)noteCount * ((float)CPerfectNotes + (float)perfectNotes * 0.9f + (float)goodNotes * 0.5f);
         UpdateIndicator();
 
@@ -978,6 +985,7 @@ public class RhythmGameManager : MonoBehaviour
         InsertChartInfo(GameManager.Instance.difficultyIndex);
         yield return new WaitForSeconds(2.0f);
         yield return StartCoroutine(InsertChart());
+        ChangeSpeedThroughTiming(currentTiming);
         yield return new WaitForSeconds(3.0f);
         audioSource.Play();
         isStarted = true;

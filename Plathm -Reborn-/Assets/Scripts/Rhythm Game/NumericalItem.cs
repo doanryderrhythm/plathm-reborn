@@ -13,6 +13,8 @@ public class NumericalItem : MonoBehaviour
     }
 
     bool isSelected = false;
+    private float heldTime = 0f;
+    private float repeatTime = 0f;
 
     [SerializeField] NumericalType numericalType;
 
@@ -38,12 +40,18 @@ public class NumericalItem : MonoBehaviour
     [SerializeField] TMP_Text valueText;
 
     [Header("Event")]
-    [SerializeField] UnityEvent onUp;
-    [SerializeField] UnityEvent onDown;
+    [SerializeField] UnityEvent onStart;
+    [Space(10.0f)]
+    [SerializeField] UnityEvent<float> onUpFloat;
+    [SerializeField] UnityEvent<float> onDownFloat;
+    [SerializeField] UnityEvent<bool> onUpBool;
+    [SerializeField] UnityEvent<bool> onDownBool;
 
     void Start()
     {
         ChangeHighlight();
+
+        onStart.Invoke();
         ShowValueUI();
     }
 
@@ -52,10 +60,44 @@ public class NumericalItem : MonoBehaviour
     {
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.upArrowKey.wasPressedThisFrame)
-                OnUp();
-            else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
-                OnDown();
+            if (isSelected && (Keyboard.current.upArrowKey.isPressed ||
+                                Keyboard.current.downArrowKey.isPressed))
+            {
+                heldTime += Time.unscaledDeltaTime;
+                Debug.Log(heldTime);
+                if (heldTime >= 1f)
+                {
+                    if (Keyboard.current.upArrowKey.isPressed)
+                    {
+                        while (repeatTime >= 0.02f)
+                        {
+                            OnUp();
+                            repeatTime -= 0.02f;
+                        }
+                    }
+                    else if (Keyboard.current.downArrowKey.isPressed)
+                    {
+                        while (repeatTime >= 0.02f)
+                        {
+                            OnDown();
+                            repeatTime -= 0.02f;
+                        }
+                    }
+                    repeatTime += Time.unscaledDeltaTime;
+                }
+                else
+                {
+                    if (Keyboard.current.upArrowKey.wasPressedThisFrame)
+                        OnUp();
+                    else if (Keyboard.current.downArrowKey.wasPressedThisFrame)
+                        OnDown();
+                }
+            }
+            else
+            {
+                heldTime = 0f;
+                repeatTime = 0f;
+            }
         }
     }
 
@@ -118,6 +160,7 @@ public class NumericalItem : MonoBehaviour
                 return;
 
             currentValue += step;
+            onUpFloat.Invoke(currentValue);
         }
         else if (numericalType == NumericalType.BOOLEAN)
         {
@@ -125,10 +168,9 @@ public class NumericalItem : MonoBehaviour
                 return;
 
             isToggled = true;
+            onUpBool.Invoke(isToggled);
         }
         ShowValueUI();
-
-        onUp.Invoke();
     }
 
     void OnDown()
@@ -142,6 +184,7 @@ public class NumericalItem : MonoBehaviour
                 return;
 
             currentValue -= step;
+            onDownFloat.Invoke(currentValue);
         }
         else if (numericalType == NumericalType.BOOLEAN)
         {
@@ -149,9 +192,24 @@ public class NumericalItem : MonoBehaviour
                 return;
 
             isToggled = false;
+            onDownBool.Invoke(isToggled);
         }
         ShowValueUI();
+    }
 
-        onDown.Invoke();
+    public void GetChartSpeed()
+    {
+        currentValue = PlayerPrefs.GetFloat(ValueStorer.prefsChartSpeed, 2.0f);
+    }
+
+    public void GetChartOffset()
+    {
+        currentValue = PlayerPrefs.GetFloat(ValueStorer.prefsChartOffset, 0.0f);
+    }
+
+    public void GetIsMirrored()
+    {
+        isToggled = PlayerPrefs.GetInt(ValueStorer.prefsIsMirror, 0) == 0
+            ? false : true;
     }
 }

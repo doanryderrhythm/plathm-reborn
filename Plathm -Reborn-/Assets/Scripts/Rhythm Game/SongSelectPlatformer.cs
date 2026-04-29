@@ -152,4 +152,20 @@ public class SongSelectPlatformer : MonoBehaviour
                 configItems[i].Toggle(false);
         }
     }
+
+    public void ChangeChartSpeed(float speed)
+    {
+        PlayerPrefs.SetFloat(ValueStorer.prefsChartSpeed, speed);
+    }
+
+    public void ChangeChartOffset(float offset)
+    {
+        PlayerPrefs.SetFloat(ValueStorer.prefsChartOffset, offset);
+    }
+
+    public void ChangeIsMirrored(bool isMirror)
+    {
+        PlayerPrefs.SetInt(ValueStorer.prefsIsMirror,
+            isMirror ? 1 : 0);
+    }
 }

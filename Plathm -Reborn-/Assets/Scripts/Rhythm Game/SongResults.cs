@@ -31,6 +31,7 @@ public class SongResults : MonoBehaviour
     [SerializeField] Image clearImage;
     [SerializeField] Image allComboImage;
     [SerializeField] Image fullPerfectImage;
+    [SerializeField] Image mirrorIndicatorImage;
 
     [Header("Rank Sprites")]
     [SerializeField] Sprite PPlusRankSprite;
@@ -98,6 +99,9 @@ public class SongResults : MonoBehaviour
 
     void Start()
     {
+        if (PlayerPrefs.GetInt(ValueStorer.prefsIsMirror, 0) == 0)
+            mirrorIndicatorImage.gameObject.SetActive(false);
+
         InsertResults();
         CalculateRate();
     }
