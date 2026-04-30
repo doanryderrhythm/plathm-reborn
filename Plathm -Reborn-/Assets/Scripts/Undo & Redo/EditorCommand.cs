@@ -1,171 +1,163 @@
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class EditorCommand
 {
     protected EditorManager editorManager;
-
-    public enum CommandType
-    {
-        ADD_ONE_NOTE,
-        MOVE_ONE_NOTE,
-        DELETE_ONE_NOTE,
-    }
-
-    protected CommandType commandType;
+    protected UndoRedoManager undoRedoManager;
 
     public virtual void UndoCommand() { }
     public virtual void RedoCommand() { }
-    public virtual void FreeCommand() { }
 }
 
 public class CommandAddOneNote : EditorCommand
 {
-    private GameObject noteObject;
-    private float timing;
-    private float notePosition;
+    MusicNote note;
+    Transform originalFolder;
+    Transform undoRedoFolder;
 
-    public CommandAddOneNote(GameObject noteObject, float timing, float notePosition)
+    public CommandAddOneNote(MusicNote note)
     {
-        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
-
-        this.noteObject = noteObject;
-        this.timing = timing;
-        this.notePosition = notePosition;
+        this.note = note;
+        originalFolder = note.transform.parent;
+        undoRedoFolder = note.timingGroup.undoRedoFolder.transform;
     }
 
     public override void UndoCommand()
     {
-        //editorManager.UndoAddOneNote(this.noteObject);
+        originalFolder = note.transform.parent;
+        note.transform.SetParent(undoRedoFolder, false);
+        note.gameObject.SetActive(false);
     }
+
     public override void RedoCommand()
     {
-        //editorManager.RedoAddOneNote(this.noteObject, this.timing, this.notePosition);
+        note.transform.SetParent(originalFolder, false);
+        note.gameObject.SetActive(true);
     }
-    public override void FreeCommand()
+}
+
+public class CommandAddMultipleNotes : EditorCommand
+{
+    List<MusicNote> notes;
+    List<Transform> originalFolders;
+    List<Transform> undoRedoFolders;
+
+    public CommandAddMultipleNotes(List<MusicNote> notes)
     {
-        MonoBehaviour.Destroy(this.noteObject);
+        originalFolders = new List<Transform>();
+        undoRedoFolders = new List<Transform>();
+
+        this.notes = notes;
+
+        for (int i = 0; i < notes.Count; i++)
+        {
+            originalFolders.Add(notes[i].transform.parent);
+            undoRedoFolders.Add(notes[i].timingGroup.undoRedoFolder.transform);
+        }
+    }
+
+    public override void UndoCommand()
+    {
+        for (int i = 0; i < notes.Count; i++)
+        {
+            originalFolders[i] = notes[i].transform.parent;
+            notes[i].transform.SetParent(undoRedoFolders[i], false);
+            notes[i].gameObject.SetActive(false);
+        }
+    }
+
+    public override void RedoCommand()
+    {
+        for (int i = 0; i < notes.Count; i++)
+        {
+            notes[i].transform.SetParent(originalFolders[i], false);
+            notes[i].gameObject.SetActive(true);
+        }
     }
 }
 
 public class CommandMoveOneNote : EditorCommand
 {
-    private GameObject noteObject;
-    private float originalTiming;
-    private float newTiming;
-    private float noteOriginalPosition;
-    private float noteNewPosition;
+    MusicNote note;
+    float oldTiming, currentTiming;
+    float oldPos, currentPos;
 
-    public CommandMoveOneNote(GameObject noteObject, float originalTiming, float newTiming, float noteOriginalPosition, float noteNewPosition)
+    public CommandMoveOneNote(MusicNote note, float oldTiming, float currentTiming, float oldPos, float currentPos)
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
 
-        this.noteObject = noteObject;
-        this.originalTiming = originalTiming;
-        this.newTiming = newTiming;
-        this.noteOriginalPosition = noteOriginalPosition;
-        this.noteNewPosition = noteNewPosition;
+        this.note = note;
+
+        this.oldTiming = oldTiming;
+        this.currentTiming = currentTiming;
+        this.oldPos = oldPos;
+        this.currentPos = currentPos;
     }
 
     public override void UndoCommand()
     {
-        //editorManager.UndoMoveOneNote(this.noteObject, this.originalTiming, this.noteOriginalPosition);
+        note.timing = oldTiming;
+        note.temporaryTiming = oldTiming;
+
+        note.transform.localPosition = new Vector3(oldPos,
+            oldTiming * editorManager.chartSpeed, 0f);
     }
+
     public override void RedoCommand()
     {
-        //editorManager.RedoMoveOneNote(this.noteObject, this.newTiming, this.noteNewPosition);
+        note.timing = currentTiming;
+        note.temporaryTiming = currentTiming;
+
+        note.transform.localPosition = new Vector3(currentPos,
+            currentTiming * editorManager.chartSpeed, 0f);
     }
-    public override void FreeCommand()
+
+    public void SetNewData(float currentTiming, float currentPos)
     {
-        
+        this.currentTiming = currentTiming;
+        this.currentPos = currentPos;
+        Debug.Log(oldTiming + " " + oldPos + " " + currentTiming + " " + currentPos);
     }
 }
 
-public class CommandDeleteOneNote : EditorCommand
+public class CommandRemoveOneNote : EditorCommand
 {
-    private GameObject noteObject;
-    private float timing;
-    private float noteDeletedPosition;
+    List<MusicNote> notes;
+    List<Transform> originalFolders;
+    List<Transform> undoRedoFolders;
 
-    public CommandDeleteOneNote(GameObject noteObject, float timing, float noteDeletedPosition)
+    public CommandRemoveOneNote()
     {
-        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
-
-        this.noteObject = noteObject;
-        this.timing = timing;
-        this.noteDeletedPosition = noteDeletedPosition;
+        this.notes = new List<MusicNote>();
+        this.originalFolders = new List<Transform>();
+        this.undoRedoFolders = new List<Transform>();
     }
 
     public override void UndoCommand()
     {
-        //editorManager.UndoDeleteOneNote(this.noteObject, this.timing, this.noteDeletedPosition);
-    }
-    public override void RedoCommand()
-    {
-        //editorManager.RedoDeleteOneNote(noteObject);
-    }
-    public override void FreeCommand()
-    {
-        if (noteObject != null && !noteObject.activeSelf)
+        for (int i = 0; i < notes.Count; i++)
         {
-            MonoBehaviour.Destroy(this.noteObject);
+            notes[i].gameObject.SetActive(true);
+            notes[i].transform.SetParent(originalFolders[i]);
         }
     }
-}
-
-public class CommandChangeOffset : EditorCommand
-{
-    private float previousOffset;
-    private float nextOffset;
-
-    public CommandChangeOffset(float previousOffset, float nextOffset)
-    {
-        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
-
-        this.previousOffset = previousOffset;
-        this.nextOffset = nextOffset;
-    }
-
-    public override void UndoCommand()
-    {
-        //editorManager.UndoChangeOffset(this.previousOffset);
-    }
 
     public override void RedoCommand()
     {
-        //editorManager.RedoChangeOffset(this.nextOffset);
+        for (int i = 0; i < notes.Count; i++)
+        {
+            notes[i].gameObject.SetActive(false);
+            notes[i].transform.SetParent(undoRedoFolders[i]);
+        }
     }
 
-    public override void FreeCommand()
+    public void SetNewData(MusicNote note, Transform originalFolder, Transform undoRedoFolder)
     {
-        
-    }
-}
-
-public class CommandChangeSpeed : EditorCommand
-{
-    private float previousSpeed;
-    private float nextSpeed;
-
-    public CommandChangeSpeed(float previousSpeed, float nextSpeed)
-    {
-        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
-
-        this.previousSpeed = previousSpeed;
-        this.nextSpeed = nextSpeed;
-    }
-
-    public override void UndoCommand()
-    {
-        //editorManager.UndoChangeSpeed(this.previousSpeed);
-    }
-
-    public override void RedoCommand()
-    {
-        //editorManager.RedoChangeSpeed(this.nextSpeed);
-    }
-
-    public override void FreeCommand()
-    {
-
+        notes.Add(note);
+        originalFolders.Add(originalFolder);
+        undoRedoFolders.Add(undoRedoFolder);
     }
 }

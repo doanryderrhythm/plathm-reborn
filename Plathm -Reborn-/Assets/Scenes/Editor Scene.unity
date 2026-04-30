@@ -1648,6 +1648,7 @@ GameObject:
   m_Component:
   - component: {fileID: 217819813}
   - component: {fileID: 217819812}
+  - component: {fileID: 217819815}
   - component: {fileID: 217819814}
   m_Layer: 0
   m_Name: Editor Manager
@@ -1674,6 +1675,7 @@ MonoBehaviour:
   isTimingGridConfirm: 0
   verticalGridValue: 0
   editOption: 0
+  undoRedoManager: {fileID: 217819815}
   isNoteTypeSelected: 0
   selectedNoteType: 0
   draggedNote: {fileID: 0}
@@ -1785,6 +1787,18 @@ MonoBehaviour:
   m_DefaultActionMap: Rhythm Gameplay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &217819815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217819811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac77d69bf13afaa46885576b56084f29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UndoRedoManager
 --- !u!1 &247270153
 GameObject:
   m_ObjectHideFlags: 0
@@ -14694,9 +14708,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 217819812}
-        m_TargetAssemblyTypeName: EditorManager, Assembly-CSharp
-        m_MethodName: RedoCommand
+      - m_Target: {fileID: 217819815}
+        m_TargetAssemblyTypeName: UndoRedoManager, Assembly-CSharp
+        m_MethodName: ExecuteRedo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -14827,9 +14841,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 217819812}
-        m_TargetAssemblyTypeName: EditorManager, Assembly-CSharp
-        m_MethodName: UndoCommand
+      - m_Target: {fileID: 217819815}
+        m_TargetAssemblyTypeName: UndoRedoManager, Assembly-CSharp
+        m_MethodName: ExecuteUndo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

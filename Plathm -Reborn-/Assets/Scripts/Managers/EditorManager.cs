@@ -57,8 +57,7 @@ public class EditorManager : MonoBehaviour
     [SerializeField] EditOption editOption;
 
     //Undo & Redo System shenanigans
-    private Stack<EditorCommand> undoCommandStack;
-    private Stack<EditorCommand> redoCommandStack;
+    [SerializeField] UndoRedoManager undoRedoManager;
     private float noteOriginalTiming;     //move note
     private Vector3 noteOriginalPosition; //move note
 
@@ -200,11 +199,6 @@ public class EditorManager : MonoBehaviour
         reservedTapKeys = new HashSet<Key>();
         reservedBlackKeys = new HashSet<Key>();
 
-        undoCommandStack = new Stack<EditorCommand>();
-        undoCommandStack.Clear();
-        redoCommandStack = new Stack<EditorCommand>();
-        redoCommandStack.Clear();
-
         timingGroups = new List<TimingGroup>();
 
         openNoteArea.SetActive(false);
@@ -225,6 +219,9 @@ public class EditorManager : MonoBehaviour
 
         UpdateGroupIndicators();
     }
+
+    CommandMoveOneNote commandMoveOneNote = null;
+    CommandRemoveOneNote commandRemoveOneNote = null;
 
     // Update is called once per frame
     void Update()
@@ -461,6 +458,9 @@ public class EditorManager : MonoBehaviour
                             {
                                 verticalGridValue = noteOriginalPosition.x;
                             }
+                            commandMoveOneNote = new CommandMoveOneNote(draggedNote,
+                                                draggedNote.timing, 0,
+                                                draggedNote.transform.position.x, 0);
                         }
                     }
                 }
@@ -483,6 +483,14 @@ public class EditorManager : MonoBehaviour
             else if (Mouse.current.leftButton.wasReleasedThisFrame && draggedNote && !isControlHeld)
             {
                 draggedNote.temporaryTiming = draggedNote.timing;
+
+                if (commandMoveOneNote != null)
+                {
+                    commandMoveOneNote.SetNewData(draggedNote.timing, draggedNote.transform.position.x);
+                    undoRedoManager.ExecuteCommand(commandMoveOneNote);
+                    commandMoveOneNote = null;
+                }
+
                 draggedNote = null;
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame &&
@@ -671,17 +679,33 @@ public class EditorManager : MonoBehaviour
         }
 
         if (!playMode
-            && Mouse.current != null 
-            && Mouse.current.rightButton.isPressed
+            && Mouse.current != null
             && EventSystem.current != null
             && !EventSystem.current.IsPointerOverGameObject())
         {
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].tapFolder.transform);
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].blackFolder.transform);
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].sliceFolder.transform);
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].leftTeleportFolder.transform);
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].rightTeleportFolder.transform);
-            ExecuteDeleteInFolder(timingGroups[timingGroupIndex].spikeFolder.transform);
+            if (Mouse.current.rightButton.wasPressedThisFrame)
+            {
+                commandRemoveOneNote = new CommandRemoveOneNote();
+            }
+
+            if (Mouse.current.rightButton.isPressed)
+            {
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].tapFolder.transform);
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].blackFolder.transform);
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].sliceFolder.transform);
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].leftTeleportFolder.transform);
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].rightTeleportFolder.transform);
+                ExecuteDeleteInFolder(timingGroups[timingGroupIndex].spikeFolder.transform);
+            }
+            
+            if (Mouse.current.rightButton.wasReleasedThisFrame)
+            {
+                if (commandRemoveOneNote != null)
+                {
+                    undoRedoManager.ExecuteCommand(commandRemoveOneNote);
+                    commandRemoveOneNote = null;
+                }
+            }
         }
     }
 
@@ -938,6 +962,9 @@ public class EditorManager : MonoBehaviour
                 {
                     return;
                 }
+
+                if (commandRemoveOneNote != null)
+                    commandRemoveOneNote.SetNewData(note, note.transform.parent, note.timingGroup.undoRedoFolder.transform);
 
                 noteTransform.SetParent(timingGroup.undoRedoFolder.transform, false);
                 note.gameObject.SetActive(false);
@@ -1260,8 +1287,8 @@ public class EditorManager : MonoBehaviour
         musicNote.timingGroup = timingGroups[timingGroupIndex];
         musicNote.temporaryTiming = musicNote.timing;
 
-        //CommandAddOneNote commandAddOneNote = new CommandAddOneNote(confirmedNote, confirmedNote.GetComponent<MusicNote>().timing, confirmedNote.transform.position.x);
-        //OverrideCommand(commandAddOneNote);
+        CommandAddOneNote commandAddOneNote = new CommandAddOneNote(musicNote);
+        undoRedoManager.ExecuteCommand(commandAddOneNote);
     }
 
     void InsertMultipleNotes(Vector3 startPosition, Vector3 endPosition, int numberOfNotes)
@@ -1275,6 +1302,8 @@ public class EditorManager : MonoBehaviour
         float yStepOffset = (endPosition.y - startPosition.y) / (float)numberOfNotes;
 
         LanePosition confirmedLane = CheckCorrectLane(startPosition);
+
+        List<MusicNote> notes = new List<MusicNote>();
 
         for (int i = 0; i <= numberOfNotes; i++)
         {
@@ -1378,7 +1407,12 @@ public class EditorManager : MonoBehaviour
             MusicNote musicNote = confirmedNote.GetComponent<MusicNote>();
             musicNote.timingGroup = timingGroups[timingGroupIndex];
             musicNote.temporaryTiming = musicNote.timing;
+
+            notes.Add(musicNote);
         }
+
+        CommandAddMultipleNotes commandAddMultipleNotes = new CommandAddMultipleNotes(notes);
+        undoRedoManager.ExecuteCommand(commandAddMultipleNotes);
     }
 
     void InsertNote(int group, string noteTypeString, float timing, float xPos = 0f)
