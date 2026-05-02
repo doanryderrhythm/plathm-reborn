@@ -99,13 +99,13 @@ public class EditorManager : MonoBehaviour
     private bool isControlHeld = false;
 
     [Header("Note Types")]
-    [SerializeField] GameObject tapNotePrefab;
-    [SerializeField] GameObject blackNotePrefab;
-    [SerializeField] GameObject leftTeleportPrefab;
-    [SerializeField] GameObject rightTeleportPrefab;
-    [SerializeField] GameObject sliceNotePrefab;
-    [SerializeField] GameObject middleSpikePrefab;
-    [SerializeField] GameObject sideSpikePrefab;
+    public GameObject tapNotePrefab;
+    public GameObject blackNotePrefab;
+    public GameObject leftTeleportPrefab;
+    public GameObject rightTeleportPrefab;
+    public GameObject sliceNotePrefab;
+    public GameObject middleSpikePrefab;
+    public GameObject sideSpikePrefab;
 
     [Header("Music")]
     public AudioSource audioSource;
@@ -221,7 +221,7 @@ public class EditorManager : MonoBehaviour
     }
 
     CommandMoveOneNote commandMoveOneNote = null;
-    CommandRemoveOneNote commandRemoveOneNote = null;
+    CommandRemoveNotes commandRemoveNotes = null;
 
     // Update is called once per frame
     void Update()
@@ -685,7 +685,7 @@ public class EditorManager : MonoBehaviour
         {
             if (Mouse.current.rightButton.wasPressedThisFrame)
             {
-                commandRemoveOneNote = new CommandRemoveOneNote();
+                commandRemoveNotes = new CommandRemoveNotes();
             }
 
             if (Mouse.current.rightButton.isPressed)
@@ -700,10 +700,10 @@ public class EditorManager : MonoBehaviour
             
             if (Mouse.current.rightButton.wasReleasedThisFrame)
             {
-                if (commandRemoveOneNote != null)
+                if (commandRemoveNotes != null)
                 {
-                    undoRedoManager.ExecuteCommand(commandRemoveOneNote);
-                    commandRemoveOneNote = null;
+                    undoRedoManager.ExecuteCommand(commandRemoveNotes);
+                    commandRemoveNotes = null;
                 }
             }
         }
@@ -963,8 +963,8 @@ public class EditorManager : MonoBehaviour
                     return;
                 }
 
-                if (commandRemoveOneNote != null)
-                    commandRemoveOneNote.SetNewData(note, note.transform.parent, note.timingGroup.undoRedoFolder.transform);
+                if (commandRemoveNotes != null)
+                    commandRemoveNotes.SetNewData(note, note.transform.parent, note.timingGroup.undoRedoFolder.transform);
 
                 noteTransform.SetParent(timingGroup.undoRedoFolder.transform, false);
                 note.gameObject.SetActive(false);
@@ -974,6 +974,8 @@ public class EditorManager : MonoBehaviour
 
     void ExecuteDeleteSelectedNotes(List<Transform> foundNotes)
     {
+        commandRemoveNotes = new CommandRemoveNotes();
+
         foreach (Transform noteTransform in foundNotes)
         {
             MusicNote note = noteTransform.gameObject.GetComponent<MusicNote>();
@@ -990,13 +992,20 @@ public class EditorManager : MonoBehaviour
                 return;
             }
 
+            commandRemoveNotes.SetNewData(note, note.transform.parent, timingGroup.undoRedoFolder.transform);
+
             noteTransform.SetParent(timingGroup.undoRedoFolder.transform, false);
             note.gameObject.SetActive(false);
         }
+
+        undoRedoManager.ExecuteCommand(commandRemoveNotes);
+        commandRemoveNotes = null;
     }
 
     void ExecuteDeleteManualNotes()
     {
+        commandRemoveNotes = new CommandRemoveNotes();
+
         foreach (MusicNote note in selectedNotes)
         {
             if (!note)
@@ -1011,10 +1020,16 @@ public class EditorManager : MonoBehaviour
                 return;
             }
 
+            commandRemoveNotes.SetNewData(note, note.transform.parent, timingGroup.undoRedoFolder.transform);
+
+            note.ToggleSelected(false);
             note.transform.SetParent(timingGroup.undoRedoFolder.transform, false);
             note.gameObject.SetActive(false);
         }
         selectedNotes.Clear();
+
+        undoRedoManager.ExecuteCommand(commandRemoveNotes);
+        commandRemoveNotes = null;
     }
 
     void ExecuteMirrorAreaNotes(bool isCopy = false)
@@ -1032,6 +1047,13 @@ public class EditorManager : MonoBehaviour
             }
         }
 
+        List<MusicNote> mirroredNotes = new List<MusicNote>();
+        List<MusicNote> originalMirroredNotes = new List<MusicNote>();
+        List<MusicNote> newMirroredNotes = new List<MusicNote>();
+
+        List<Transform> originalFolders = new List<Transform>();
+        List<Transform> newFolders = new List<Transform>();
+
         foreach (Transform foundNote in foundNotesInArea)
         {
             MusicNote note = foundNote.gameObject.GetComponent<MusicNote>();
@@ -1048,6 +1070,7 @@ public class EditorManager : MonoBehaviour
             }
 
             foundNote.position = new Vector3(-foundNote.position.x, foundNote.position.y, 0);
+            mirroredNotes.Add(note);
         }
 
         foreach (Transform archivedNote in archives)
@@ -1059,7 +1082,11 @@ public class EditorManager : MonoBehaviour
             MusicNote note = archivedNote.gameObject.GetComponent<MusicNote>();
             oldNoteType = note.GetNoteType();
 
-            Destroy(archivedNote.gameObject);
+            originalMirroredNotes.Add(note);
+            originalFolders.Add(archivedNote.parent);
+
+            archivedNote.SetParent(note.timingGroup.undoRedoFolder.transform);
+            archivedNote.gameObject.SetActive(false);
 
             GameObject newNote = null;
             if (oldNoteType == MusicNote.NoteType.LEFT_TELEPORT)
@@ -1076,12 +1103,21 @@ public class EditorManager : MonoBehaviour
             musicNote.timing = newNote.transform.localPosition.y / chartSpeed;
             musicNote.timingGroup = timingGroups[timingGroupIndex];
             musicNote.temporaryTiming = musicNote.timing;
+
+            newMirroredNotes.Add(musicNote);
+            newFolders.Add(musicNote.transform.parent);
         }
 
         if (isCopy)
         {
             ResetNoteSelectArea(ref isNoteAreaAdded);
         }
+
+        CommandMirrorNotes commandMirrorNotes = new CommandMirrorNotes(
+            mirroredNotes,
+            originalMirroredNotes, originalFolders,
+            newMirroredNotes, newFolders);
+        undoRedoManager.ExecuteCommand(commandMirrorNotes);
     }
 
     void ExecuteMirrorManualNotes(bool isCopy = false)

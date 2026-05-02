@@ -123,13 +123,13 @@ public class CommandMoveOneNote : EditorCommand
     }
 }
 
-public class CommandRemoveOneNote : EditorCommand
+public class CommandRemoveNotes : EditorCommand
 {
     List<MusicNote> notes;
     List<Transform> originalFolders;
     List<Transform> undoRedoFolders;
 
-    public CommandRemoveOneNote()
+    public CommandRemoveNotes()
     {
         this.notes = new List<MusicNote>();
         this.originalFolders = new List<Transform>();
@@ -159,5 +159,80 @@ public class CommandRemoveOneNote : EditorCommand
         notes.Add(note);
         originalFolders.Add(originalFolder);
         undoRedoFolders.Add(undoRedoFolder);
+    }
+}
+
+public class CommandMirrorNotes : EditorCommand
+{
+    List<MusicNote> notes;
+    List<MusicNote> originalTeleportNotes, newTeleportNotes;
+    List<Transform> originalFolders, newFolders;
+
+    public CommandMirrorNotes(List<MusicNote> notes, 
+        List<MusicNote> originalTeleportNotes, List<Transform> originalFolders,
+        List<MusicNote> newTeleportNotes, List<Transform> newFolders)
+    {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+        this.notes = notes;
+
+        this.originalTeleportNotes = originalTeleportNotes;
+        this.newTeleportNotes = newTeleportNotes;
+
+        this.originalFolders = originalFolders;
+        this.newFolders = newFolders;
+    }
+
+    public override void UndoCommand()
+    {
+        MirrorNotes(true);
+    }
+
+    public override void RedoCommand()
+    {
+        MirrorNotes(false);
+    }
+
+    void MirrorNotes(bool isUndo)
+    {
+        for (int i = 0; i < notes.Count; i++)
+        {
+            if (notes[i] == null)
+                continue;
+
+            notes[i].transform.localPosition = new Vector3(
+                -notes[i].transform.localPosition.x,
+                notes[i].transform.localPosition.y, 0);
+        }
+
+        if (isUndo)
+        {
+            for (int i = 0; i < originalTeleportNotes.Count; i++)
+            {
+                if (originalTeleportNotes[i] == null)
+                    continue;
+
+                originalTeleportNotes[i].transform.SetParent(originalFolders[i]);
+                originalTeleportNotes[i].gameObject.SetActive(true);
+
+                newTeleportNotes[i].transform.SetParent(
+                    newTeleportNotes[i].timingGroup.undoRedoFolder.transform);
+                newTeleportNotes[i].gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < newTeleportNotes.Count; i++)
+            {
+                if (newTeleportNotes[i] == null)
+                    continue;
+
+                newTeleportNotes[i].transform.SetParent(newFolders[i]);
+                newTeleportNotes[i].gameObject.SetActive(true);
+
+                originalTeleportNotes[i].transform.SetParent(
+                    originalTeleportNotes[i].timingGroup.undoRedoFolder.transform);
+                originalTeleportNotes[i].gameObject.SetActive(false);
+            }
+        }
     }
 }
