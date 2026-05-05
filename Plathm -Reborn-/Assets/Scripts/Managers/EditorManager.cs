@@ -223,6 +223,16 @@ public class EditorManager : MonoBehaviour
     CommandMoveOneNote commandMoveOneNote = null;
     CommandRemoveNotes commandRemoveNotes = null;
 
+    CommandAddMultipleNotes commandCopyNotes = null;
+    List<MusicNote> pastedNotes = null;
+
+    List<MusicNote> movedNotes = null;
+    List<float> oldTimings = null;
+    List<float> newTimings = null;
+    //AREA INTERFACE
+    float oldOpenTiming, currentOpenTiming;
+    float oldCloseTiming, currentCloseTiming;
+
     // Update is called once per frame
     void Update()
     {
@@ -328,6 +338,8 @@ public class EditorManager : MonoBehaviour
                 && EventSystem.current != null
                 && !EventSystem.current.IsPointerOverGameObject())
             {
+                pastedNotes = new List<MusicNote>();
+
                 foreach (Transform noteTransform in copiedNotes)
                 {
                     MusicNote note = noteTransform.gameObject.GetComponent<MusicNote>();
@@ -353,6 +365,10 @@ public class EditorManager : MonoBehaviour
                             noteTransform.localPosition.x);
                     }
                 }
+
+                commandCopyNotes = new CommandAddMultipleNotes(pastedNotes);
+                undoRedoManager.ExecuteCommand(commandCopyNotes);
+                commandCopyNotes = null;
             }
         }
 
@@ -512,6 +528,21 @@ public class EditorManager : MonoBehaviour
                     note.timing = selectedNotes[i].transform.localPosition.y / chartSpeed;
                     note.temporaryTiming = note.timing;
                 }
+
+                if (oldTimings != null)
+                {
+                    newTimings = new List<float>();
+                    for (int i = 0; i < movedNotes.Count; i++)
+                        newTimings.Add(movedNotes[i].timing);
+
+                    CommandMoveMultipleNotes commandMoveMultipleNotes = new CommandMoveMultipleNotes(
+                        movedNotes, oldTimings, newTimings);
+                    undoRedoManager.ExecuteCommand(commandMoveMultipleNotes);
+
+                    oldTimings = null;
+                    newTimings = null;
+                }
+
                 lowestSelectedNote = null;
             }
             else if (Mouse.current.leftButton.wasReleasedThisFrame &&
@@ -538,6 +569,26 @@ public class EditorManager : MonoBehaviour
                 closeNoteTempTiming = closeNoteArea.transform.localPosition.y / chartSpeed;
                 areaTempTiming = noteArea.transform.localPosition.y / chartSpeed;
 
+                currentOpenTiming = openNoteTempTiming;
+                currentCloseTiming = closeNoteTempTiming;
+
+                if (oldTimings != null)
+                {
+                    newTimings = new List<float>();
+                    for (int i = 0; i < movedNotes.Count; i++)
+                        newTimings.Add(movedNotes[i].timing);
+
+                    CommandMoveMultipleNotes commandMoveMultipleNotes = new CommandMoveMultipleNotes(
+                        movedNotes, oldTimings, newTimings);
+                    undoRedoManager.ExecuteCommand(commandMoveMultipleNotes);
+
+                    commandMoveMultipleNotes.InsertOpenInterface(oldOpenTiming, currentOpenTiming);
+                    commandMoveMultipleNotes.InsertCloseInterface(oldCloseTiming, currentCloseTiming);
+
+                    oldTimings = null;
+                    newTimings = null;
+                }
+
                 lowestNoteArea = null;
             }
             else if (Mouse.current.leftButton.isPressed && draggedNote && !isControlHeld && !isCopied)
@@ -546,6 +597,18 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.isPressed && selectedNotes.Count != 0 && selectedNotes.All(e => e != null) && !isControlHeld && !isCopied)
             {
+                if (oldTimings == null)
+                {
+                    movedNotes = new List<MusicNote>();
+                    oldTimings = new List<float>();
+
+                    for (int i = 0; i < selectedNotes.Count; i++)
+                    {
+                        movedNotes.Add(selectedNotes[i]);
+                        oldTimings.Add(selectedNotes[i].timing);
+                    }
+                }
+
                 float alignValue = worldPosition.y - lockedAreaPosition.y;
 
                 GameObject alignBeat = FindAlignArea(alignValue, 1);
@@ -571,6 +634,25 @@ public class EditorManager : MonoBehaviour
             }
             else if (Mouse.current.leftButton.isPressed && foundNotesInArea.Count != 0 && foundNotesInArea.All(e => e != null) && !isControlHeld && !isCopied)
             {
+                if (oldTimings == null)
+                {
+                    movedNotes = new List<MusicNote>();
+                    oldTimings = new List<float>();
+
+                    for (int i = 0; i < foundNotesInArea.Count; i++)
+                    {
+                        MusicNote areaNote = foundNotesInArea[i].GetComponent<MusicNote>();
+                        if (areaNote == null)
+                            continue;
+
+                        movedNotes.Add(areaNote);
+                        oldTimings.Add(areaNote.timing);
+                    }
+
+                    oldOpenTiming = openNoteTempTiming;
+                    oldCloseTiming = closeNoteTempTiming;
+                }
+
                 float alignValue = worldPosition.y - lockedAreaPosition.y;
 
                 GameObject alignBeat = FindAlignArea(alignValue, 0);
@@ -1141,6 +1223,13 @@ public class EditorManager : MonoBehaviour
             }
         }
 
+        List<MusicNote> mirroredNotes = new List<MusicNote>();
+        List<MusicNote> originalMirroredNotes = new List<MusicNote>();
+        List<MusicNote> newMirroredNotes = new List<MusicNote>();
+
+        List<Transform> originalFolders = new List<Transform>();
+        List<Transform> newFolders = new List<Transform>();
+
         foreach (MusicNote note in selectedNotes)
         {
             if (!note)
@@ -1155,6 +1244,7 @@ public class EditorManager : MonoBehaviour
             }
 
             note.transform.position = new Vector3(-note.transform.position.x, note.transform.position.y, 0);
+            mirroredNotes.Add(note);
         }
 
         foreach (MusicNote note in archives)
@@ -1166,7 +1256,12 @@ public class EditorManager : MonoBehaviour
             oldNoteType = note.GetNoteType();
 
             selectedNotes.Remove(note);
-            Destroy(note.gameObject);
+
+            originalMirroredNotes.Add(note);
+            originalFolders.Add(folder);
+
+            note.transform.SetParent(note.timingGroup.undoRedoFolder.transform);
+            note.gameObject.SetActive(false);
 
             GameObject newNote = null;
             if (oldNoteType == MusicNote.NoteType.LEFT_TELEPORT)
@@ -1186,7 +1281,16 @@ public class EditorManager : MonoBehaviour
 
             musicNote.ToggleSelected(true);
             selectedNotes.Add(musicNote);
+
+            newMirroredNotes.Add(musicNote);
+            newFolders.Add(musicNote.transform.parent);
         }
+
+        CommandMirrorNotes commandMirrorNotes = new CommandMirrorNotes(
+            mirroredNotes,
+            originalMirroredNotes, originalFolders,
+            newMirroredNotes, newFolders);
+        undoRedoManager.ExecuteCommand(commandMirrorNotes);
     }
 
     void ConvertFromMouseToWorld()
@@ -1484,6 +1588,9 @@ public class EditorManager : MonoBehaviour
         musicNote.timingGroup = timingGroups[group];
         musicNote.timing = timing / 1000f;
         musicNote.temporaryTiming = timing / 1000f;
+
+        if (pastedNotes != null)
+            pastedNotes.Add(musicNote);
     }
 
     void InsertMultipleNotesSignal(Vector3 targetPosition, ref bool isPreSelected)
@@ -1602,6 +1709,41 @@ public class EditorManager : MonoBehaviour
         return lowestNote;
     }
 
+    public void ExecuteNoteAreaSignal(List<MusicNote> notes, float openTiming, float closeTiming)
+    {
+        if (notes.Count == 0)
+            return;
+
+        openNoteArea.transform.localPosition = new Vector3(0, openTiming * chartSpeed, 0);
+        openNoteTempTiming = openTiming;
+        openNoteArea.SetActive(true);
+
+        closeNoteArea.transform.localPosition = new Vector3(0, closeTiming * chartSpeed, 0);
+        closeNoteTempTiming = closeTiming;
+        closeNoteArea.SetActive(true);
+
+        if (openNoteArea.transform.position.y < closeNoteArea.transform.position.y)
+        {
+            noteArea.transform.position = new Vector3(0, openNoteArea.transform.position.y, 0);
+        }
+        else
+        {
+            noteArea.transform.position = new Vector3(0, closeNoteArea.transform.position.y, 0);
+        }
+        areaTempTiming = noteArea.transform.localPosition.y / chartSpeed;
+        noteArea.transform.localScale = new Vector3(
+                1,
+                Mathf.Abs(openNoteArea.transform.position.y - closeNoteArea.transform.position.y),
+                1);
+        noteArea.SetActive(true);
+
+        List<Transform> noteTransforms = new List<Transform>();
+        for (int i = 0; i < notes.Count; i++)
+            noteTransforms.Add(notes[i].transform);
+
+        ShrinkArea(true, noteTransforms);
+    }
+
     void ExecuteNoteAreaSignal(Vector3 targetPosition, ref bool isPreselected)
     {
         if (targetPosition.x < ValueStorer.minLeftLaneX ||
@@ -1642,7 +1784,7 @@ public class EditorManager : MonoBehaviour
         }
         else
         {
-            ShrinkArea();
+            ShrinkArea(false);
 
             openNoteArea.transform.localPosition = new Vector3(0, openNoteTempTiming * chartSpeed, 0);
             openNoteArea.SetActive(true);
@@ -1753,11 +1895,12 @@ public class EditorManager : MonoBehaviour
         draggedNote.timing = draggedNote.gameObject.transform.localPosition.y / chartSpeed;
     }
 
-    void ShrinkArea()
+    void ShrinkArea(bool isUndoRedo, List<Transform> notes = null)
     {
-        InsertNotesInArea();
+        if (isUndoRedo) foundNotesInArea = notes;
+        else InsertNotesInArea();
 
-        if (foundNotesInArea.Count == 0)
+        if (foundNotesInArea == null || foundNotesInArea.Count == 0)
         {
             ResetNoteSelectArea(ref isNoteAreaAdded);
             return;

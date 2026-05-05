@@ -236,3 +236,93 @@ public class CommandMirrorNotes : EditorCommand
         }
     }
 }
+
+public class CommandChangePlayerPos : EditorCommand
+{
+    TestPlayer player;
+    int originalPos, newPos;
+
+    public CommandChangePlayerPos(int originalPos, int newPos)
+    {
+        player = GameObject.FindFirstObjectByType<TestPlayer>();
+        this.originalPos = originalPos;
+        this.newPos = newPos;
+    }
+
+    public override void UndoCommand()
+    {
+        player.ChangePositionUndoRedo(originalPos);
+    }
+
+    public override void RedoCommand()
+    {
+        player.ChangePositionUndoRedo(newPos);
+    }
+}
+
+public class CommandMoveMultipleNotes : EditorCommand
+{
+    List<MusicNote> notes;
+    List<float> oldTimings, currentTimings;
+    List<float> oldPoses, currentPoses;
+
+    bool isArea = false;
+    float oldOpenTiming, currentOpenTiming;
+    float oldCloseTiming, currentCloseTiming;
+
+    public CommandMoveMultipleNotes(List<MusicNote> notes, 
+        List<float> oldTimings, List<float> currentTimings)
+    {
+        editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+
+        this.notes = notes;
+        this.oldTimings = oldTimings;
+        this.currentTimings = currentTimings;
+    }
+
+    public override void UndoCommand()
+    {
+        for (int i = 0; i < notes.Count; i++)
+        {
+            notes[i].timing = oldTimings[i];
+            notes[i].temporaryTiming = oldTimings[i];
+
+            notes[i].transform.localPosition = new Vector3(
+                notes[i].transform.localPosition.x,
+                oldTimings[i] * editorManager.chartSpeed, 0f);
+        }
+
+        if (isArea)
+            editorManager.ExecuteNoteAreaSignal(notes, oldOpenTiming, oldCloseTiming);
+    }
+
+    public override void RedoCommand()
+    {
+        for (int i = 0; i < notes.Count; i++)
+        {
+            notes[i].timing = currentTimings[i];
+            notes[i].temporaryTiming = currentTimings[i];
+
+            notes[i].transform.localPosition = new Vector3(
+                notes[i].transform.localPosition.x,
+                currentTimings[i] * editorManager.chartSpeed, 0f);
+        }
+
+        if (isArea)
+            editorManager.ExecuteNoteAreaSignal(notes, currentOpenTiming, currentCloseTiming);
+    }
+
+    public void InsertOpenInterface(float oldOpenTiming, float currentOpenTiming)
+    {
+        isArea = true;
+        this.oldOpenTiming = oldOpenTiming;
+        this.currentOpenTiming = currentOpenTiming;
+    }
+
+    public void InsertCloseInterface(float oldCloseTiming, float currentCloseTiming)
+    {
+        isArea = true;
+        this.oldCloseTiming = oldCloseTiming;
+        this.currentCloseTiming = currentCloseTiming;
+    }
+}

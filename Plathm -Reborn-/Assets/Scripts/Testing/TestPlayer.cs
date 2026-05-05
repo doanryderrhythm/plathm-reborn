@@ -5,6 +5,7 @@ public class TestPlayer : MonoBehaviour
 {
     //Other shenanigans
     private EditorManager editorManager;
+    private UndoRedoManager undoRedoManager;
 
     public EditorManager.LanePosition originalPosition;
 
@@ -16,6 +17,7 @@ public class TestPlayer : MonoBehaviour
     private void Awake()
     {
         editorManager = GameObject.FindFirstObjectByType<EditorManager>();
+        undoRedoManager = GameObject.FindFirstObjectByType<UndoRedoManager>();
 
         moveLeftAction.performed += MoveLeft;
         moveRightAction.performed += MoveRight;
@@ -108,6 +110,30 @@ public class TestPlayer : MonoBehaviour
     }
 
     public void ChangePosition(int position)
+    {
+        int originalIndex = (int)lanePosition;
+
+        this.lanePosition = (EditorManager.LanePosition)position;
+        int newIndex = (int)lanePosition;
+
+        if (this.lanePosition == EditorManager.LanePosition.LEFT_POS)
+        {
+            this.transform.position = ValueStorer.playerLeftPosition;
+        }
+        else if (this.lanePosition == EditorManager.LanePosition.MIDDLE_POS)
+        {
+            this.transform.position = ValueStorer.playerMiddlePosition;
+        }
+        else if (this.lanePosition == EditorManager.LanePosition.RIGHT_POS)
+        {
+            this.transform.position = ValueStorer.playerRightPosition;
+        }
+
+        CommandChangePlayerPos commandChangePlayerPos = new CommandChangePlayerPos(originalIndex, newIndex);
+        undoRedoManager.ExecuteCommand(commandChangePlayerPos);
+    }
+
+    public void ChangePositionUndoRedo(int position)
     {
         this.lanePosition = (EditorManager.LanePosition)position;
 
