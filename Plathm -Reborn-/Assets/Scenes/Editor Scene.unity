@@ -1185,6 +1185,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OpenFile
   uiManager: {fileID: 961892503}
   editorManager: {fileID: 217819812}
+  undoRedoManager: {fileID: 217819815}
   loadedDirectory: 
   directoryText: {fileID: 2096830327}
   songNameInputField: {fileID: 1015510316}

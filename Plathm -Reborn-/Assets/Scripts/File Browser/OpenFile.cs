@@ -12,6 +12,7 @@ public class OpenFile : MonoBehaviour
 {
     [SerializeField] UIManager uiManager;
     [SerializeField] EditorManager editorManager;
+    [SerializeField] UndoRedoManager undoRedoManager;
 
     [SerializeField] string loadedDirectory = string.Empty;
 
@@ -33,32 +34,6 @@ public class OpenFile : MonoBehaviour
 
     public AudioSource audioSource;
     public Image jacketArt;
-
-    /*
-    public void OnClickOpenMusic()
-    {
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Music", "", "ogg", false);
-        if (paths.Length > 0)
-        {
-            StartCoroutine(OutputRoutineOpen(new System.Uri(paths[0]).AbsoluteUri, FileType.TYPE_AUDIO));
-        }
-    }
-
-    public void OnClickOpenJacket()
-    {
-        ExtensionFilter[] extensions =
-        {
-            new ExtensionFilter("", "png"),
-            new ExtensionFilter("", "jpg"),
-            new ExtensionFilter("", "jpeg")
-        };
-        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Jacket Art", "", extensions, false);
-        if (paths.Length > 0)
-        {
-            StartCoroutine(OutputRoutineOpen(new System.Uri(paths[0]).AbsoluteUri, FileType.TYPE_JACKET));
-        }
-    }
-    */
 
     public void OnClickOpenProject()
     {
@@ -226,6 +201,8 @@ public class OpenFile : MonoBehaviour
                     Debug.Log("The file is not supported");
                 }
             }
+
+            undoRedoManager.ResetStacks();
         }
     }
 
@@ -244,5 +221,7 @@ public class OpenFile : MonoBehaviour
             case 3: editorManager.ChangeDifficulty(difficulty, loadedDirectory + ValueStorer.difficultySquare); break;
             default: return;
         }
+
+        undoRedoManager.ResetStacks();
     }
 }

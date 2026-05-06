@@ -55,4 +55,10 @@ public class UndoRedoManager : MonoBehaviour
             undoStack.Push(redo);
         }
     }
+
+    public void ResetStacks()
+    {
+        undoStack.Clear();
+        redoStack.Clear();
+    }
 }

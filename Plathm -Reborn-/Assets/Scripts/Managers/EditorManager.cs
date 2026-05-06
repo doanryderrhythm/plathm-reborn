@@ -1119,13 +1119,21 @@ public class EditorManager : MonoBehaviour
         InsertNotesInArea();
         List<Transform> archives = new List<Transform>();
 
+        List<MusicNote> copiedNotesForMirror = null;
+
         if (isCopy)
         {
+            copiedNotesForMirror = new List<MusicNote>();
+
             foreach (Transform foundNote in foundNotesInArea)
             {
                 GameObject duplicatedNote = null;
                 duplicatedNote = Instantiate(foundNote.gameObject, foundNote.parent) as GameObject;
                 duplicatedNote.transform.position = foundNote.transform.position;
+
+                MusicNote duplicatedMusicNote = duplicatedNote.GetComponent<MusicNote>();
+                if (duplicatedMusicNote != null)
+                    copiedNotesForMirror.Add(duplicatedMusicNote);
             }
         }
 
@@ -1199,6 +1207,8 @@ public class EditorManager : MonoBehaviour
             mirroredNotes,
             originalMirroredNotes, originalFolders,
             newMirroredNotes, newFolders);
+        if (isCopy)
+            commandMirrorNotes.InsertNewData(copiedNotesForMirror);
         undoRedoManager.ExecuteCommand(commandMirrorNotes);
     }
 
@@ -1211,8 +1221,12 @@ public class EditorManager : MonoBehaviour
 
         List<MusicNote> archives = new List<MusicNote>();
 
+        List<MusicNote> copiedNotesForMirror = null;
+
         if (isCopy)
         {
+            copiedNotesForMirror = new List<MusicNote>();
+
             foreach (MusicNote foundNote in selectedNotes)
             {
                 GameObject duplicatedNote = null;
@@ -1220,6 +1234,10 @@ public class EditorManager : MonoBehaviour
                 duplicatedNote.transform.position = foundNote.transform.position;
 
                 duplicatedNote.GetComponent<MusicNote>().ToggleSelected(false);
+
+                MusicNote duplicatedMusicNote = duplicatedNote.GetComponent<MusicNote>();
+                if (duplicatedMusicNote != null)
+                    copiedNotesForMirror.Add(duplicatedMusicNote);
             }
         }
 
@@ -1243,6 +1261,8 @@ public class EditorManager : MonoBehaviour
                 continue;
             }
 
+            if (isCopy)
+                note.ToggleSelected(false);
             note.transform.position = new Vector3(-note.transform.position.x, note.transform.position.y, 0);
             mirroredNotes.Add(note);
         }
@@ -1251,6 +1271,9 @@ public class EditorManager : MonoBehaviour
         {
             Transform folder = note.transform.parent;
             Vector3 newPos = new Vector3(-note.transform.position.x, note.transform.position.y, 0);
+
+            if (isCopy)
+                note.ToggleSelected(false);
 
             MusicNote.NoteType oldNoteType;
             oldNoteType = note.GetNoteType();
@@ -1289,7 +1312,9 @@ public class EditorManager : MonoBehaviour
         CommandMirrorNotes commandMirrorNotes = new CommandMirrorNotes(
             mirroredNotes,
             originalMirroredNotes, originalFolders,
-            newMirroredNotes, newFolders);
+            newMirroredNotes, newFolders); 
+        if (isCopy)
+            commandMirrorNotes.InsertNewData(copiedNotesForMirror);
         undoRedoManager.ExecuteCommand(commandMirrorNotes);
     }
 

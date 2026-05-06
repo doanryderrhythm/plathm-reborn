@@ -168,6 +168,10 @@ public class CommandMirrorNotes : EditorCommand
     List<MusicNote> originalTeleportNotes, newTeleportNotes;
     List<Transform> originalFolders, newFolders;
 
+    bool isCopied = false;
+    List<MusicNote> copiedNotes = null;
+    List<Transform> originalCopiedFolders = null;
+
     public CommandMirrorNotes(List<MusicNote> notes, 
         List<MusicNote> originalTeleportNotes, List<Transform> originalFolders,
         List<MusicNote> newTeleportNotes, List<Transform> newFolders)
@@ -194,6 +198,8 @@ public class CommandMirrorNotes : EditorCommand
 
     void MirrorNotes(bool isUndo)
     {
+        ToggleEverythingOff();
+
         for (int i = 0; i < notes.Count; i++)
         {
             if (notes[i] == null)
@@ -234,6 +240,43 @@ public class CommandMirrorNotes : EditorCommand
                 originalTeleportNotes[i].gameObject.SetActive(false);
             }
         }
+
+        if (isCopied && isUndo)
+        {
+            for (int i = 0; i < copiedNotes.Count; i++)
+            {
+                copiedNotes[i].transform.SetParent(copiedNotes[i].timingGroup.undoRedoFolder.transform, false);
+                copiedNotes[i].gameObject.SetActive(false);
+            }
+        }
+        else if (isCopied && !isUndo)
+        {
+            for (int i = 0; i < copiedNotes.Count; i++)
+            {
+                copiedNotes[i].transform.SetParent(originalCopiedFolders[i], false);
+                copiedNotes[i].gameObject.SetActive(true);
+            }
+        }
+    }
+
+    public void InsertNewData(List<MusicNote> copiedNotes)
+    {
+        this.isCopied = true;
+        this.copiedNotes = copiedNotes;
+
+        originalCopiedFolders = new List<Transform>();
+        for (int i = 0; i < copiedNotes.Count; i++)
+            originalCopiedFolders.Add(copiedNotes[i].transform.parent);
+    }
+
+    void ToggleEverythingOff()
+    {
+        foreach (MusicNote note in notes)
+            note.ToggleSelected(false);
+        foreach (MusicNote note in originalTeleportNotes)
+            note.ToggleSelected(false);
+        foreach (MusicNote note in newTeleportNotes)
+            note.ToggleSelected(false);
     }
 }
 
