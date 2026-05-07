@@ -84,8 +84,8 @@ public class EditorManager : MonoBehaviour
     public float speedMulti = 1f;
     public int beatDensity = 1;
     public float editorCurrentTiming = 0f;
+    public float playModeTiming = 0f;
     public int difficulty = 0;
-    private double startDsp = 0;
 
     [Header("Input Actions")]
     [SerializeField] InputActionReference inputAnyKey;
@@ -242,6 +242,8 @@ public class EditorManager : MonoBehaviour
 
         if (playMode)
         {
+            playModeTiming += Time.deltaTime;
+
             if (!autoplayToggle.isOn)
             {
                 var keyboard = Keyboard.current;
@@ -283,12 +285,26 @@ public class EditorManager : MonoBehaviour
                 }
             }
 
-            ChangeSpeedThroughTiming((AudioSettings.dspTime - startDsp) * 1000f);
+            ChangeSpeedThroughTiming(playModeTiming * 1000f);
 
             return;
         }
 
         ExecuteScrolling();
+
+        if (!playMode && Keyboard.current != null)
+        {
+            if (Keyboard.current.digit1Key.wasPressedThisFrame)
+                ConfirmEditOption(0);
+            else if (Keyboard.current.digit2Key.wasPressedThisFrame)
+                ConfirmEditOption(1);
+            else if (Keyboard.current.digit3Key.wasPressedThisFrame)
+                ConfirmEditOption(2);
+            else if (Keyboard.current.pKey.wasPressedThisFrame)
+                SetPlayMode(true);
+            else if (Keyboard.current.tKey.wasPressedThisFrame)
+                SetTestMode();
+        }
 
         if (!playMode && editorInputCopy.action.WasPressedThisFrame())
         {
@@ -2210,9 +2226,10 @@ public class EditorManager : MonoBehaviour
         }
         else
         {
-            startDsp = AudioSettings.dspTime;
             player.originalPosition = player.lanePosition;
             ApplyTimingSpeed();
+
+            playModeTiming = 0f;
             audioSource.Play();
         }
     }
@@ -2224,7 +2241,7 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        startDsp = AudioSettings.dspTime;
+        playModeTiming = editorCurrentTiming;
 
         List<Transform> allTransforms = new List<Transform>();
         allTransforms.Clear();
@@ -2261,7 +2278,6 @@ public class EditorManager : MonoBehaviour
 
         player.originalPosition = player.lanePosition;
         ApplyTimingSpeed();
-        startDsp = AudioSettings.dspTime - editorCurrentTiming;
         audioSource.time = editorCurrentTiming;
         audioSource.Play();
     }

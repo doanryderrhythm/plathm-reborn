@@ -63,12 +63,12 @@ public class MusicNote : MonoBehaviour
 
         if (editorManager.autoplayToggle.isOn)
         {
-            if (editorManager.audioSource.time < timing)
+            if (editorManager.playModeTiming < timing)
             {
                 return;
             }
 
-            if (isAutoActivated && editorManager.audioSource.time >= timing)
+            if (isAutoActivated && editorManager.playModeTiming >= timing)
             {
                 return;
             }
@@ -86,7 +86,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (noteType == NoteType.BLACK_NOTE && isBlackActivated && editorManager.audioSource.time >= timing)
+        if (noteType == NoteType.BLACK_NOTE && isBlackActivated && editorManager.playModeTiming >= timing)
         {
             Instantiate(editorManager.blackCPerfectPrefab,
                 new Vector3(this.transform.position.x, 0, 0),
@@ -96,7 +96,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (noteType == NoteType.MIDDLE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
+        if (noteType == NoteType.MIDDLE_SPIKE && this.timing - editorManager.playModeTiming <= 0)
         {
             if (player.GetLanePosition() != EditorManager.LanePosition.MIDDLE_POS)
             {
@@ -109,7 +109,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (noteType == NoteType.SIDE_SPIKE && this.timing - editorManager.audioSource.time <= 0)
+        if (noteType == NoteType.SIDE_SPIKE && this.timing - editorManager.playModeTiming <= 0)
         {
             if (player.GetLanePosition() == EditorManager.LanePosition.MIDDLE_POS)
             {
@@ -124,7 +124,7 @@ public class MusicNote : MonoBehaviour
         }
 
         //Check missed notes
-        if (timing - editorManager.audioSource.time < -ValueStorer.goodJudgement && editorManager.playMode)
+        if (timing - editorManager.playModeTiming < -ValueStorer.goodJudgement && editorManager.playMode)
         {
             Debug.Log("MISSED, " + timingGroup);
             SwitchToUsedFolder();
@@ -138,7 +138,7 @@ public class MusicNote : MonoBehaviour
             return;
         }
 
-        if (Mathf.Abs(timing - editorManager.audioSource.time) > ValueStorer.goodJudgement)
+        if (Mathf.Abs(timing - editorManager.playModeTiming) > ValueStorer.goodJudgement)
         {
             return;
         }
@@ -178,21 +178,21 @@ public class MusicNote : MonoBehaviour
     {
         GameObject judgementSelected = null;
 
-        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.cPerfectJudgement)
+        if (Mathf.Abs(timing - editorManager.playModeTiming) <= ValueStorer.cPerfectJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.CPERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             return;
         }
 
-        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.perfectJudgement)
+        if (Mathf.Abs(timing - editorManager.playModeTiming) <= ValueStorer.perfectJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.PERFECT);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
             return;
         }
 
-        if (Mathf.Abs(timing - editorManager.audioSource.time) <= ValueStorer.goodJudgement)
+        if (Mathf.Abs(timing - editorManager.playModeTiming) <= ValueStorer.goodJudgement)
         {
             judgementSelected = SelectJudgementVFX(EditorManager.JudgementType.GOOD);
             Instantiate(judgementSelected, new Vector3(transform.position.x, 0, 0), Quaternion.identity);
