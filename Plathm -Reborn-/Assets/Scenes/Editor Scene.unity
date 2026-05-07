@@ -1800,6 +1800,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac77d69bf13afaa46885576b56084f29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UndoRedoManager
+  undoAction: {fileID: 3463329279502539797, guid: 3f09a8b355775f5499df93d1412b0a7c, type: 3}
+  redoAction: {fileID: 3978103295473500371, guid: 3f09a8b355775f5499df93d1412b0a7c, type: 3}
 --- !u!1 &247270153
 GameObject:
   m_ObjectHideFlags: 0
